@@ -170,13 +170,26 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
 <body>
 <header>
   <div class="hwrap">
-    <h1><span class="pfs">PFS</span> — Personal Financial Status</h1>
+    <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px">index028 · v009</span></h1>
     <div class="subtitle">Now and in the Future · <a href="https://github.com/lougualtieri-AMI/PFS/blob/main/README.md" target="_blank" rel="noopener">User Guide &#8599;</a></div>
-    <div class="buildline">pfs_index027 · engine v009 (Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
+    <div class="buildline">pfs_index028 · engine v009 (Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
   </div>
 </header>
 <div id="delta" aria-live="polite"></div>
 <main>
+
+<details class="panel" id="startPanel" open>
+  <summary class="phead" style="cursor:pointer"><h2 style="display:inline">Start here</h2><span class="tag">new? read this first · click to fold away</span></summary>
+  <div class="pbody">
+    <p class="note" style="font-size:14px;line-height:1.5">You're looking at a planning sketch of your household's money over the years ahead — before and after retirement. Nothing you do here is saved or sent anywhere.</p>
+    <ol style="font-size:14px;line-height:1.6;padding-left:20px;margin:8px 0">
+      <li><strong>See it work first.</strong> Pick a household from the <em>“— sample households —”</em> menu just below. The whole page fills in: where you stand today, what your savings can safely support each year, and what shifts under different choices.</li>
+      <li><strong>Read down the page.</strong> <em>Where you are</em> (today) → <em>What it supports</em> (a safe yearly spend) → <em>What could happen</em> (retire earlier, spend differently, move, sell the house, plan around taxes).</li>
+      <li><strong>Make it yours.</strong> Edit any number in place, or paste in your own data. Hover — or tap, on a phone — the underlined items and info marks for plain-language explanations.</li>
+    </ol>
+    <p class="note" style="font-size:13px"><strong>On a phone?</strong> Turn on your browser's “Desktop site” so the wide tables fit on one screen.</p>
+  </div>
+</details>
 
 <section class="panel" id="dataPanel">
   <div class="phead"><h2>Household data</h2><span class="tag">JSON · stays on this device</span></div>
@@ -266,6 +279,7 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
   spousal inheritance only · senior bonus deduction omitted · NJ exit-tax as note. All figures are estimates, not advice.</p>
 </footer>
 <script>
+/* PFS-ENGINE-FREEZE-START · v009 · everything between the sentinels is fingerprinted; edit only with a deliberate re-stamp */
 /* =====================================================================
    PFS — Personal Financial Status · Engine v003 · pfs_index007
    Pure functions, no DOM. Real terms internally, nominal at display.
@@ -1116,6 +1130,7 @@ if (typeof module !== "undefined" && module.exports){
     ltcgTax, runTimeline, solveSustainableSpend, rmdStartAge, RMD_TABLE,
     streamActiveFactor, liabRate, bracketCeiling };
 }
+/* PFS-ENGINE-FREEZE-END */
 
 /* ================= PFS UI · pfs_index012 ============================ */
 /* index012 change-set (play-session punch list): drop-downs keep
@@ -3372,9 +3387,30 @@ $("jsonToggle").onclick = () => {
   box.style.display = box.style.display === "none" ? "block" : "none";
 };
 
+/* index028: promote every native title= tooltip to the rich, tappable ladtip
+   engine (instant, styled, and works on touch — native title has no touch path).
+   A MutationObserver re-promotes titles that re-render (forms, ladder, etc.). */
+function promoteTips(root){
+  if (!root) return;
+  const els = [];
+  if (root.nodeType === 1 && root.getAttribute && root.getAttribute("title")) els.push(root);
+  if (root.querySelectorAll) root.querySelectorAll("[title]").forEach(e => els.push(e));
+  els.forEach(el => { const t = el.getAttribute("title"); if (!t) return;
+    el.setAttribute("data-tip", t); el.classList.add("rtip"); el.removeAttribute("title"); });
+}
+function initRichTips(){
+  promoteTips(document);
+  try { new MutationObserver(ms => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) promoteTips(n); })
+    .observe(document.body, { childList: true, subtree: true }); } catch(e){}
+  document.addEventListener("mouseover", ev => { const el = ev.target.closest && ev.target.closest(".rtip"); if (el) ladTipShow(ev, el); });
+  document.addEventListener("mouseout",  ev => { const el = ev.target.closest && ev.target.closest(".rtip"); if (el) ladTipHide(); });
+  document.addEventListener("click",     ev => { const el = ev.target.closest && ev.target.closest(".rtip"); if (el) ladTipPin(ev, el); });
+}
+
 /* boot with Sample B */
 setJSON(PERSONAS.B); applyJSON();
 setSource("Sample B (synthetic)");
+initRichTips();
 
 </script>
 <style>
