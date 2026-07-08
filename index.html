@@ -172,7 +172,7 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
   <div class="hwrap">
     <h1><span class="pfs">PFS</span> — Personal Financial Status</h1>
     <div class="subtitle">Now and in the Future · <a href="https://github.com/lougualtieri-AMI/PFS/blob/main/README.md" target="_blank" rel="noopener">User Guide &#8599;</a></div>
-    <div class="buildline">pfs_index025 · engine v007 (NIIT 3.8% · end-year horizon) · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · GENERIC</div>
+    <div class="buildline">pfs_index026 · engine v008 (spending-change step · NIIT 3.8% · end-year horizon) · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · GENERIC</div>
   </div>
 </header>
 <div id="delta" aria-live="polite"></div>
@@ -895,9 +895,9 @@ function runTimeline(data, opts){
     let baseline = opts && opts.spendOverride != null ? opts.spendOverride
                  : (S.currentAnnual || 0);
     if (!(opts && opts.spendOverride != null)){
-      (S.phases||[]).forEach(ph => {
-        if (ageOf(p1, year) >= ph.fromAge) baseline *= ph.multiplier;
-      });
+      const sc = (d.actions||[]).filter(a => a.type==="spendingChange" && a.enabled!==false && a.year<=year && a.newAnnual!=null).sort((x,y)=>x.year-y.year).pop();
+      if (sc) baseline = sc.newAnnual;                      // v008 #026: latest year-anchored step wins; else currentAnnual
+      (S.phases||[]).forEach(ph => { if (ageOf(p1, year) >= ph.fromAge) baseline *= ph.multiplier; });
     }
     let lump = (S.lumpEvents||[]).filter(e=>e.year===year)
       .reduce((s,e)=>s+e.amount,0);
@@ -1309,6 +1309,8 @@ function validateRefs(){
     const off = a.enabled === false ? " (currently unchecked)" : "";
     if (a.type === "sellAsset" && a.assetId && !bIds.has(a.assetId))
       probs.push(`"${esc(nm)}"${off}: asset id "${esc(a.assetId)}" is not on the balance sheet`);
+    if (a.type === "spendingChange" && (a.newAnnual == null || a.newAnnual < 0))
+      probs.push(`"${esc(nm)}"${off}: spending change needs a non-negative new annual amount (today's $)`);
     if (a.type === "payDownDebt" && a.liabilityId && !lIds.has(a.liabilityId))
       probs.push(`"${esc(nm)}"${off}: liability id "${esc(a.liabilityId)}" does not exist`);
     if (a.payoffLiability && !lIds.has(a.payoffLiability))
@@ -1383,6 +1385,33 @@ function fsel(path, val, options){
   return `<select onchange="fset('${path}', this.value)">` +
     options.map(o => `<option value="${o}" ${o===val?"selected":""}>${o}</option>`).join("") +
     `</select>`;
+}
+
+/* index026 #026: spending-change helpers (UI slice — outside the frozen engine).
+   A soft nudge offers a seeded spending-change step for the events that usually
+   move a household's spending: home sale · relocate · downsize · death. */
+function maybeNudgeSpendingChange(fromYear, label){
+  const cur = ((DATA.spending||{}).currentAnnual) || 0;
+  DATA.actions = DATA.actions || [];
+  if (DATA.actions.some(a => a.type === "spendingChange" && a.year === fromYear)) return null;   // don't double-seed a year
+  if (!window.confirm("This often changes spending — add a spending change?\n\nWe'll seed it in " + fromYear +
+      " with your current annual spending (" + fmt$(cur) + ", today's $) for you to adjust.")) return null;
+  const rec = { year: fromYear, type: "spendingChange", newAnnual: cur, label: label || "Spending change", enabled: true };
+  DATA.actions.push(rec);
+  return rec;
+}
+function setActionType(i, type){
+  const yr = DATA.actions[i].year;
+  DATA.actions[i] = { year: yr, type: type, label: "" };
+  if (type === "relocate") maybeNudgeSpendingChange(yr, "Spending change (relocation)");
+  else if (type === "death") maybeNudgeSpendingChange(yr, "Spending change (loss of spouse)");
+  renderForms(); formEdit();
+}
+function setSellAsset(i, assetId){
+  DATA.actions[i].assetId = assetId || undefined;
+  const b = (DATA.balanceSheet||[]).find(x => x.id === assetId);
+  if (b && b.taxType === "residence") maybeNudgeSpendingChange(DATA.actions[i].year, "Spending change (home sale)");
+  renderForms(); formEdit();
 }
 
 function renderForms(){
@@ -1516,13 +1545,13 @@ function renderForms(){
         title="${on?"Included in the model — uncheck to set aside without deleting":"Set aside — not in the model. Check to include."}"
         onchange="DATA.actions[${i}].enabled=this.checked; renderForms(); formEdit()"></td>
       <td style="width:70px">${fin("actions."+i+".year", a.year, "num", 'style="width:70px"')}</td>
-      <td style="width:150px"><select onchange="DATA.actions[${i}]={year:DATA.actions[${i}].year,type:this.value,label:''}; renderForms(); formEdit()">` +
-      ["sellAsset","relocate","death","rothConversion","payDownDebt","taxFreeReimbursement"].map(t =>
-        `<option value="${t}" ${t===a.type?"selected":""}>${{sellAsset:"Sell asset",relocate:"Relocate",death:"Death",rothConversion:"Roth conversion",payDownDebt:"Pay down debt",taxFreeReimbursement:"Tax-free reimbursement"}[t]}</option>`).join("") +
+      <td style="width:150px"><select onchange="setActionType(${i}, this.value)">` +
+      ["sellAsset","relocate","death","rothConversion","payDownDebt","taxFreeReimbursement","spendingChange"].map(t =>
+        `<option value="${t}" ${t===a.type?"selected":""}>${{sellAsset:"Sell asset",relocate:"Relocate",death:"Death",rothConversion:"Roth conversion",payDownDebt:"Pay down debt",taxFreeReimbursement:"Tax-free reimbursement",spendingChange:"Spending change"}[t]}</option>`).join("") +
       `</select></td><td>`;
     if (a.type === "sellAsset"){
       const sellable = (DATA.balanceSheet||[]).filter(b => ["residence","illiquid","taxable"].includes(b.taxType));
-      h += `sell ` + `<select onchange="fset('actions.${i}.assetId', this.value)">` +
+      h += `sell ` + `<select onchange="setSellAsset(${i}, this.value)">` +
         `<option value="">— asset —</option>` +
         sellable.map(b => `<option value="${b.id}" ${b.id===a.assetId?"selected":""}>${esc(b.label)}</option>`).join("") + `</select>`;
       if ((DATA.liabilities||[]).length){
@@ -1592,6 +1621,18 @@ function renderForms(){
         ["cash","taxable","deferred","roth"].map(t =>
           `<option value="${t}" ${t===(a.fromBucket||"cash")?"selected":""}>${t}</option>`).join("") +
         `</select> <span class="note">(deferred = ordinary income that year · taxable realizes gains)</span>`;
+    }
+    if (a.type === "spendingChange"){
+      const cur = ((DATA.spending||{}).currentAnnual) || 0;
+      if (a.newAnnual == null) a.newAnnual = cur;   // pre-fill with a number they recognize (today's $)
+      h += `from this year on, annual spending becomes
+        ${fin("actions."+i+".newAnnual", a.newAnnual, "num", 'style="width:120px"')} <span class="note">/yr (today's $)</span>
+        <div class="note" style="margin-top:4px;max-width:640px;line-height:1.4">
+          <strong>What this sets:</strong> the entire annual spending figure from the chosen year forward — edit the number above to the new total, not a delta.<br>
+          <em>Usually drops / goes away:</em> property tax, home insurance, maintenance &amp; repairs, HOA/condo fees, utilities on a larger place.<br>
+          <em>Usually added / goes up:</em> rent (fold it into the new total); a new home's tax/insurance/upkeep if you buy again; cost-of-living differences in the new area.<br>
+          <em style="color:#B6543F">Leave OUT here (already handled elsewhere — would double-count):</em> the old <strong>mortgage payment</strong> (a home sale retires it via its pay-off); <strong>state income-tax</strong> changes (a Relocate re-solves tax); one-time <strong>moving / closing costs</strong> (use a one-time event instead).
+        </div>`;
     }
     h += `</td><td>${fin("actions."+i+".label", a.label, "str", 'placeholder="label for chart"')}</td>
       <td style="width:34px"><button class="mini" onclick="DATA.actions.splice(${i},1); renderForms(); formEdit()">×</button></td></tr>`;
