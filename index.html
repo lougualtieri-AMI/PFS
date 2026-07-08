@@ -172,7 +172,7 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
   <div class="hwrap">
     <h1><span class="pfs">PFS</span> — Personal Financial Status</h1>
     <div class="subtitle">Now and in the Future · <a href="https://github.com/lougualtieri-AMI/PFS/blob/main/README.md" target="_blank" rel="noopener">User Guide &#8599;</a></div>
-    <div class="buildline">pfs_index026 · engine v008 (spending-change step · NIIT 3.8% · end-year horizon) · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · GENERIC</div>
+    <div class="buildline">pfs_index027 · engine v009 (Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
   </div>
 </header>
 <div id="delta" aria-live="polite"></div>
@@ -502,6 +502,39 @@ const STATE_MODULES = {
       return "NJ exit-tax note: closing prepayment = max(2% of price, 10.75% of gain) if departing; largely recovered at filing.";
     },
     estateNote(){ return "NJ: estate tax repealed; inheritance tax applies to non-Class-A beneficiaries (spouse/descendants exempt)."; }
+  },
+  CO: {
+    id: "CO", label: "Colorado",
+    computeTax(y, fed){
+      const notes = [];
+      const rate = 0.044;                         // 2025 flat rate (returns filed 2026); a TABOR trigger could trim toward 4.25%
+      // CO taxable income starts from FEDERAL TAXABLE INCOME (LTCG included, taxed at the same flat
+      // rate), then applies CO age-based subtractions. Component fallback if fed isn't supplied.
+      const fedTaxable = fed ? Math.max(0, (fed.ordTaxable||0) + (fed.gains||0))
+        : Math.max(0, (y.wages||0)+(y.pension||0)+(y.deferredDraws||0)+(y.conversions||0)+
+                      (y.interest||0)+(y.rental||0)+(y.qualDiv||0)+(y.ltcgRealized||0));
+      const ssInFed = fed ? (fed.ssTaxable||0) : (y.ss||0)*0.85;   // only SS actually taxed federally is subtractable
+      const ages = (y.ages||[]).filter(a => a != null);
+      // per-taxpayer pension/annuity subtraction cap: 65+ $24k · 55–64 $20k · under 55 $0
+      const capFor = a => a >= 65 ? 24000 : a >= 55 ? 20000 : 0;
+      const pensionCap = ages.reduce((s,a)=>s+capFor(a), 0);
+      const retirementInc = (y.pension||0)+(y.deferredDraws||0)+(y.conversions||0);
+      const pensionSub = Math.min(retirementInc, pensionCap);
+      // SS subtraction: 65+ full (no income limit); 55–64 full only under the AGI cap.
+      const agiCap = y.filing === "MFJ" ? 95000 : 75000;
+      const proxyAGI = fed && fed.magi != null ? fed.magi : fedTaxable;
+      let ssSub = 0;
+      if (ages.some(a => a >= 65)) ssSub = ssInFed;
+      else if (ages.some(a => a >= 55) && proxyAGI <= agiCap) ssSub = ssInFed;
+      const coTaxable = Math.max(0, fedTaxable - pensionSub - ssSub);
+      let tax = coTaxable * rate;
+      if (y.taxDriftPP) tax += coTaxable * (y.taxDriftPP / 100);
+      if (pensionSub > 0) notes.push("CO pension/annuity subtraction: $" + Math.round(pensionSub).toLocaleString());
+      if (ssSub > 0) notes.push("CO Social Security subtraction: $" + Math.round(ssSub).toLocaleString());
+      return { stateTax: tax, notes,
+        detail: { fedTaxable, pensionSub, ssSub, coTaxable, ratePct: 4.4, ssInFed } };
+    },
+    estateNote(){ return "CO: no state estate or inheritance tax."; }
   },
   GENERIC: {
     id: "GENERIC", label: "Generic (effective rate)",
@@ -993,7 +1026,7 @@ function runTimeline(data, opts){
         taxDriftPP: driftPP, nomF: nomFY,
         stateCfg: A.stateOverrides };
       fed = federalTax(yTax);
-      const st = (STATE_MODULES[stateId] || STATE_MODULES.GENERIC).computeTax(yTax);
+      const st = (STATE_MODULES[stateId] || STATE_MODULES.GENERIC).computeTax(yTax, fed);
       stateTax = st.stateTax; stDetail = st.detail || null;
       st.notes.forEach(n => { if (!notes.includes(n)) notes.push(n); });
       taxTotal = fed.tax + stateTax;
@@ -1434,7 +1467,7 @@ function renderForms(){
     h += `<tr><td colspan="4"><button class="mini" onclick="DATA.household.person2={name:'P2',birthYear:1970}; DATA.household.filingStatus='MFJ'; renderForms(); formEdit()">+ add spouse/partner</button></td></tr>`;
   }
   h += `<tr><th>Filing</th><td>${fsel("household.filingStatus", hh.filingStatus, ["MFJ","Single"])}</td>
-        <th>State</th><td>${fsel("household.stateModule", hh.stateModule, ["FL","NJ","GENERIC"])}</td></tr>
+        <th>State</th><td>${fsel("household.stateModule", hh.stateModule, ["FL","NJ","CO","GENERIC"])}</td></tr>
     <tr><th>Plan through (end year)</th><td>${fin("household.endYear", planEndYear(hh), "num", 'style="width:90px"')}</td><th></th><td class="note">${endYearAges(hh)}</td></tr>
   </tbody></table></fieldset>`;
 
@@ -1569,7 +1602,7 @@ function renderForms(){
     }
     if (a.type === "relocate"){
       h += `move to <select onchange="fset('actions.${i}.to', this.value)">` +
-        ["FL","NJ","GENERIC"].map(t => `<option value="${t}" ${t===a.to?"selected":""}>${t}</option>`).join("") + `</select>`;
+        ["FL","NJ","CO","GENERIC"].map(t => `<option value="${t}" ${t===a.to?"selected":""}>${t}</option>`).join("") + `</select>`;
     }
     if (a.type === "death"){
       const people = ["person1"].concat(DATA.household.person2 ? ["person2"] : []);
@@ -2703,7 +2736,7 @@ function ladderSpendingNeeds(run, year){
     deferredDraws: D + payoffDeferred, conversions, interest: inc.interest, rental: inc.rental,
     ss: inc.ss, qualDiv: inc.qualDiv, ltcgRealized, taxDriftPP: driftPP, nomF, stateCfg: A.stateOverrides });
   const stateMod = STATE_MODULES[stateId] || STATE_MODULES.GENERIC;
-  const totalTax = D => { const y = mkY(D); return federalTax(y).tax + stateMod.computeTax(y).stateTax; };
+  const totalTax = D => { const y = mkY(D); const fy = federalTax(y); return fy.tax + stateMod.computeTax(y, fy).stateTax; };
   /* fidelity check the caller/battery can read: reconstructing the ACTUAL deferred
      ordinary (voluntary + rmd) must reproduce the recorded landing. */
   const reconLanding = federalTax(mkY(fed.deferredDraws + rmd)).ordTaxable;
@@ -3229,7 +3262,7 @@ function renderFixedDraw(){
     ltcgRealized: ltcg, taxDriftPP: 0, nomF: rowY.nomF,
     stateCfg: (DATA.assumptions||{}).stateOverrides };
   const fed = federalTax(yTax);
-  const st = (STATE_MODULES[hh.stateModule] || STATE_MODULES.GENERIC).computeTax(yTax);
+  const st = (STATE_MODULES[hh.stateModule] || STATE_MODULES.GENERIC).computeTax(yTax, fed);
   const tax = fed.tax + st.stateTax;
   const grossDraws = drawTot + Math.max(0, inc.rmd - defDraw);   // RMD excess adds cash
   const cashIn = inc.wages + inc.pension + inc.ss + inc.interest + inc.rental + inc.qualDiv
