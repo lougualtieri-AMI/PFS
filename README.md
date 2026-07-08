@@ -18,6 +18,8 @@ Nothing is downloaded, nothing is sent anywhere, and you don't need an account.
   running short.
 - **What could happen** — how the picture shifts if you retire earlier, spend more or
   less, move money between accounts, or plan around taxes.
+- **A change in spending down the road** — set a new annual spending level from a
+  chosen year forward, for a downsize, a move, or any other reason.
 - **Taxes, made visible** — it shows how much of your income falls into each tax
   bracket in a given year, so you can see the room you have before the next bracket
   kicks in. This is useful if you're thinking about moving money from a traditional
@@ -104,7 +106,7 @@ Those tests re-run three reference households to the exact dollar, confirm the e
 fingerprint matches, and exercise each feature (the tax-bracket views, navigation,
 and edge cases). A build isn't finished until every check passes.
 
-Current build: `pfs_index023` · engine `v007`.
+Current build: `pfs_index026` · engine `v008`.
 
 ---
 
