@@ -171,8 +171,8 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
 <header>
   <div class="hwrap">
     <h1><span class="pfs">PFS</span> — Personal Financial Status</h1>
-    <div class="subtitle">Now and in the Future</div>
-    <div class="buildline">pfs_index021 · engine v007 (NIIT 3.8% · end-year horizon) · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · GENERIC</div>
+    <div class="subtitle">Now and in the Future · <a href="https://github.com/lougualtieri-AMI/PFS/blob/main/README.md" target="_blank" rel="noopener">User Guide &#8599;</a></div>
+    <div class="buildline">pfs_index024 · engine v007 (NIIT 3.8% · end-year horizon) · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · GENERIC</div>
   </div>
 </header>
 <div id="delta" aria-live="polite"></div>
@@ -3303,5 +3303,17 @@ setJSON(PERSONAS.B); applyJSON();
 setSource("Sample B (synthetic)");
 
 </script>
+<style>
+/* ===== index024 mobile quick-fix (display-only; appended below engine, slice 269-1085 untouched) =====
+   (1) summary pills wrap instead of overlapping on narrow screens
+   (2) wide panels scroll sideways instead of clipping their right-hand columns
+   Later source order => these override earlier rules for the same properties. */
+@media (max-width:640px){
+  /* (1) Capacity / Economic-NW chips: allow wrap, left-align, tighten padding */
+  #delta{flex-wrap:wrap; justify-content:flex-start; gap:6px; padding:6px 12px 0;}
+  /* (2) panel bodies scroll horizontally when a table is wider than the phone */
+  .pbody{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+}
+</style>
 </body>
 </html>
