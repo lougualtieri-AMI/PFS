@@ -1,0 +1,3307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PFS — Personal Financial Status</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1B2A3A; --paper:#FAFAF7; --panel:#FFFFFF; --line:#DCDCD4;
+  --muted:#6B7482; --accent:#2C7A78;
+  --c-cash:#949CA8; --c-taxable:#5E7F98; --c-deferred:#9A8563;
+  --c-roth:#639880; --c-residence:#837099; --c-illiquid:#98636F;
+  --c-debt:#B6543F;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{transition:none!important;} }
+body{
+  font-family:'Archivo',system-ui,sans-serif; background:var(--paper);
+  color:var(--ink); font-size:15px; line-height:1.5;
+}
+.num{font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums;}
+header{
+  background:var(--ink); color:var(--paper); padding:26px 20px 22px;
+}
+.hwrap{max-width:1060px; margin:0 auto;}
+h1{font-weight:800; font-size:26px; letter-spacing:-0.5px; font-stretch:85%;}
+h1 .pfs{color:#8FD0CE;}
+.subtitle{font-size:14px; color:#B9C2CC; margin-top:2px; font-weight:400;}
+.buildline{font-family:'IBM Plex Mono',monospace; font-size:11px; color:#7E8A97; margin-top:10px;}
+main{max-width:1060px; margin:0 auto; padding:18px 20px 60px;}
+section.panel{
+  background:var(--panel); border:1px solid var(--line); border-radius:6px;
+  margin-top:18px; overflow:hidden;
+}
+.phead{
+  display:flex; align-items:baseline; gap:12px; padding:14px 18px 12px;
+  border-bottom:1px solid var(--line); cursor:default;
+}
+.phead h2{font-size:16px; font-weight:700; letter-spacing:-0.2px;}
+.phead .tag{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted);
+  text-transform:uppercase; letter-spacing:1px;}
+.pbody{padding:16px 18px;}
+.collapsible .phead{cursor:pointer;}
+.collapsible .phead::after{content:"+"; margin-left:auto; font-family:'IBM Plex Mono',monospace; color:var(--muted);}
+.collapsible.open .phead::after{content:"–";}
+.collapsible .pbody{display:none;}
+.collapsible.open .pbody{display:block;}
+
+
+#delta{position:sticky; top:0; z-index:50; display:flex; gap:10px; justify-content:flex-end;
+  max-width:1060px; margin:0 auto; padding:6px 20px 0; pointer-events:none;}
+.dtchip{background:var(--ink); color:var(--paper); border-radius:4px; padding:4px 10px;
+  font-size:11.5px; display:inline-flex; gap:6px; align-items:baseline; box-shadow:0 1px 4px rgba(27,42,58,.25);}
+.dtd{font-family:'IBM Plex Mono',monospace; font-size:10.5px;}
+.dtd.pos{color:#8FD0CE;} .dtd.neg{color:#E8A18F;}
+#delta.flash .dtchip{animation:dflash .9s ease-out;}
+@keyframes dflash{0%{background:var(--accent);}100%{background:var(--ink);}}
+@media (prefers-reduced-motion: reduce){#delta.flash .dtchip{animation:none;}}
+fieldset{border:1px solid var(--line); border-radius:5px; padding:10px 12px; margin-top:12px;}
+legend{font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); padding:0 6px;}
+table.form{border-collapse:collapse; font-size:12.5px;}
+table.form th{text-align:left; font-weight:600; padding:4px 8px 4px 0; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; vertical-align:middle;}
+table.form td{padding:4px 10px 4px 0; vertical-align:middle;}
+table.form.wide{width:100%;}
+table.form input[type=text]{font-family:'Archivo'; font-size:12.5px; padding:5px 7px; border:1px solid var(--line); border-radius:4px; width:100%; min-width:80px;}
+table.form input[type=number]{width:100px;}
+button.mini{font-size:11px; padding:3px 8px; background:transparent; color:var(--ink); border:1px solid var(--line); border-radius:3px;}
+button.mini:hover{border-color:var(--ink);}
+/* data panel */
+textarea{
+  width:100%; min-height:150px; font-family:'IBM Plex Mono',monospace; font-size:11px;
+  border:1px solid var(--line); border-radius:4px; padding:10px; background:#FCFCFA;
+  color:var(--ink); resize:vertical;
+}
+.row{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+button, .btn{
+  font-family:'Archivo'; font-size:13px; font-weight:600; padding:7px 14px;
+  border:1px solid var(--ink); background:var(--ink); color:var(--paper);
+  border-radius:4px; cursor:pointer;
+}
+button.secondary{background:transparent; color:var(--ink);}
+button:focus-visible{outline:3px solid var(--accent); outline-offset:2px;}
+select,input[type=number]{
+  font-family:'IBM Plex Mono',monospace; font-size:13px; padding:6px 8px;
+  border:1px solid var(--line); border-radius:4px; background:#fff; color:var(--ink);
+}
+.note{font-size:12px; color:var(--muted);} /* #42-B4: strategy/headroom/ladder notes bumped for MacBook+Pixel */ #draworder .note, #headroom .note, #ladder .note{font-size:13.5px; line-height:1.55;} .ladder-win{font-size:11px; font-weight:600; color:var(--muted); margin-left:12px; text-transform:none; letter-spacing:0;} .ladder-win b{color:var(--ink); margin:0 1px;} .ladder-win button.mini{padding:1px 7px; margin:0 2px;} .ladhead{position:relative; margin:8px 0 0;} .ladcol-btn{position:absolute; top:0; box-sizing:border-box; font-family:inherit; font-size:11px; font-weight:600; color:var(--ink); background:rgba(0,0,0,0.02); border:1px solid var(--line); border-radius:4px; padding:2px 3px; cursor:pointer; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; line-height:1.5; transition:border-color .12s, background .12s;} .ladcol-btn:hover{border-color:var(--ink); background:rgba(0,0,0,0.05);} .ladcol-btn.open{background:rgba(62,107,143,0.12); border-color:#3E6B8F;} .ladcol-btn .chev{color:#3E6B8F; margin-right:2px; font-weight:700;} .ladcol-btn .cue{color:var(--muted); font-weight:400;} .laddrawers{display:flex; flex-wrap:wrap; gap:12px; margin-top:10px;} .laddrawer{flex:1 1 240px; min-width:230px; max-width:340px; border:1px solid var(--line); border-radius:6px; padding:8px 11px 10px; background:rgba(0,0,0,0.015);} .laddrawer h4{margin:0 0 5px; font-size:12.5px; color:var(--ink); font-weight:700;} .laddrawer .dbasis{font-size:11px; color:var(--muted); margin:0 0 7px; line-height:1.45;} .laddrawer table.ladtax{border-collapse:collapse; width:100%; margin:0 0 7px; font-size:12px;} .laddrawer table.ladtax th{text-align:left; font-weight:600; color:var(--muted); border-bottom:1px solid var(--line); padding:2px 6px;} .laddrawer table.ladtax td{padding:1.5px 6px; border-bottom:1px solid rgba(0,0,0,0.05); color:var(--ink);} .laddrawer table.ladtax td.r{font-weight:700; width:44px; white-space:nowrap;} .laddrawer .gl{font-size:12px; color:var(--ink); margin:5px 0 3px; line-height:1.5;} .laddrawer .niit{font-size:10.5px; color:var(--muted); margin:0; font-style:italic;} .fpd-headline{font-size:20px; font-weight:800; color:var(--ink); margin:2px 0 10px; line-height:1.15;} .fpd-headline .sub{font-size:12px; font-weight:400; color:var(--muted); margin-left:8px;}
+.privacy{font-size:12px; color:var(--accent); font-weight:600;} .ladtip{position:fixed; z-index:60; max-width:300px; background:#1B2A3A; color:#fff; font-size:12px; line-height:1.45; padding:7px 10px; border-radius:6px; pointer-events:none; box-shadow:0 3px 12px rgba(20,30,45,.35); display:none;} .ladtip.pin{pointer-events:auto; outline:2px solid #C9A227;} .ladlegend{margin:4px 0 0;} .ladflags{margin:2px 0 0;} .ladflag{display:inline-block; margin:2px 10px 2px 0; padding:2px 8px; border:1px solid var(--line); border-radius:10px; background:#FBF7EE; font-size:12px;} .gstrip{margin:6px 0 2px;} .gstrip svg{display:block;}
+/* where you are */
+.bigbar{display:flex; height:44px; border-radius:4px; overflow:hidden; margin:8px 0 6px;}
+.bigbar div{min-width:2px;}
+.legend{display:flex; gap:14px; flex-wrap:wrap; font-size:12px; margin-top:8px;}
+.legend .sw{display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:-1px;}
+.statgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:14px;}
+.stat{border-left:3px solid var(--line); padding-left:10px;}
+.stat .lab{font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted);}
+.stat .val{font-size:19px; font-weight:600;}
+table.data{width:100%; border-collapse:collapse; font-size:12.5px; margin-top:10px;}
+table.data th{
+  text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.8px;
+  color:var(--muted); font-weight:600; padding:5px 8px; border-bottom:1px solid var(--line);
+}
+table.data td{padding:5px 8px; border-bottom:1px solid #EFEFE9;}
+table.data td.n{text-align:right;}
+table.data th.n{text-align:right;}
+/* headline */
+.headline{padding:6px 0 2px;}
+.headline .big{font-size:40px; font-weight:800; letter-spacing:-1px; font-stretch:85%;}
+.headline .big .per{font-size:16px; font-weight:500; color:var(--muted); letter-spacing:0;}
+.headline .sub{font-size:13px; color:var(--muted); margin-top:2px;}
+.failflag{color:var(--c-debt); font-weight:700;}
+.modebar{margin:8px 0 4px; padding:6px 10px; border-radius:6px; font-size:12.5px; font-weight:600;
+  background:#F5EBD6; border:1px solid #C9A227; color:#5A4A14;}
+.modebar.fail{background:#F5DEDA; border-color:var(--c-debt); color:#6B2A1E;}
+.hoverhint{border-bottom:1px dotted #6B7482; cursor:help;}
+.stale{color:#8A5A14; font-weight:600;}
+tr.actoff td:not(:first-child){opacity:0.45;}
+.vmode label{margin-right:14px; cursor:pointer;}
+/* horizon ribbon */
+.ribbonwrap{margin-top:16px;}
+svg text{font-family:'IBM Plex Mono',monospace;}
+/* sliders */
+.sliders{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px 24px;}
+.slider label{font-size:12px; font-weight:600; display:flex; justify-content:space-between;}
+.slider label .v{font-family:'IBM Plex Mono',monospace; color:var(--accent);}
+input[type=range]{width:100%; accent-color:var(--accent);}
+.retgrid{margin-top:14px;}
+.estline{font-size:13px;}
+
+
+
+
+.dorder{display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;}
+.dchip{display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line); border-radius:4px; padding:4px 8px; font-size:12.5px; background:#FCFCFA;}
+.dnum{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--accent); font-weight:600;}
+.dchip button[disabled]{opacity:0.3;}
+tr.yrow{cursor:pointer;}
+tr.yrow:hover td{background:#F4F4EE;}
+td.expander{color:var(--muted); font-size:10px; width:16px;}
+tr.drow > td{background:#F7F7F2; border-bottom:2px solid var(--line);}
+.walk{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; padding:8px 4px;}
+.wtitle{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); margin-bottom:6px;}
+.wline{display:flex; justify-content:space-between; gap:12px; font-size:12px; padding:1.5px 0;}
+.wline.wsum{border-top:1px solid var(--line); font-weight:700; margin-top:2px; padding-top:3px;}
+.wline.wsub{color:var(--muted); font-size:11px;}
+.mgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; margin-top:8px;}
+.mcard{border:1px solid var(--line); border-radius:5px; padding:10px 12px; background:#FCFCFA;}
+.mage{font-weight:800; font-size:14px; margin-bottom:6px; font-stretch:85%;}
+.myr{font-weight:400; font-size:11px; color:var(--muted);}
+.mrow{display:flex; justify-content:space-between; font-size:12px; padding:1.5px 0;}
+.mrow span:first-child{color:var(--muted);}
+.twin{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+@media (max-width:700px){.twin{grid-template-columns:1fr;}}
+.twinlab{font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; color:var(--muted); text-transform:uppercase;}
+.twincap{font-size:22px; font-weight:800; letter-spacing:-0.5px; margin:2px 0 4px;}
+.delta{font-size:13px; font-weight:600; margin-left:6px;}
+.delta.pos{color:var(--accent);}
+.delta.neg{color:var(--c-debt);}
+footer{max-width:1060px; margin:30px auto 0; padding:0 20px 40px; font-size:11.5px; color:var(--muted);}
+footer .mono{font-family:'IBM Plex Mono',monospace;}
+@media (max-width:640px){
+  .headline .big{font-size:30px;}
+  .pbody{padding:12px;}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <h1><span class="pfs">PFS</span> — Personal Financial Status</h1>
+    <div class="subtitle">Now and in the Future</div>
+    <div class="buildline">pfs_index021 · engine v007 (NIIT 3.8% · end-year horizon) · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · GENERIC</div>
+  </div>
+</header>
+<div id="delta" aria-live="polite"></div>
+<main>
+
+<section class="panel" id="dataPanel">
+  <div class="phead"><h2>Household data</h2><span class="tag">JSON · stays on this device</span></div>
+  <div class="pbody">
+    <div class="row" style="margin-bottom:10px">
+      <select id="personaSel" aria-label="Sample persona">
+        <option value="">— sample households —</option>
+        <option value="A">Sample A · Single, 40, working, NJ</option>
+        <option value="B">Sample B · Couple 68/66, retired, FL</option>
+        <option value="C">Sample C · Couple 58/56, NJ→FL move, home sale</option>
+      </select>
+      <button class="secondary" id="loadBtn">Load file</button>
+      <button class="secondary" id="saveBtn">Save file</button>
+      <button class="secondary" id="jsonToggle">Show / hide JSON</button>
+      <input type="file" id="fileInput" accept=".json" style="display:none">
+      <span class="note" id="loadedName" style="font-weight:600"></span>
+    </div>
+    <div id="forms"></div>
+    <div id="jsonArea" style="display:none; margin-top:12px">
+      <div class="row" style="margin-bottom:6px"><button id="applyBtn">Apply JSON to forms</button>
+      <span class="note">Advanced: edit the record directly.</span></div>
+      <textarea id="jsonBox" spellcheck="false" aria-label="Household JSON"></textarea>
+    </div>
+    <p class="note" style="margin-top:8px">
+      <span class="privacy">Everything runs in your browser.</span>
+      Fields save into the JSON record automatically. Use Save file to keep it.
+    </p>
+    <p class="note" id="jsonErr" style="color:var(--c-debt)"></p>
+    <div id="loadWarn"></div>
+  </div>
+</section>
+
+<section class="panel" id="nowPanel">
+  <div class="phead"><h2>Where you are</h2><span class="tag">Section 1 · today</span></div>
+  <div class="pbody" id="nowBody"></div>
+</section>
+
+<section class="panel" id="capPanel">
+  <div class="phead"><h2>What it supports</h2><span class="tag">Section 2 · capacity</span></div>
+  <div class="pbody">
+    <div class="headline" id="headline"></div>
+    <div class="ribbonwrap" id="ribbon"></div>
+    <div id="milestones"></div>
+    <details style="margin-top:14px" id="ytDet" ontoggle="window._ytOpen = this.open">
+      <summary style="cursor:pointer; font-size:13px; font-weight:600">Year-by-year table (nominal dollars — click any row for the math)</summary>
+      <div id="yearTable" style="overflow-x:auto"></div>
+    </details>
+  </div>
+</section>
+
+<section class="panel" id="whatifPanel">
+  <div class="phead"><h2>What could happen</h2><span class="tag">Section 3 · assumptions &amp; scenarios</span></div>
+  <div class="pbody">
+    <div class="sliders" id="sliders"></div>
+    <div id="draworder"></div>
+    <div id="headroom"></div>
+    <div id="ladder"></div>
+    <div id="scenario"></div>
+    <p class="note" style="margin-top:10px">Sliders recompute everything instantly. Actions are added in the data section above.</p>
+  </div>
+</section>
+
+<section class="panel collapsible" id="fpdPanel">
+  <div class="phead" onclick="this.parentElement.classList.toggle('open'); renderFixedDraw();">
+    <h2>Fixed-percent draw view</h2><span class="tag">optional · one-year snapshot</span>
+  </div>
+  <div class="pbody" id="fpdBody"></div>
+</section>
+
+<section class="panel collapsible" id="cmpPanel">
+  <div class="phead" onclick="this.parentElement.classList.toggle('open'); render();">
+    <h2>Compare to current spending</h2><span class="tag">optional</span>
+  </div>
+  <div class="pbody" id="cmpBody"></div>
+</section>
+
+<section class="panel" id="estPanel">
+  <div class="phead"><h2>Estate line</h2><span class="tag">display only</span></div>
+  <div class="pbody estline" id="estBody"></div>
+</section>
+
+</main>
+<footer>
+  <p><strong>PFS pfs_index001.</strong> Deterministic, descriptive, client-side. Gates: engine v002 golden-verified (G1 re-anchored) · 28 engine asserts · 14 UI asserts green
+  (federal engine, NJ cliff, RMD timing, relocation, home sale, survivor mechanics) on three synthetic personas.</p>
+  <p class="mono" style="margin-top:6px">Simplifications S1–S5: brackets treated inflation-indexed · taxable yield as qualified dividends ·
+  spousal inheritance only · senior bonus deduction omitted · NJ exit-tax as note. All figures are estimates, not advice.</p>
+</footer>
+<script>
+/* =====================================================================
+   PFS — Personal Financial Status · Engine v003 · pfs_index007
+   Pure functions, no DOM. Real terms internally, nominal at display.
+   Documented v1 simplifications:
+     S1: Federal brackets & std deduction treated as inflation-indexed
+         (static in real terms). SS provisional thresholds likewise
+         (in reality unindexed — conservative direction: understates tax).
+     S2: Taxable bucket return split: yieldPct distributed annually as
+         qualified dividends; remainder appreciates (raises basis on
+         distribution reinvest = no; distributions are spent/available).
+     S3: Spousal inheritance only for deferred (rollover). Non-spouse
+         10-year rule out of scope in index001.
+     S4: Senior bonus deduction (OBBBA) omitted; overridable later.
+     S5: NJ exit-tax modeled as note only (prepayment, not true tax).
+     v002: recording-only detail for audit drop-downs (golden-verified).
+     v003: growth:"fixed" (constant-nominal streams, declining real) +
+     exact DOB support (person.dob) with first-year proration of
+     streams. Golden regression vs v002 for dob-less, fixed-less data.
+     v004 (this build): all additive; golden regression vs v003 for
+     data using none of the new fields.
+       #014 DATE-FIRST STREAMS: streams accept startDate/endDate
+            (ISO). Dates OVERRIDE ages and prorate their calendar
+            year by month ((13-m)/12 start · m/12 end). Ages remain
+            an entry convenience. Actions stay year-granular (scope).
+       #015 LIABILITY KINDS: rateResets:[{year,ratePct}] (ARM — the
+            latest reset at or before the year governs) and
+            interestOnly:true (margin — interest paid annually as
+            debt service, principal unchanged). Defaults reproduce
+            v003 exactly: amortizing when monthlyPI>0; interest
+            capitalizes when monthlyPI=0 and not interestOnly.
+       #016 BRACKET HEADROOM (display only): per-year distance from
+            taxable ordinary income to the next federal bracket edge
+            at capacity spending — terrain for placing conversions.
+            Descriptive; the app never recommends an amount.
+       #017 FIXED-PERCENT DRAW VIEW (display only): one-year
+            snapshot — X% from each liquid bucket, taxed at this
+            year's composition. Bridge to back-of-napkin habit; the
+            capacity solver remains the multi-year answer.
+       #018 SOURCED DEBT PAYDOWN: payDownDebt accepts fromBucket
+            (cash default = v003 behavior). deferred source is
+            ordinary income that tax year but NOT spendable cash;
+            taxable source realizes gains pro-rata. Enables the
+            "sell IRA/taxable to retire the margin" scenario.
+     v005 (this build): all additive; golden regression vs v003
+     reference for data using none of the new fields.
+       #019 BRACKET-FILL DRAW STRATEGY: assumptions.maxTargetBracket
+            (rate, e.g. 0.24, or percent, e.g. 24). When set, the
+            year's shortfall is funded deferred-FIRST up to the
+            target bracket's upper edge — the fill is found by
+            bisection against actual taxable ordinary income (so SS
+            phase-in and prior-pass realized gains are respected),
+            inside the existing 3-pass fixed point. The remainder
+            spills through the user's draw order with deferred
+            removed. The ceiling is a PREFERENCE: if only deferred
+            remains, the engine exceeds it rather than starve
+            spending (noted in the year's notes). Unset = static
+            draw order, bit-identical to v004. RMDs, conversions,
+            and #018 deferred paydowns consume headroom first, as
+            they must.
+       #020 TAX-FREE REIMBURSEMENT (HSA receipts convention): action
+            taxFreeReimbursement { amount, sourceBucketId,
+            payoffLiability? }. Bypasses the tax waterfall entirely;
+            proceeds retire the named liability, remainder to cash.
+            GUARD: source must be a roth- or cash-type bucket (model
+            an HSA as a roth-type bucket labeled HSA); other types
+            no-op with a note — no tax-free minting from an IRA.
+     v006 (this build): all additive; golden regression vs v005 —
+     warnings never change math, and no golden persona uses the new
+     fields or trips a warning-that-refuses.
+       #025 BUCKET-ROUTED ROTH CONVERSION: rothConversion accepts
+            sourceBucketId (must be deferred-type) and destBucketId
+            (must be roth-type and not isHSA). Absent IDs, the v005
+            type-level fallback applies (first deferred with balance
+            → first non-HSA roth), with an ambiguity warning when
+            more than one candidate exists. Buckets accept an
+            optional isHSA:true flag (the HSA-disguised-as-roth
+            convention made machine-readable): an isHSA bucket is
+            REFUSED as a conversion destination — conversions cannot
+            deposit into an HSA. Owner mismatch (person1 ↔ person2,
+            joint compatible with either) is REFUSED, not warned-and-
+            executed: it is a legal impossibility, not a preference.
+       #026 ACTION WARNINGS: run result gains warnings:[{year,
+            action, reason}]. Every action no-op or refusal path now
+            reports: rothConversion (no/invalid source or dest, HSA
+            dest, owner mismatch, zero amount, ambiguity),
+            sellAsset (asset missing or already empty), payDownDebt
+            (liability missing/paid, no source with balance),
+            taxFreeReimbursement (source missing — previously fully
+            silent — plus the existing wrong-type note, mirrored).
+            Warnings are recording-only: no branch that previously
+            executed now behaves differently, and no branch that
+            previously skipped now executes.
+   ===================================================================== */
+"use strict";
+
+/* ---------------- Tax tables (2026-federal-est, real/as-of dollars) -- */
+const TAX = {
+  version: "2026-federal-est",
+  ordinary: {
+    MFJ: [[0,.10],[24800,.12],[100800,.22],[211400,.24],[403550,.32],[512450,.35],[768700,.37]],
+    Single: [[0,.10],[12400,.12],[50400,.22],[105700,.24],[201775,.32],[256225,.35],[640600,.37]]
+  },
+  ltcg: {
+    MFJ: [[0,0],[98900,.15],[613700,.20]],
+    Single: [[0,0],[49450,.15],[545500,.20]]
+  },
+  stdDed: { MFJ: 32200, Single: 16100 },
+  aged65Add: { MFJ: 1650, Single: 2050 },       // per qualifying person
+  ssThresholds: { MFJ: [32000,44000], Single: [25000,34000] },
+  /* #021 NIIT: statutory MAGI thresholds are frozen in NOMINAL dollars (not
+     indexed); the engine works in real terms, so each year's real threshold
+     is the nominal figure deflated by that year's nomF — more of the plan
+     gets caught over time, exactly as under actual law. */
+  niit: { rate: 0.038, threshold: { MFJ: 250000, Single: 200000 } },
+  estateExemptionPerPerson: 15000000,
+  sec121: { MFJ: 500000, Single: 250000 }
+};
+
+const RMD_TABLE = {73:26.5,74:25.5,75:24.6,76:23.7,77:22.9,78:22.0,79:21.1,
+  80:20.2,81:19.4,82:18.5,83:17.7,84:16.8,85:16.0,86:15.2,87:14.4,88:13.7,
+  89:12.9,90:12.2,91:11.5,92:10.8,93:10.1,94:9.5,95:8.9,96:8.4,97:7.8,
+  98:7.3,99:6.8,100:6.4,101:6.0,102:5.6,103:5.2,104:4.9,105:4.6};
+
+function rmdStartAge(birthYear){ return birthYear >= 1960 ? 75 : 73; }
+
+function bracketTax(income, brackets){
+  let tax = 0;
+  for (let i = 0; i < brackets.length; i++){
+    const [lo, rate] = brackets[i];
+    const hi = i + 1 < brackets.length ? brackets[i+1][0] : Infinity;
+    if (income > lo) tax += (Math.min(income, hi) - lo) * rate;
+  }
+  return tax;
+}
+
+/* LTCG/QD stacked on ordinary taxable income */
+function ltcgTax(ordTaxable, gains, brackets){
+  let tax = 0, start = Math.max(0, ordTaxable);
+  for (let i = 0; i < brackets.length; i++){
+    const [lo, rate] = brackets[i];
+    const hi = i + 1 < brackets.length ? brackets[i+1][0] : Infinity;
+    const from = Math.max(start, lo), to = Math.min(start + gains, hi);
+    if (to > from) tax += (to - from) * rate;
+  }
+  return tax;
+}
+
+/* Taxable portion of Social Security via provisional income */
+function taxableSS(ssTotal, otherOrdinary, taxExemptInt, filing){
+  if (ssTotal <= 0) return 0;
+  const [t1, t2] = TAX.ssThresholds[filing];
+  const prov = otherOrdinary + taxExemptInt + ssTotal * 0.5;
+  if (prov <= t1) return 0;
+  if (prov <= t2) return Math.min(0.5 * (prov - t1), 0.5 * ssTotal);
+  return Math.min(0.85 * (prov - t2) + Math.min(0.5 * (t2 - t1), 0.5 * ssTotal),
+                  0.85 * ssTotal);
+}
+
+/* ---------------- Federal engine ------------------------------------ */
+function federalTax(y){
+  // y: {filing, ages[], wages, pension, deferredDraws, conversions,
+  //     interest, rental, ss, qualDiv, ltcgRealized, taxDriftPP}
+  const filing = y.filing;
+  const otherOrd = y.wages + y.pension + y.deferredDraws + y.conversions +
+                   y.interest + y.rental;
+  const ssTaxable = taxableSS(y.ss, otherOrd + y.qualDiv + y.ltcgRealized, 0, filing);
+  let ded = TAX.stdDed[filing];
+  y.ages.forEach(a => { if (a >= 65) ded += TAX.aged65Add[filing]; });
+  const ordTaxable = Math.max(0, otherOrd + ssTaxable - ded);
+  const gains = Math.max(0, y.qualDiv + y.ltcgRealized -
+                Math.max(0, ded - (otherOrd + ssTaxable)));
+  const ordTax = bracketTax(ordTaxable, TAX.ordinary[filing]);
+  const gainsTax = ltcgTax(ordTaxable, gains, TAX.ltcg[filing]);
+  let tax = ordTax + gainsTax;
+  let driftTax = 0;
+  if (y.taxDriftPP){ driftTax = (ordTaxable + gains) * (y.taxDriftPP / 100); tax += driftTax; }
+  /* #021 NIIT (3.8%): min(net investment income, MAGI over the threshold).
+     NII = interest + rental + qualified dividends + realized gains (passive
+     investment income). IRA/deferred draws and Roth conversions are NOT NII
+     but DO raise MAGI — a big conversion can push otherwise-untaxed
+     investment income over the line. MAGI ≈ AGI here (no foreign addbacks).
+     Threshold is nominal-frozen: deflate by this year's nomF (default 1). */
+  const magi = otherOrd + ssTaxable + y.qualDiv + y.ltcgRealized;
+  const nii = Math.max(0, y.interest + y.rental + y.qualDiv + y.ltcgRealized);
+  const niitThr = TAX.niit.threshold[filing] / (y.nomF || 1);
+  const niit = TAX.niit.rate * Math.min(nii, Math.max(0, magi - niitThr));
+  tax += niit;
+  return { tax: Math.max(0, tax), ordTaxable, ssTaxable, gains,
+           deduction: ded, otherOrd, ordTax, gainsTax, driftTax,
+           niit, magi, niitThr };
+}
+
+/* ---------------- State modules ------------------------------------- */
+const NJ_BRACKETS = {
+  MFJ: [[0,.014],[20000,.0175],[50000,.0245],[70000,.035],[80000,.05525],
+        [150000,.0637],[500000,.0897],[1000000,.1075]],
+  Single: [[0,.014],[20000,.0175],[35000,.035],[40000,.05525],
+           [75000,.0637],[500000,.0897],[1000000,.1075]]
+};
+
+const STATE_MODULES = {
+  FL: {
+    id: "FL", label: "Florida",
+    computeTax(){ return { stateTax: 0, notes: [] }; },
+    estateNote(){ return "FL: no state estate or inheritance tax."; }
+  },
+  NJ: {
+    id: "NJ", label: "New Jersey",
+    computeTax(y){
+      const notes = [];
+      // NJ: cap gains & dividends taxed as ordinary; SS exempt.
+      let retirementIncome = y.pension + y.deferredDraws + y.conversions;
+      let gross = y.wages + retirementIncome + y.interest + y.rental +
+                  y.qualDiv + y.ltcgRealized;
+      // Retirement income exclusion with cliff (approx current rules)
+      const cap = y.filing === "MFJ" ? 100000 : 75000;
+      let exclPct = 0;
+      if (gross <= 100000) exclPct = 1;
+      else if (gross <= 125000) exclPct = 0.5;
+      else if (gross <= 150000) exclPct = 0.25;
+      const excl = Math.min(retirementIncome, cap) * exclPct;
+      if (exclPct > 0 && retirementIncome > 0)
+        notes.push("NJ retirement exclusion applied: $" + Math.round(excl).toLocaleString());
+      if (gross > 150000 && retirementIncome > 0)
+        notes.push("NJ retirement exclusion lost (income over $150k cliff)");
+      const njTaxable = Math.max(0, gross - excl - 1000 * (y.filing === "MFJ" ? 2 : 1));
+      let tax = bracketTax(njTaxable, NJ_BRACKETS[y.filing]);
+      if (y.taxDriftPP) tax += njTaxable * (y.taxDriftPP / 100);
+      return { stateTax: tax, notes,
+        detail: { gross, retirementIncome, exclusion: excl, exclPct, njTaxable,
+          ssExempt: y.ss, capGainsAsOrdinary: y.ltcgRealized } };
+    },
+    saleNote(gain, price){
+      return "NJ exit-tax note: closing prepayment = max(2% of price, 10.75% of gain) if departing; largely recovered at filing.";
+    },
+    estateNote(){ return "NJ: estate tax repealed; inheritance tax applies to non-Class-A beneficiaries (spouse/descendants exempt)."; }
+  },
+  GENERIC: {
+    id: "GENERIC", label: "Generic (effective rate)",
+    computeTax(y){
+      const cfg = y.stateCfg || { ratePct: 5, exemptSS: true, exemptRetirement: false, localPct: 0 };
+      let base = y.wages + y.interest + y.rental + y.qualDiv + y.ltcgRealized;
+      if (!cfg.exemptRetirement) base += y.pension + y.deferredDraws + y.conversions;
+      if (!cfg.exemptSS) base += y.ss * 0.85;
+      const tax = Math.max(0, base) * ((cfg.ratePct + (cfg.localPct||0)) / 100);
+      return { stateTax: tax, notes: [],
+        detail: { base, ratePct: cfg.ratePct, localPct: cfg.localPct||0 } };
+    },
+    estateNote(){ return "Generic state: verify estate/inheritance rules for your state."; }
+  }
+};
+
+/* ---------------- Timeline projection ------------------------------- */
+function cloneData(d){ return JSON.parse(JSON.stringify(d)); }
+
+function birthYearOf(p){
+  if (!p) return null;
+  if (p.dob){ const y = parseInt(String(p.dob).slice(0,4)); if (!isNaN(y)) return y; }
+  return p.birthYear;
+}
+function birthMonthOf(p){
+  if (p && p.dob){ const m = parseInt(String(p.dob).slice(5,7)); if (!isNaN(m)) return m; }
+  return null;
+}
+function ageOf(p, year){ return p ? year - birthYearOf(p) : null; }
+
+/* v004 #014 — unified stream gating & proration. Returns a 0..1 factor.
+   startDate/endDate (ISO) override startAge/endAge; a dated boundary
+   prorates its calendar year by month. Age path reproduces v003
+   exactly (incl. first-year DOB proration). */
+function streamActiveFactor(s, owner, year){
+  let f = 1;
+  const sd = s.startDate || null, ed = s.endDate || null;
+  if (sd){
+    const sy = parseInt(String(sd).slice(0,4)), sm = parseInt(String(sd).slice(5,7)) || 1;
+    if (isNaN(sy) || year < sy) return 0;
+    if (year === sy) f *= (13 - sm) / 12;
+  } else if (s.startAge != null){
+    const a = ageOf(owner, year);
+    if (a < s.startAge) return 0;
+    const bm = birthMonthOf(owner);
+    if (bm && a === s.startAge) f *= (13 - bm) / 12;
+  }
+  if (ed){
+    const ey = parseInt(String(ed).slice(0,4)), em = parseInt(String(ed).slice(5,7)) || 12;
+    if (!isNaN(ey)){
+      if (year > ey) return 0;
+      if (year === ey) f *= em / 12;
+    }
+  } else if (s.endAge != null){
+    if (ageOf(owner, year) > s.endAge) return 0;
+  }
+  return f;
+}
+
+/* v004 #015 — effective liability rate for a year: base ratePct unless
+   a rate reset at or before this year applies (latest one governs). */
+function liabRate(l, year){
+  let r = l.ratePct || 0, best = -Infinity;
+  (l.rateResets || []).forEach(x => {
+    if (x && x.year != null && year >= x.year && x.year > best && x.ratePct != null){
+      best = x.year; r = x.ratePct;
+    }
+  });
+  return r / 100;
+}
+
+/* v005 #019 — upper edge of the target marginal bracket. Accepts a rate
+   (0.24) or a percent (24). If the exact rate isn't in the filing's
+   table (e.g. after a filing flip), the highest bracket at or below the
+   target governs. Top bracket → Infinity. */
+function bracketCeiling(target, filing){
+  const t = target > 1 ? target/100 : target;
+  const br = TAX.ordinary[filing];
+  let ceil = 0;
+  for (let i = 0; i < br.length; i++){
+    if (br[i][1] <= t + 1e-9) ceil = (i+1 < br.length) ? br[i+1][0] : Infinity;
+  }
+  return ceil;
+}
+
+function runTimeline(data, opts){
+  // opts: { spendOverride: number|null }  spendOverride = constant real baseline
+  const d = cloneData(data);
+  const now = new Date(d.meta.asOfDate || "2026-01-01").getFullYear();
+  const A = d.assumptions || {};
+  const infl = (A.inflationPct != null ? A.inflationPct : 2.5) / 100;
+  const drawOrder = A.drawOrder || ["cash","taxable","deferred","roth"];
+  const p1 = d.household.person1, p2 = d.household.person2 || null;
+  const horizon = d.household.endYear != null ? Math.round(d.household.endYear)
+                : now + (d.household.planToAge - ageOf(p1, now));   // #021: end-year horizon (legacy plan-to-age translated at load)
+  let filing = d.household.filingStatus || (p2 ? "MFJ" : "Single");
+  let stateId = d.household.stateModule || "GENERIC";
+  let alive = { person1: true, person2: !!p2 };
+  const rows = [];
+  let failed = false;
+  const actionMarkers = [];
+  const warnings = [];   /* #026: {year, action, reason} — recording-only */
+
+  const liquidTypes = ["cash","taxable","deferred","roth"];
+  const buckets = d.balanceSheet.map(b => Object.assign({}, b,
+    { basis: b.costBasis != null ? b.costBasis : b.value }));
+  const liabs = (d.liabilities || []).map(l => Object.assign({}, l));
+  let streams = d.incomeStreams.map(s => Object.assign({}, s));
+  let deathThisRun = null;
+
+  for (let year = now; year <= horizon; year++){
+    const t = year - now;
+    const ages = [];
+    if (alive.person1) ages.push(ageOf(p1, year));
+    if (alive.person2 && p2) ages.push(ageOf(p2, year));
+    const notes = [];
+
+    /* 1 — ACTIONS */
+    (d.actions || []).forEach(act => {
+      if (act.year !== year || act._done) return;
+      act._done = true;
+      if (act.type === "relocate"){
+        stateId = act.to || act.stateModule || stateId;
+        actionMarkers.push({ year, label: act.label || ("Relocate to " + stateId) });
+      }
+      if (act.type === "sellAsset"){
+        const b = buckets.find(x => x.id === act.assetId);
+        if (b && b.value > 0){
+          let gain = Math.max(0, b.value - b.basis);
+          if (b.taxType === "residence"){
+            const ex = TAX.sec121[filing];
+            gain = Math.max(0, gain - ex);
+            notes.push("§121 exclusion applied to home sale");
+            if (stateId === "NJ") notes.push(STATE_MODULES.NJ.saleNote(gain, b.value));
+          }
+          let proceeds = b.value;
+          if (act.payoffLiability){
+            const l = liabs.find(x => x.id === act.payoffLiability);
+            if (l){ proceeds -= l.balance; l.balance = 0; }
+          }
+          b._pendingGain = gain;               // realized this tax year
+          const target = buckets.find(x => x.taxType === (act.proceedsTo || "cash"));
+          if (target){ target.value += proceeds; target.basis += proceeds; }
+          else buckets.push({ id: "cash_auto", label: "Cash (sale proceeds)",
+            taxType: "cash", value: proceeds, basis: proceeds,
+            expectedRealReturn: 0, owner: "joint" });
+          b.value = 0; b.basis = 0;
+          actionMarkers.push({ year, label: act.label || ("Sell " + (b.label||act.assetId)) });
+        } else {
+          /* #026 */
+          warnings.push({ year, action: act.label || "Sell asset",
+            reason: !b ? ("skipped: asset '" + (act.assetId||"(none chosen)") + "' not found on the balance sheet")
+                       : ("skipped: '" + (b.label||b.id) + "' already has no value this year") });
+        }
+      }
+      if (act.type === "rothConversion"){
+        /* #025: bucket-routed source/destination; type-level fallback with
+           ambiguity warning; isHSA destination refused; owner mismatch
+           refused. #026: every skip/refusal path reports a warning. */
+        const aName = act.label || "Roth conversion";
+        const warn = reason => warnings.push({ year, action: aName, reason });
+        let src = null, dst = null;
+        if (act.sourceBucketId){
+          const s = buckets.find(x => x.id === act.sourceBucketId);
+          if (!s) warn("skipped: source bucket '" + act.sourceBucketId + "' not found");
+          else if (s.taxType !== "deferred")
+            warn("skipped: source '" + (s.label||s.id) + "' is " + s.taxType + "-type — conversions draw from deferred only");
+          else if (!(s.value > 0))
+            warn("skipped: source '" + (s.label||s.id) + "' has no balance this year");
+          else src = s;
+        } else {
+          const cands = buckets.filter(x => x.taxType === "deferred" && x.value > 0);
+          if (!cands.length) warn("skipped: no deferred-type bucket with a balance");
+          else {
+            src = cands[0];
+            if (cands.length > 1)
+              warn("ambiguous source: " + cands.length + " deferred buckets — using '" +
+                (src.label||src.id) + "'; set a source bucket on the action to choose");
+          }
+        }
+        if (act.destBucketId){
+          const t = buckets.find(x => x.id === act.destBucketId);
+          if (!t) warn("skipped: destination bucket '" + act.destBucketId + "' not found");
+          else if (t.taxType !== "roth")
+            warn("skipped: destination '" + (t.label||t.id) + "' is " + t.taxType + "-type, not Roth");
+          else if (t.isHSA)
+            warn("refused: destination '" + (t.label||t.id) + "' is an HSA — a conversion cannot deposit into an HSA");
+          else dst = t;
+        } else {
+          const cands = buckets.filter(x => x.taxType === "roth" && !x.isHSA);
+          if (!cands.length)
+            warn(buckets.some(x => x.taxType === "roth" && x.isHSA)
+              ? "skipped: the only roth-type bucket is flagged as an HSA — no eligible Roth destination exists"
+              : "skipped: no roth-type destination bucket exists — add one to the balance sheet");
+          else {
+            dst = cands[0];
+            if (cands.length > 1)
+              warn("ambiguous destination: " + cands.length + " Roth buckets — using '" +
+                (dst.label||dst.id) + "'; set a destination bucket on the action to choose");
+          }
+        }
+        if (src && dst){
+          const so = src.owner || "joint", dow = dst.owner || "joint";
+          if (so !== dow && so !== "joint" && dow !== "joint"){
+            warn("refused: source is owned by " + so + " but destination by " + dow +
+              " — a conversion must stay within one owner's accounts");
+            src = null;
+          }
+        }
+        const amt = Math.min(act.amount || 0, src ? src.value : 0);
+        if (src && dst && amt > 0){
+          src.value -= amt; dst.value += amt; dst.basis += amt;
+          act._converted = amt;
+          actionMarkers.push({ year, label: act.label || ("Roth conversion $" + amt.toLocaleString()) });
+        } else if (src && dst){
+          warn("skipped: no conversion amount set");
+        }
+      }
+      if (act.type === "payDownDebt"){
+        const l = liabs.find(x => x.id === act.liabilityId);
+        const srcType = act.fromBucket || "cash";          // v004 #018
+        const src = buckets.find(x => x.taxType === srcType && x.value > 0);
+        if (l && src){
+          const amt = Math.min(act.amount || l.balance, l.balance, src.value);
+          if (amt > 0){
+            l.balance -= amt; src.value -= amt;
+            if (srcType === "taxable"){
+              const gainFrac = Math.max(0, (src.value + amt) - src.basis) / (src.value + amt);
+              src._pendingGain = (src._pendingGain || 0) + amt * gainFrac;  // realized this tax year
+              src.basis -= amt * (1 - gainFrac);
+            } else if (srcType === "deferred"){
+              act._paidDeferred = amt;                     // ordinary income this tax year
+            } else {
+              src.basis = Math.max(0, src.basis - amt);
+            }
+            actionMarkers.push({ year, label: act.label ||
+              ("Pay down debt from " + srcType) });
+          } else {
+            warnings.push({ year, action: act.label || "Pay down debt",   /* #026 */
+              reason: "skipped: nothing to pay — liability already at zero or amount is zero" });
+          }
+        } else {
+          /* #026 */
+          warnings.push({ year, action: act.label || "Pay down debt",
+            reason: !l ? ("skipped: liability '" + (act.liabilityId||"(none chosen)") + "' not found")
+                       : ("skipped: no " + srcType + "-type bucket with a balance to pay from") });
+        }
+      }
+      if (act.type === "taxFreeReimbursement"){
+        const src = buckets.find(x => x.id === act.sourceBucketId);
+        if (src && (src.taxType === "roth" || src.taxType === "cash")){
+          const amt = Math.min(act.amount || 0, src.value);
+          if (amt > 0){
+            src.value -= amt; src.basis = Math.max(0, src.basis - amt);
+            let rem = amt;
+            if (act.payoffLiability){
+              const l = liabs.find(x => x.id === act.payoffLiability);
+              if (l){ const pay = Math.min(rem, l.balance); l.balance -= pay; rem -= pay; }
+            }
+            if (rem > 0){
+              const cash = buckets.find(x => x.taxType === "cash");
+              if (cash){ cash.value += rem; cash.basis += rem; }
+              else buckets.push({ id:"cash_reimb", label:"Cash (reimbursement)",
+                taxType:"cash", value: rem, basis: rem, expectedRealReturn: 0, owner:"joint" });
+            }
+            notes.push("Tax-free reimbursement (saved receipts) — outside the tax waterfall");
+            actionMarkers.push({ year, label: act.label || ("Tax-free reimbursement $" + amt.toLocaleString()) });
+          } else {
+            warnings.push({ year, action: act.label || "Tax-free reimbursement",   /* #026 */
+              reason: !(act.amount > 0) ? "skipped: no amount set"
+                : ("skipped: source '" + (src.label||src.id) + "' has no balance this year") });
+          }
+        } else if (src){
+          notes.push("Tax-free reimbursement skipped: source must be a Roth/HSA- or cash-type bucket");
+          warnings.push({ year, action: act.label || "Tax-free reimbursement",   /* #026 */
+            reason: "skipped: source '" + (src.label||src.id) + "' is " + src.taxType + "-type — must be a Roth/HSA- or cash-type bucket" });
+        } else {
+          /* #026: previously fully silent */
+          warnings.push({ year, action: act.label || "Tax-free reimbursement",
+            reason: "skipped: source bucket '" + (act.sourceBucketId||"(none chosen)") + "' not found" });
+        }
+      }
+      if (act.type === "death"){
+        const who = act.person;
+        if (alive[who]){
+          alive[who] = false;
+          deathThisRun = { year, who };
+          const survivor = who === "person1" ? "person2" : "person1";
+          // Deferred: spousal rollover (S3)
+          buckets.forEach(b => { if (b.owner === who) b.owner = survivor; });
+          // Taxable step-up: decedent-owned 100%, joint 50%
+          buckets.forEach(b => {
+            if (b.taxType === "taxable" || b.taxType === "residence" || b.taxType === "illiquid"){
+              if (b.owner === survivor && b._wasDecedent) return;
+              const stepFrac = (b.owner === "joint") ? 0.5 : (b.owner === survivor ? 0 : 1);
+              b.basis = b.basis + (b.value - b.basis) * stepFrac;
+            }
+          });
+          // Income streams: SS keep-the-larger; others via survivorPct
+          const ssStreams = streams.filter(s => s.taxCharacter === "socialSecurity");
+          if (ssStreams.length > 1){
+            const best = ssStreams.reduce((a,b) =>
+              (a.annual * (a.owner===who ? (a.survivorPct||0)/100 : 1)) >=
+              (b.annual * (b.owner===who ? (b.survivorPct||0)/100 : 1)) ? a : b);
+            streams = streams.filter(s => s.taxCharacter !== "socialSecurity" || s === best);
+            if (best.owner === who){
+              const decAge = ageOf(d.household[who], year);
+              if (best.startAge == null || decAge >= best.startAge) best.startAge = null;
+              best.owner = survivor;
+            }
+            notes.push("Survivor keeps larger Social Security benefit");
+          }
+          streams.forEach(s => {
+            if (s.owner === who && s.taxCharacter !== "socialSecurity"){
+              s.annual *= (s.survivorPct != null ? s.survivorPct : 0) / 100;
+              s.owner = survivor;
+            }
+          });
+          // Filing status: single from following tax year (v1 simplification)
+          filing = "Single";
+          actionMarkers.push({ year, label: act.label || ("Death of " + (d.household[who].name || who)) });
+        }
+      }
+    });
+
+    /* 2 — INCOME */
+    let wages=0, pension=0, ss=0, interest=0, rental=0, annuity=0;
+    streams.forEach(s => {
+      const owner = d.household[s.owner] || p1;
+      if (!alive[s.owner || "person1"] && s.owner) return;
+      const af = streamActiveFactor(s, owner, year);   // v004: dates override ages
+      if (af === 0) return;
+      let amt = s.annual;
+      if (typeof s.growth === "number") amt *= Math.pow(1 + s.growth/100, t); // real growth
+      // growth:"inflation" => flat in real terms
+      if (s.growth === "fixed") amt /= Math.pow(1 + infl, t); // constant nominal, declining real
+      amt *= af;   // start/end gating + calendar-year proration
+      switch (s.taxCharacter){
+        case "wages": wages += amt; break;
+        case "socialSecurity": ss += amt; break;
+        case "pension": pension += amt; break;
+        case "interest": interest += amt; break;
+        case "rental": rental += amt; break;
+        case "annuity": pension += amt; break;
+        default: wages += amt;
+      }
+    });
+
+    // RMDs (forced, from deferred, per owner)
+    let rmd = 0;
+    ["person1","person2"].forEach(pk => {
+      const p = d.household[pk];
+      if (!p || !alive[pk]) return;
+      const a = ageOf(p, year);
+      if (a >= rmdStartAge(birthYearOf(p))){
+        const divisor = RMD_TABLE[Math.min(a, 105)] || 4.5;
+        const bal = buckets.filter(b => b.taxType === "deferred" &&
+          (b.owner === pk || b.owner === "joint")).reduce((s,b)=>s+b.value,0);
+        if (bal > 0){
+          const amt = bal / divisor;
+          rmd += amt;
+          let rem = amt;
+          buckets.forEach(b => {
+            if (rem <= 0 || b.taxType !== "deferred") return;
+            if (b.owner !== pk && b.owner !== "joint") return;
+            const take = Math.min(b.value, rem); b.value -= take; rem -= take;
+          });
+        }
+      }
+    });
+
+    // Taxable-bucket distributions (S2): yieldPct as qualified dividends
+    let qualDiv = 0;
+    buckets.forEach(b => {
+      if (b.taxType === "taxable" && b.yieldPct){
+        qualDiv += b.value * (b.yieldPct/100);
+      }
+      if (b.taxType === "cash" && b.yieldPct){
+        interest += b.value * (b.yieldPct/100);
+      }
+    });
+
+    const conversions = (d.actions||[]).filter(a=>a.year===year&&a._converted)
+      .reduce((s,a)=>s+a._converted,0);
+    // v004 #018: deferred dollars sent to a lender are ordinary income but not spendable cash
+    const payoffDeferred = (d.actions||[]).filter(a=>a.year===year&&a._paidDeferred)
+      .reduce((s,a)=>s+a._paidDeferred,0);
+
+    /* 3 — SPENDING NEED (real) */
+    const S = d.spending || {};
+    let baseline = opts && opts.spendOverride != null ? opts.spendOverride
+                 : (S.currentAnnual || 0);
+    if (!(opts && opts.spendOverride != null)){
+      (S.phases||[]).forEach(ph => {
+        if (ageOf(p1, year) >= ph.fromAge) baseline *= ph.multiplier;
+      });
+    }
+    let lump = (S.lumpEvents||[]).filter(e=>e.year===year)
+      .reduce((s,e)=>s+e.amount,0);
+    let debtService = 0;
+    liabs.forEach(l => {
+      if (l.balance <= 0) return;
+      if (l.interestOnly) debtService += l.balance * liabRate(l, year) / Math.pow(1+infl, t);
+      else debtService += (l.monthlyPI||0)*12 / Math.pow(1+infl, t);
+    });
+    const spendNeed = baseline + lump + debtService;
+
+    /* 4+5 — FUNDING, DRAWS & TAX (fixed-point, 3 passes) */
+    let deferredDraws = 0, ltcgRealized = 0, taxTotal = 0, stateTax = 0, fed = null;
+    let stDetail = null, draws = null;
+    const pendingGain = buckets.reduce((s,b)=>s+(b._pendingGain||0),0);
+    buckets.forEach(b => delete b._pendingGain);
+    const driftPP = (A.taxDrift && year >= (A.taxDrift.fromYear||Infinity)) ? A.taxDrift.deltaPP : 0;
+    const nomFY = Math.pow(1 + infl, t + 1);   // #021: year's nominal factor — deflates the frozen NIIT threshold
+    /* #019: bracket-fill strategy engages only when maxTargetBracket is set */
+    const tb = A.maxTargetBracket;
+    const targetRate = tb == null ? null : (tb > 1 ? tb/100 : tb);
+    let prevSpillLtcg = 0;   // gains realized by draws in the previous pass
+
+    const snap = buckets.map(b => ({ value: b.value, basis: b.basis }));
+    for (let pass = 0; pass < 3; pass++){
+      buckets.forEach((b,i) => { b.value = snap[i].value; b.basis = snap[i].basis; });
+      deferredDraws = 0; ltcgRealized = pendingGain;
+      draws = { cash: 0, taxable: 0, deferred: 0, roth: 0 };
+      const cashIncome = wages + pension + ss + interest + rental + qualDiv + rmd + conversions * 0;
+      let need = spendNeed + taxTotal - cashIncome;
+      // RMD cash already counted as income; conversions are not cash income
+      const takeFrom = (tt, cap) => {              // per-bucket take, v003 arithmetic
+        for (const b of buckets){
+          if (cap <= 0) break;
+          if (b.taxType !== tt || b.value <= 0) continue;
+          const take = Math.min(b.value, cap);
+          if (tt === "taxable"){
+            const gainFrac = b.value > 0 ? Math.max(0,(b.value - b.basis))/b.value : 0;
+            ltcgRealized += take * gainFrac;
+            b.basis -= take * (1 - gainFrac);
+          }
+          if (tt === "deferred") deferredDraws += take;
+          if (tt === "cash") b.basis -= take;
+          draws[tt] += take;
+          b.value -= take; need -= take; cap -= take;
+        }
+      };
+      if (need > 0){
+        let order = drawOrder;
+        if (targetRate != null){
+          /* deferred-first, bisected against ACTUAL taxable ordinary income
+             so SS phase-in and prior-pass realized gains are respected */
+          const ceil = bracketCeiling(targetRate, filing);
+          const defAvail = buckets.filter(b=>b.taxType==="deferred").reduce((s,b)=>s+b.value,0);
+          const evalOrd = defX => federalTax({ filing, ages, wages, pension,
+            deferredDraws: rmd + payoffDeferred + defX, conversions,
+            interest, rental, ss, qualDiv,
+            ltcgRealized: pendingGain + prevSpillLtcg, nomF: nomFY,
+            taxDriftPP: driftPP, stateCfg: A.stateOverrides }).ordTaxable;
+          let defDraw = 0;
+          const hiCap = Math.min(need, defAvail);
+          if (hiCap > 0 && ceil > 0 && evalOrd(0) < ceil - 0.5){
+            if (evalOrd(hiCap) <= ceil) defDraw = hiCap;
+            else {
+              let lo = 0, hi = hiCap;
+              for (let it = 0; it < 20; it++){
+                const mid = (lo + hi)/2;
+                if (evalOrd(mid) <= ceil) lo = mid; else hi = mid;
+              }
+              defDraw = lo;
+            }
+          }
+          if (defDraw > 0) takeFrom("deferred", defDraw);
+          order = drawOrder.filter(t => t !== "deferred");
+        }
+        for (const tt of order){
+          if (need <= 0) break;
+          takeFrom(tt, need);
+        }
+        if (targetRate != null && need > 1){
+          /* ceiling is a preference, not a constraint: exceed it rather
+             than starve spending when only deferred remains */
+          const before = need;
+          takeFrom("deferred", need);
+          const msg = "Bracket target exceeded — deferred drawn past the ceiling to fund spending";
+          if (before - need > 0.5 && !notes.includes(msg)) notes.push(msg);
+        }
+      }
+      if (need > 1) { failed = true; }
+      const yTax = { filing, ages, wages, pension,
+        deferredDraws: deferredDraws + rmd + payoffDeferred, conversions,
+        interest, rental, ss, qualDiv, ltcgRealized,
+        taxDriftPP: driftPP, nomF: nomFY,
+        stateCfg: A.stateOverrides };
+      fed = federalTax(yTax);
+      const st = (STATE_MODULES[stateId] || STATE_MODULES.GENERIC).computeTax(yTax);
+      stateTax = st.stateTax; stDetail = st.detail || null;
+      st.notes.forEach(n => { if (!notes.includes(n)) notes.push(n); });
+      taxTotal = fed.tax + stateTax;
+      prevSpillLtcg = ltcgRealized - pendingGain;
+    }
+
+    /* 6 — GROWTH & DEBT (growth net of distributed yield) */
+    buckets.forEach(b => {
+      const r = (b.expectedRealReturn != null ? b.expectedRealReturn : 0)/100;
+      const yld = (b.yieldPct||0)/100;
+      const g = Math.max(-1, r - ((b.taxType==="taxable"||b.taxType==="cash") ? yld : 0));
+      b.value *= (1 + g);
+    });
+    liabs.forEach(l => {
+      if (l.balance <= 0) return;
+      if (l.interestOnly) return;               // interest paid via debt service; principal unchanged
+      const rate = liabRate(l, year);           // v004: rate resets (ARM)
+      const pay = (l.monthlyPI||0)*12;
+      l.balance = Math.max(0, l.balance*(1+rate) - pay);
+    });
+
+    /* 7 — RECORD ROW (real values; nominal factor supplied) */
+    const nomF = Math.pow(1 + infl, t + 1);
+    const byType = {};
+    liquidTypes.concat(["residence","illiquid"]).forEach(tt => byType[tt] = 0);
+    buckets.forEach(b => { byType[b.taxType] = (byType[b.taxType]||0) + b.value; });
+    const liquid = liquidTypes.reduce((s,tt)=>s+byType[tt],0);
+    const debt = liabs.reduce((s,l)=>s+l.balance,0);
+    rows.push({
+      year, ages: ages.slice(), filing, stateId,
+      income: { wages, pension, ss, interest, rental, qualDiv, rmd },
+      spend: spendNeed, taxes: { federal: fed.tax, state: stateTax, total: taxTotal },
+      byType: Object.assign({}, byType), liquid,
+      netWorth: liquid + byType.residence + byType.illiquid - debt,
+      debt, nomF, notes, failed: failed,
+      detail: {
+        fed: { otherOrd: fed.otherOrd, ssGross: ss, ssTaxable: fed.ssTaxable,
+          deduction: fed.deduction, ordTaxable: fed.ordTaxable, ordTax: fed.ordTax,
+          gains: fed.gains, gainsTax: fed.gainsTax, driftTax: fed.driftTax,
+          niit: fed.niit, magi: fed.magi, niitThr: fed.niitThr,
+          conversions, rmd, deferredDraws },
+        state: stDetail,
+        draws: draws,
+        bucketList: buckets.filter(b => b.value > 0.5)
+          .map(b => ({ label: b.label, taxType: b.taxType, value: b.value })),
+        liabList: liabs.filter(l => l.balance > 0.5)
+          .map(l => ({ label: l.label, balance: l.balance }))
+      }
+    });
+    if (failed && opts && opts.stopOnFail) break;
+  }
+
+  return { rows, failed, actionMarkers, warnings, horizon,
+    estate: estateLine(rows[rows.length-1], filing, stateId) };
+}
+
+function estateLine(lastRow, filing, stateId){
+  if (!lastRow) return null;
+  const exemption = TAX.estateExemptionPerPerson * (filing === "MFJ" ? 2 : 1);
+  return {
+    netWorthAtHorizon: lastRow.netWorth,
+    federalExemption: exemption,
+    aboveExemption: Math.max(0, lastRow.netWorth - exemption),
+    stateNote: (STATE_MODULES[stateId]||STATE_MODULES.GENERIC).estateNote(lastRow.netWorth)
+  };
+}
+
+/* ---------------- Sustainable Real Spend (binary search) ------------ */
+function solveSustainableSpend(data){
+  let lo = 0, hi = 2000000;
+  // expand hi if even hi is sustainable
+  for (let k = 0; k < 5; k++){
+    const r = runTimeline(data, { spendOverride: hi, stopOnFail: true });
+    if (!r.failed) { lo = hi; hi *= 2; } else break;
+  }
+  for (let i = 0; i < 40; i++){
+    const mid = (lo + hi)/2;
+    const r = runTimeline(data, { spendOverride: mid, stopOnFail: true });
+    if (r.failed) hi = mid; else lo = mid;
+  }
+  return Math.floor(lo);
+}
+
+/* ---------------- Exports (node testing) ---------------------------- */
+if (typeof module !== "undefined" && module.exports){
+  module.exports = { TAX, STATE_MODULES, federalTax, taxableSS, bracketTax,
+    ltcgTax, runTimeline, solveSustainableSpend, rmdStartAge, RMD_TABLE,
+    streamActiveFactor, liabRate, bracketCeiling };
+}
+
+/* ================= PFS UI · pfs_index012 ============================ */
+/* index012 change-set (play-session punch list): drop-downs keep
+   their open state across edits; native date picker for DOB with a
+   Key Dates readout (SS start, RMD start, per person); ribbon gets
+   plain numbers every 5 years and a clearer dashed-line label; the
+   capacity headline explains how it is found and names person 1 as
+   the horizon; year table explains why spend changes; tax walk
+   names its tables; LEGACY FLOOR — capacity can be solved with a
+   required amount left at the horizon (UI-side solver).             */
+const BUCKET_META = {
+  cash:      {label:"Cash",        color:"var(--c-cash)",      hex:"#949CA8"},
+  taxable:   {label:"Taxable brokerage", color:"var(--c-taxable)", hex:"#5E7F98"},
+  deferred:  {label:"Tax-deferred (IRA/401k)", color:"var(--c-deferred)", hex:"#9A8563"},
+  roth:      {label:"Roth",        color:"var(--c-roth)",      hex:"#639880"},
+  residence: {label:"Residence",   color:"var(--c-residence)", hex:"#837099"},
+  illiquid:  {label:"Illiquid",    color:"var(--c-illiquid)",  hex:"#98636F"}
+};
+const ORDER = ["cash","taxable","deferred","roth","residence","illiquid"];
+const TAXCHARS = ["wages","socialSecurity","pension","interest","qualifiedDividends","rental","annuity","taxFree"];
+
+const PERSONAS = { A: {
+  meta: { asOfDate: "2026-01-01" },
+  household: { person1: { name:"A", birthYear: 1986 }, filingStatus: "Single",
+    stateModule: "NJ", planToAge: 95 },
+  incomeStreams: [
+    { name:"Salary", owner:"person1", annual: 160000, startAge: null, endAge: 64,
+      growth: 1, taxCharacter: "wages", survivorPct: 0 },
+    { name:"Social Security", owner:"person1", annual: 38000, startAge: 67,
+      endAge: null, growth: "inflation", taxCharacter: "socialSecurity", survivorPct: 0 }
+  ],
+  balanceSheet: [
+    { id:"c1", label:"Cash", taxType:"cash", value: 40000, costBasis: 40000, owner:"person1", expectedRealReturn: 0.5, yieldPct: 0.5 },
+    { id:"b1", label:"Brokerage", taxType:"taxable", value: 250000, costBasis: 180000, owner:"person1", expectedRealReturn: 4.5, yieldPct: 1.5 },
+    { id:"k1", label:"401k", taxType:"deferred", value: 350000, owner:"person1", expectedRealReturn: 4.5 },
+    { id:"r1", label:"Roth", taxType:"roth", value: 60000, owner:"person1", expectedRealReturn: 4.5 },
+    { id:"h1", label:"Home", taxType:"residence", value: 550000, costBasis: 420000, owner:"person1", expectedRealReturn: 1 }
+  ],
+  liabilities: [ { id:"m1", label:"Mortgage", linkedAsset:"h1", balance: 320000,
+    ratePct: 4.0, monthlyPI: 1900, maturityYear: 2050 } ],
+  spending: { currentAnnual: 70000 },
+  assumptions: { inflationPct: 2.5 }
+},
+  B: {
+  meta: { asOfDate: "2026-01-01" },
+  household: { person1:{name:"B1", birthYear:1958}, person2:{name:"B2", birthYear:1960},
+    filingStatus:"MFJ", stateModule:"FL", planToAge:95 },
+  incomeStreams: [
+    { name:"SS P1", owner:"person1", annual: 44000, startAge: 67, endAge: null,
+      growth:"inflation", taxCharacter:"socialSecurity", survivorPct: 100 },
+    { name:"SS P2", owner:"person2", annual: 24000, startAge: 66, endAge: null,
+      growth:"inflation", taxCharacter:"socialSecurity", survivorPct: 100 }
+  ],
+  balanceSheet: [
+    { id:"c1", label:"Cash", taxType:"cash", value: 100000, costBasis:100000, owner:"joint", expectedRealReturn: 0.5, yieldPct: 0.5 },
+    { id:"b1", label:"Brokerage", taxType:"taxable", value: 1200000, costBasis: 700000, owner:"joint", expectedRealReturn: 4.5, yieldPct: 1.5 },
+    { id:"i1", label:"IRA P1", taxType:"deferred", value: 900000, owner:"person1", expectedRealReturn: 4.5 },
+    { id:"h1", label:"Home", taxType:"residence", value: 500000, costBasis: 300000, owner:"joint", expectedRealReturn: 1 }
+  ],
+  liabilities: [],
+  spending: { currentAnnual: 110000 },
+  assumptions: { inflationPct: 2.5 }
+},
+  C: {
+  meta: { asOfDate: "2026-01-01" },
+  household: { person1:{name:"C1", birthYear:1968}, person2:{name:"C2", birthYear:1970},
+    filingStatus:"MFJ", stateModule:"NJ", planToAge:95 },
+  incomeStreams: [
+    { name:"Salary P1", owner:"person1", annual: 220000, startAge: null, endAge: 62,
+      growth: 0, taxCharacter:"wages", survivorPct: 0 },
+    { name:"SS P1", owner:"person1", annual: 48000, startAge: 70, endAge: null,
+      growth:"inflation", taxCharacter:"socialSecurity", survivorPct: 100 },
+    { name:"SS P2", owner:"person2", annual: 26000, startAge: 67, endAge: null,
+      growth:"inflation", taxCharacter:"socialSecurity", survivorPct: 100 }
+  ],
+  balanceSheet: [
+    { id:"c1", label:"Cash", taxType:"cash", value: 80000, costBasis:80000, owner:"joint", expectedRealReturn: 0.5, yieldPct: 0.5 },
+    { id:"b1", label:"Brokerage", taxType:"taxable", value: 900000, costBasis: 500000, owner:"joint", expectedRealReturn: 4.5, yieldPct: 1.5 },
+    { id:"i1", label:"IRA P1", taxType:"deferred", value: 700000, owner:"person1", expectedRealReturn: 4.5 },
+    { id:"r1", label:"Roth P2", taxType:"roth", value: 150000, owner:"person2", expectedRealReturn: 4.5 },
+    { id:"h1", label:"NJ Home", taxType:"residence", value: 800000, costBasis: 350000, owner:"joint", expectedRealReturn: 1 }
+  ],
+  liabilities: [ { id:"m1", label:"Mortgage", linkedAsset:"h1", balance: 200000,
+    ratePct: 3.25, monthlyPI: 1500, maturityYear: 2040 } ],
+  spending: { currentAnnual: 130000 },
+  actions: [
+    { year: 2030, type: "sellAsset", assetId: "h1", payoffLiability: "m1",
+      proceedsTo: "cash", label: "Sell NJ home" },
+    { year: 2030, type: "relocate", to: "FL", label: "Move to FL" },
+    { year: 2044, type: "death", person: "person1", label: "Death of C1" }
+  ],
+  assumptions: { inflationPct: 2.5 }
+} };
+
+let DATA = null;
+
+function legacyFloor(){
+  const A = DATA.assumptions||{};
+  return A.legacyFloorPct != null ? 0 : (A.legacyFloor || 0);   // today's $
+}
+
+/* Capacity solver honoring a terminal-liquid floor (in today's $ = real). */
+function capacityFor(engineData){
+  const floor = legacyFloor();
+  if (!floor) return solveSustainableSpend(engineData);
+  const ok = spend => {
+    const r = runTimeline(JSON.parse(JSON.stringify(engineData)), { spendOverride: spend });
+    return !r.failed && r.rows.every(x => x.liquid >= floor - 0.5) ;
+  };
+  let lo = 0, hi = 2000000;
+  for (let k = 0; k < 5; k++){ if (ok(hi)) { lo = hi; hi *= 2; } else break; }
+  if (!ok(0)) return 0;
+  for (let i = 0; i < 40; i++){
+    const mid = (lo + hi)/2;
+    if (ok(mid)) lo = mid; else hi = mid;
+  }
+  return Math.floor(lo);
+}
+function solveCapacity(){ return capacityFor(toEngine(DATA)); }
+
+function inflPct(){ const A = DATA.assumptions||{}; return A.inflationPct != null ? A.inflationPct : 2.5; }
+function nomToReal(nomPct){ return ((1 + nomPct/100) / (1 + inflPct()/100) - 1) * 100; }
+function realToNom(realPct){ return ((1 + realPct/100) * (1 + inflPct()/100) - 1) * 100; }
+
+/* Engine boundary: engine thinks in real; JSON stores nominal.
+   #24: actions with enabled:false are excluded here, so every consumer
+   (capacity solver, ribbon, table, scenario, headroom) sees the same set. */
+function toEngine(data){
+  const d = JSON.parse(JSON.stringify(data));
+  d.actions = (d.actions || []).filter(a => a.enabled !== false);
+  (d.balanceSheet||[]).forEach(b => {
+    const nom = b.expectedReturnPct != null ? b.expectedReturnPct : 0;
+    b.expectedRealReturn = ((1 + nom/100) / (1 + (d.assumptions&&d.assumptions.inflationPct!=null?d.assumptions.inflationPct:2.5)/100) - 1) * 100;
+  });
+  (d.incomeStreams||[]).forEach(st => {
+    if (typeof st.growth === "number"){
+      st.growth = ((1 + st.growth/100) / (1 + (d.assumptions&&d.assumptions.inflationPct!=null?d.assumptions.inflationPct:2.5)/100) - 1) * 100;
+    }
+    // keywords pass through: "inflation" (0 real), "fixed" (0 nominal)
+  });
+  return d;
+}
+
+/* One-time migration of legacy real-rate documents. */
+function migrateToNominal(d){
+  if (d.meta && d.meta.rateConvention === "nominal") return d;
+  const i = (d.assumptions && d.assumptions.inflationPct != null ? d.assumptions.inflationPct : 2.5)/100;
+  (d.balanceSheet||[]).forEach(b => {
+    if (b.expectedReturnPct == null){
+      const r = (b.expectedRealReturn||0)/100;
+      b.expectedReturnPct = +(((1+r)*(1+i)-1)*100).toFixed(4);
+    }
+    delete b.expectedRealReturn;
+  });
+  (d.incomeStreams||[]).forEach(st => {
+    // preserve semantics exactly: legacy numeric growth was REAL %/yr
+    if (typeof st.growth === "number"){
+      st.growth = +((((1+st.growth/100)*(1+i))-1)*100).toFixed(4);
+    }
+  });
+  if (d.assumptions && d.assumptions.discountRatePct != null){
+    d.assumptions.discountRatePct = +((((1+d.assumptions.discountRatePct/100)*(1+i))-1)*100).toFixed(4);
+  }
+  (d.meta = d.meta||{}).rateConvention = "nominal";
+  return d;
+}
+
+/* #021: horizon is an END YEAR, not an age-on-person1. Legacy files carry
+   household.planToAge; translate once at load (endYear = P1 birth year +
+   planToAge — the exact same horizon the old formula produced) and drop the
+   old field so there is a single source of truth. */
+function planEndYear(hh){
+  if (hh && hh.endYear != null) return Math.round(hh.endYear);
+  const p1 = hh && hh.person1 || {};
+  const by1 = p1.dob ? parseInt(String(p1.dob).slice(0,4)) : p1.birthYear;
+  return (by1||0) + (hh && hh.planToAge != null ? hh.planToAge : 95);
+}
+function endYearAges(hh){
+  const ey = planEndYear(hh);
+  const ageAt = p => { if (!p) return null;
+    const by = p.dob ? parseInt(String(p.dob).slice(0,4)) : p.birthYear;
+    return by ? ey - by : null; };
+  return [hh.person1, hh.person2].filter(Boolean)
+    .map(p => `${esc(p.name)||"—"} age ${ageAt(p)}`).join(" · ");
+}
+function endYearSliderMin(){ const hh=DATA.household, by=hh.person1.dob?parseInt(String(hh.person1.dob).slice(0,4)):hh.person1.birthYear; return by+80; }
+function endYearSliderMax(){ const hh=DATA.household, by=hh.person1.dob?parseInt(String(hh.person1.dob).slice(0,4)):hh.person1.birthYear; return by+105; }
+function migrateHorizon(d){
+  const hh = d.household || {};
+  if (hh.endYear == null && hh.planToAge != null) hh.endYear = planEndYear(hh);
+  delete hh.planToAge;
+  return d;
+}
+
+const $ = id => document.getElementById(id);
+const fmt$ = v => "$" + Math.round(v).toLocaleString();
+const fmtK = v => Math.abs(v) >= 1e6 ? "$" + (v/1e6).toFixed(2) + "M"
+              : "$" + Math.round(v/1000) + "K";
+const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g,
+  c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function setJSON(obj){ $("jsonBox").value = JSON.stringify(obj, null, 2); }
+
+function applyJSON(){
+  try{
+    DATA = migrateHorizon(migrateToNominal(JSON.parse($("jsonBox").value)));
+    setJSON(DATA);
+    $("jsonErr").textContent = "";
+    validateRefs();
+    renderForms(); render();
+  }catch(e){ $("jsonErr").textContent = "JSON error: " + e.message; }
+}
+
+/* #26 (UI side): dangling references caught at load, before the engine runs.
+   The engine's runtime warnings are the second net; this is the first. */
+function validateRefs(){
+  const el = $("loadWarn"); if (!el) return;
+  const probs = [];
+  const bIds = new Set((DATA.balanceSheet||[]).map(b => b.id));
+  const lIds = new Set((DATA.liabilities||[]).map(l => l.id));
+  const bById = id => (DATA.balanceSheet||[]).find(b => b.id === id);
+  (DATA.actions||[]).forEach(a => {
+    const nm = a.label || a.type || "action";
+    const off = a.enabled === false ? " (currently unchecked)" : "";
+    if (a.type === "sellAsset" && a.assetId && !bIds.has(a.assetId))
+      probs.push(`"${esc(nm)}"${off}: asset id "${esc(a.assetId)}" is not on the balance sheet`);
+    if (a.type === "payDownDebt" && a.liabilityId && !lIds.has(a.liabilityId))
+      probs.push(`"${esc(nm)}"${off}: liability id "${esc(a.liabilityId)}" does not exist`);
+    if (a.payoffLiability && !lIds.has(a.payoffLiability))
+      probs.push(`"${esc(nm)}"${off}: payoff liability id "${esc(a.payoffLiability)}" does not exist`);
+    if (a.type === "taxFreeReimbursement" && a.sourceBucketId && !bIds.has(a.sourceBucketId))
+      probs.push(`"${esc(nm)}"${off}: source bucket id "${esc(a.sourceBucketId)}" does not exist`);
+    if (a.type === "rothConversion"){
+      if (a.sourceBucketId){
+        const s = bById(a.sourceBucketId);
+        if (!s) probs.push(`"${esc(nm)}"${off}: source bucket id "${esc(a.sourceBucketId)}" does not exist`);
+        else if (s.taxType !== "deferred") probs.push(`"${esc(nm)}"${off}: source "${esc(s.label||s.id)}" is ${s.taxType}-type — conversions draw from deferred only`);
+      }
+      if (a.destBucketId){
+        const t = bById(a.destBucketId);
+        if (!t) probs.push(`"${esc(nm)}"${off}: destination bucket id "${esc(a.destBucketId)}" does not exist`);
+        else if (t.taxType !== "roth") probs.push(`"${esc(nm)}"${off}: destination "${esc(t.label||t.id)}" is ${t.taxType}-type, not Roth`);
+        else if (t.isHSA) probs.push(`"${esc(nm)}"${off}: destination "${esc(t.label||t.id)}" is an HSA — a conversion cannot deposit into an HSA`);
+      }
+      if (!a.destBucketId && !(DATA.balanceSheet||[]).some(b => b.taxType === "roth" && !b.isHSA))
+        probs.push(`"${esc(nm)}"${off}: no eligible Roth destination bucket exists — the conversion will be skipped. A $0 placeholder Roth on the balance sheet is the legitimate way to stage it`);
+    }
+  });
+  el.innerHTML = probs.length
+    ? `<div class="modebar" style="margin-top:6px">⚠ <strong>Check the file:</strong> ${probs.length} action reference issue${probs.length>1?"s":""} —
+       <ul style="margin:4px 0 0 18px">${probs.map(p=>`<li>${p}</li>`).join("")}</ul></div>`
+    : "";
+}
+
+/* after any form edit: JSON mirror + recompute (forms stay as-is) */
+function formEdit(){ setJSON(DATA); render(); }
+
+/* set a value by path, coercing numbers; empty -> null */
+function fset(path, value, kind){
+  const parts = path.split(".");
+  let o = DATA;
+  for (let i = 0; i < parts.length - 1; i++){
+    const k = isNaN(+parts[i]) ? parts[i] : +parts[i];
+    if (o[k] == null) o[k] = isNaN(+parts[i+1]) ? {} : [];
+    o = o[k];
+  }
+  const last = parts[parts.length-1];
+  let v = value;
+  if (kind === "num") v = value === "" ? null : +value;
+  if (kind === "numOrInflation") v = (value === "inflation" || value === "fixed") ? value : (value === "" ? 0 : +value);
+  o[isNaN(+last) ? last : +last] = v;
+  formEdit();
+}
+
+function setLiabReset(i, key, v){
+  const l = DATA.liabilities[i];
+  const r = (l.rateResets = l.rateResets || [{}])[0] || (l.rateResets[0] = {});
+  r[key] = v === "" ? null : +v;
+  if (r.year == null && r.ratePct == null) l.rateResets = [];
+  formEdit();
+}
+
+function setDOB(pk, v){
+  const p = DATA.household[pk];
+  const y = parseInt(String(v).slice(0,4));
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)){ p.dob = v; p.birthYear = y; }
+  else if (!isNaN(y) && String(v).length === 4){ delete p.dob; p.birthYear = y; }
+  formEdit();
+}
+
+/* ---------------- FORMS ---------------------------------------------- */
+function fin(path, val, kind, extra){
+  const type = kind === "num" ? "number" : "text";
+  return `<input type="${type}" ${extra||""} value="${esc(val == null ? "" : val)}"
+    onchange="fset('${path}', this.value, '${kind||"str"}')">`;
+}
+function fsel(path, val, options){
+  return `<select onchange="fset('${path}', this.value)">` +
+    options.map(o => `<option value="${o}" ${o===val?"selected":""}>${o}</option>`).join("") +
+    `</select>`;
+}
+
+function renderForms(){
+  const hh = DATA.household;
+  const owners = ["person1"].concat(hh.person2 ? ["person2"] : []).concat(["joint"]);
+
+  /* Household */
+  const dobField = (pk) => hh[pk].dob
+    ? `<input type="date" value="${esc(hh[pk].dob)}" onchange="setDOB('${pk}', this.value)">`
+    : `<input type="date" onchange="setDOB('${pk}', this.value)">
+       <span class="note">year on file: ${esc(hh[pk].birthYear||"—")} — pick the full date for exact SS/RMD timing</span>`;
+  let h = `<fieldset><legend>Household</legend><table class="form"><tbody>
+    <tr><th>Person 1</th><td>${fin("household.person1.name", hh.person1.name)}</td>
+        <th>Date of birth</th><td>${dobField("person1")}</td></tr>`;
+  if (hh.person2){
+    h += `<tr><th>Person 2</th><td>${fin("household.person2.name", hh.person2.name)}</td>
+        <th>Date of birth</th><td>${dobField("person2")}
+        <button class="mini" onclick="delete DATA.household.person2; DATA.household.filingStatus='Single'; renderForms(); formEdit()">remove</button></td></tr>`;
+  } else {
+    h += `<tr><td colspan="4"><button class="mini" onclick="DATA.household.person2={name:'P2',birthYear:1970}; DATA.household.filingStatus='MFJ'; renderForms(); formEdit()">+ add spouse/partner</button></td></tr>`;
+  }
+  h += `<tr><th>Filing</th><td>${fsel("household.filingStatus", hh.filingStatus, ["MFJ","Single"])}</td>
+        <th>State</th><td>${fsel("household.stateModule", hh.stateModule, ["FL","NJ","GENERIC"])}</td></tr>
+    <tr><th>Plan through (end year)</th><td>${fin("household.endYear", planEndYear(hh), "num", 'style="width:90px"')}</td><th></th><td class="note">${endYearAges(hh)}</td></tr>
+  </tbody></table></fieldset>`;
+
+  /* Income streams */
+  h += `<fieldset><legend>Income streams</legend><table class="form wide"><thead>
+    <tr><th>Name</th><th>Owner</th><th>Annual $</th><th>Start<br><span class="note">age · or exact date</span></th><th>End<br><span class="note">age · or exact date</span></th><th>Growth<br><span class="note">"inflation" · "fixed" (constant $) · %/yr nominal</span></th><th>Character</th><th>Survivor %</th><th></th></tr></thead><tbody>`;
+  (DATA.incomeStreams||[]).forEach((s,i) => {
+    h += `<tr>
+      <td>${fin("incomeStreams."+i+".name", s.name)}</td>
+      <td>${fsel("incomeStreams."+i+".owner", s.owner||"person1", owners.filter(o=>o!=="joint"))}</td>
+      <td>${fin("incomeStreams."+i+".annual", s.annual, "num", 'style="width:100px"')}</td>
+      <td>${fin("incomeStreams."+i+".startAge", s.startAge, "num", 'style="width:56px" title="start age"')}<br>
+          <input type="date" title="exact start date — overrides age, prorates first year"
+            value="${esc(s.startDate||"")}" onchange="fset('incomeStreams.${i}.startDate', this.value)"></td>
+      <td>${fin("incomeStreams."+i+".endAge", s.endAge, "num", 'style="width:56px" title="end age"')}<br>
+          <input type="date" title="exact end date — overrides age, prorates last year"
+            value="${esc(s.endDate||"")}" onchange="fset('incomeStreams.${i}.endDate', this.value)"></td>
+      <td><input type="text" style="width:80px" value="${esc(s.growth)}"
+        onchange="fset('incomeStreams.${i}.growth', this.value, 'numOrInflation')"></td>
+      <td>${fsel("incomeStreams."+i+".taxCharacter", s.taxCharacter, TAXCHARS)}</td>
+      <td>${fin("incomeStreams."+i+".survivorPct", s.survivorPct, "num", 'style="width:64px"')}</td>
+      <td><button class="mini" onclick="DATA.incomeStreams.splice(${i},1); renderForms(); formEdit()">×</button></td></tr>`;
+  });
+  h += `</tbody></table>
+    <button class="mini" onclick="(DATA.incomeStreams=DATA.incomeStreams||[]).push({name:'New stream',owner:'person1',annual:0,startAge:null,endAge:null,growth:'inflation',taxCharacter:'wages',survivorPct:0}); renderForms(); formEdit()">+ add stream</button>
+  </fieldset>`;
+
+  /* Buckets */
+  h += `<fieldset><legend>Balance sheet — buckets</legend><table class="form wide"><thead>
+    <tr><th>Label</th><th>Type</th><th>Value $</th><th>Cost basis $</th><th>Owner</th><th>Return %/yr<br><span class="note">nominal</span></th><th>Yield %</th><th></th></tr></thead><tbody>`;
+  (DATA.balanceSheet||[]).forEach((b,i) => {
+    h += `<tr>
+      <td>${fin("balanceSheet."+i+".label", b.label)}</td>
+      <td>${fsel("balanceSheet."+i+".taxType", b.taxType, ORDER)}${
+        b.taxType === "roth" ? `<br><label class="note" style="white-space:nowrap"
+          title="Marks this Roth-type bucket as an HSA under the receipts convention. The engine will refuse it as a Roth-conversion destination — a conversion cannot deposit into an HSA — and the tax-free reimbursement action remains its only exit.">
+          <input type="checkbox" ${b.isHSA?"checked":""}
+            onchange="if(this.checked){DATA.balanceSheet[${i}].isHSA=true}else{delete DATA.balanceSheet[${i}].isHSA}; renderForms(); formEdit()"> is an HSA</label>` : ""}</td>
+      <td>${fin("balanceSheet."+i+".value", b.value, "num", 'style="width:110px"')}</td>
+      <td>${fin("balanceSheet."+i+".costBasis", b.costBasis, "num", 'style="width:110px"')}</td>
+      <td>${fsel("balanceSheet."+i+".owner", b.owner||"joint", owners)}</td>
+      <td>${fin("balanceSheet."+i+".expectedReturnPct", b.expectedReturnPct, "num", 'style="width:64px" step="0.25"')}</td>
+      <td>${fin("balanceSheet."+i+".yieldPct", b.yieldPct, "num", 'style="width:64px" step="0.25"')}</td>
+      <td><button class="mini" onclick="DATA.balanceSheet.splice(${i},1); renderForms(); formEdit()">×</button></td></tr>`;
+  });
+  h += `</tbody></table>
+    <button class="mini" onclick="(DATA.balanceSheet=DATA.balanceSheet||[]).push({id:'b'+Date.now(),label:'New bucket',taxType:'taxable',value:0,costBasis:0,owner:'joint',expectedReturnPct:7,yieldPct:0}); renderForms(); formEdit()">+ add bucket</button>
+  </fieldset>`;
+
+  /* Liabilities */
+  h += `<fieldset><legend>Liabilities</legend><table class="form wide"><thead>
+    <tr><th>Label</th><th>Balance $</th><th>Rate %</th><th>Kind</th><th>Monthly P&amp;I $</th>
+    <th>Rate reset<br><span class="note">ARM: year · new rate %</span></th><th></th></tr></thead><tbody>`;
+  (DATA.liabilities||[]).forEach((l,i) => {
+    const reset = (l.rateResets && l.rateResets[0]) || {};
+    h += `<tr>
+      <td>${fin("liabilities."+i+".label", l.label)}</td>
+      <td>${fin("liabilities."+i+".balance", l.balance, "num", 'style="width:110px"')}</td>
+      <td>${fin("liabilities."+i+".ratePct", l.ratePct, "num", 'style="width:70px" step="0.125"')}</td>
+      <td><select onchange="DATA.liabilities[${i}].interestOnly = (this.value==='io'); renderForms(); formEdit()">
+        <option value="am" ${!l.interestOnly?"selected":""}>Amortizing (P&amp;I)</option>
+        <option value="io" ${l.interestOnly?"selected":""}>Interest-only (margin)</option></select></td>
+      <td>${l.interestOnly
+        ? `<span class="note">interest paid yearly; principal flat</span>`
+        : fin("liabilities."+i+".monthlyPI", l.monthlyPI, "num", 'style="width:90px"')}</td>
+      <td><input type="number" style="width:70px" placeholder="year" value="${esc(reset.year==null?"":reset.year)}"
+          onchange="setLiabReset(${i},'year',this.value)">
+        <input type="number" style="width:64px" step="0.125" placeholder="%" value="${esc(reset.ratePct==null?"":reset.ratePct)}"
+          onchange="setLiabReset(${i},'ratePct',this.value)"></td>
+      <td><button class="mini" onclick="DATA.liabilities.splice(${i},1); renderForms(); formEdit()">×</button></td></tr>`;
+  });
+  h += `</tbody></table>
+    <p class="note" style="margin-top:4px">Amortizing with P&amp;I of $0 = interest capitalizes (balance grows).
+    Interest-only models a margin loan: the interest bill joins spending each year and the balance holds
+    until a payoff action or a sale retires it. A rate reset models an ARM: from that year the new rate governs.</p>
+    <button class="mini" onclick="(DATA.liabilities=DATA.liabilities||[]).push({id:'l'+Date.now(),label:'New liability',balance:0,ratePct:0,monthlyPI:0}); renderForms(); formEdit()">+ add liability</button>
+  </fieldset>`;
+
+  /* Spending */
+  const S = DATA.spending || (DATA.spending = {});
+  h += `<fieldset><legend>Spending (cost side of the flow statement)</legend>
+    <table class="form"><tbody><tr>
+      <th>Annual spending, today $</th>
+      <td>${fin("spending.currentAnnual", S.currentAnnual, "num", 'style="width:120px"')}</td>
+      <td class="note">Observed, not a target. Debt payments are counted separately from liabilities above.</td>
+    </tr></tbody></table>
+    <table class="form wide"><thead><tr><th>One-time event year</th><th>Amount $</th><th>Label</th><th></th></tr></thead><tbody>`;
+  (S.lumpEvents||[]).forEach((e,i) => {
+    h += `<tr><td>${fin("spending.lumpEvents."+i+".year", e.year, "num", 'style="width:80px"')}</td>
+      <td>${fin("spending.lumpEvents."+i+".amount", e.amount, "num", 'style="width:110px"')}</td>
+      <td>${fin("spending.lumpEvents."+i+".label", e.label)}</td>
+      <td><button class="mini" onclick="DATA.spending.lumpEvents.splice(${i},1); renderForms(); formEdit()">×</button></td></tr>`;
+  });
+  h += `</tbody></table>
+    <button class="mini" onclick="(DATA.spending.lumpEvents=DATA.spending.lumpEvents||[]).push({year:new Date().getFullYear()+2,amount:0,label:'New event'}); renderForms(); formEdit()">+ add one-time event</button>
+  </fieldset>`;
+
+
+  /* Actions — scenario events */
+  const acts = DATA.actions || (DATA.actions = []);
+  h += `<fieldset><legend>Actions — what could happen</legend>`;
+  if (!acts.length) h += `<p class="note">No actions yet. Actions are one-time events injected into the timeline: a sale, a move, a death, a conversion. Markers appear on the horizon chart.</p>`;
+  h += `<table class="form wide"><tbody>`;
+  acts.forEach((a,i) => {
+    const on = a.enabled !== false;
+    h += `<tr class="${on?"":"actoff"}"><td style="width:26px">
+      <input type="checkbox" ${on?"checked":""} style="opacity:1"
+        title="${on?"Included in the model — uncheck to set aside without deleting":"Set aside — not in the model. Check to include."}"
+        onchange="DATA.actions[${i}].enabled=this.checked; renderForms(); formEdit()"></td>
+      <td style="width:70px">${fin("actions."+i+".year", a.year, "num", 'style="width:70px"')}</td>
+      <td style="width:150px"><select onchange="DATA.actions[${i}]={year:DATA.actions[${i}].year,type:this.value,label:''}; renderForms(); formEdit()">` +
+      ["sellAsset","relocate","death","rothConversion","payDownDebt","taxFreeReimbursement"].map(t =>
+        `<option value="${t}" ${t===a.type?"selected":""}>${{sellAsset:"Sell asset",relocate:"Relocate",death:"Death",rothConversion:"Roth conversion",payDownDebt:"Pay down debt",taxFreeReimbursement:"Tax-free reimbursement"}[t]}</option>`).join("") +
+      `</select></td><td>`;
+    if (a.type === "sellAsset"){
+      const sellable = (DATA.balanceSheet||[]).filter(b => ["residence","illiquid","taxable"].includes(b.taxType));
+      h += `sell ` + `<select onchange="fset('actions.${i}.assetId', this.value)">` +
+        `<option value="">— asset —</option>` +
+        sellable.map(b => `<option value="${b.id}" ${b.id===a.assetId?"selected":""}>${esc(b.label)}</option>`).join("") + `</select>`;
+      if ((DATA.liabilities||[]).length){
+        h += ` · pay off <select onchange="fset('actions.${i}.payoffLiability', this.value)">` +
+          `<option value="">— none —</option>` +
+          DATA.liabilities.map(l => `<option value="${l.id}" ${l.id===a.payoffLiability?"selected":""}>${esc(l.label)}</option>`).join("") + `</select>`;
+      }
+      h += ` · proceeds to <select title="Proceeds land in the FIRST bucket of the chosen type (full basis, §121 applied for a residence)"
+        onchange="fset('actions.${i}.proceedsTo', this.value)">` +
+        ["cash","taxable"].map(t => {
+          const first = (DATA.balanceSheet||[]).find(b => b.taxType === t);
+          const lab = first ? `${t} → "${esc(first.label)}"` : `${t} (no ${t} bucket yet — one will be needed)`;
+          return `<option value="${t}" ${t===(a.proceedsTo||"cash")?"selected":""}>${lab}</option>`;
+        }).join("") + `</select>`;
+    }
+    if (a.type === "relocate"){
+      h += `move to <select onchange="fset('actions.${i}.to', this.value)">` +
+        ["FL","NJ","GENERIC"].map(t => `<option value="${t}" ${t===a.to?"selected":""}>${t}</option>`).join("") + `</select>`;
+    }
+    if (a.type === "death"){
+      const people = ["person1"].concat(DATA.household.person2 ? ["person2"] : []);
+      h += `death of <select onchange="fset('actions.${i}.person', this.value)">` +
+        `<option value="">— person —</option>` +
+        people.map(p => `<option value="${p}" ${p===a.person?"selected":""}>${esc(DATA.household[p].name||p)}</option>`).join("") + `</select>`;
+    }
+    if (a.type === "rothConversion"){
+      /* #25: bucket-routed source/destination. Blank = auto (first eligible),
+         with an engine ambiguity warning when more than one candidate exists. */
+      const defs = (DATA.balanceSheet||[]).filter(b => b.taxType === "deferred");
+      const roths = (DATA.balanceSheet||[]).filter(b => b.taxType === "roth");
+      const ownerTag = b => (b.owner && b.owner !== "joint")
+        ? " · " + esc((DATA.household[b.owner]||{}).name || b.owner) : "";
+      h += `convert ${fin("actions."+i+".amount", a.amount, "num", 'style="width:110px"')}
+        from <select title="Which deferred account funds the conversion. Blank = first deferred bucket with a balance (the engine warns if that choice is ambiguous)."
+          onchange="fset('actions.${i}.sourceBucketId', this.value || null)">` +
+        `<option value="">— auto (first deferred) —</option>` +
+        defs.map(b => `<option value="${b.id}" ${b.id===a.sourceBucketId?"selected":""}>${esc(b.label)}${ownerTag(b)}</option>`).join("") +
+        `</select> to <select title="Which Roth account receives the conversion. Blank = first Roth bucket that is not an HSA. HSA-flagged buckets are ineligible — a conversion cannot deposit into an HSA."
+          onchange="fset('actions.${i}.destBucketId', this.value || null)">` +
+        `<option value="">— auto (first non-HSA Roth) —</option>` +
+        roths.map(b => b.isHSA
+          ? `<option value="${b.id}" disabled>${esc(b.label)} (HSA — ineligible)</option>`
+          : `<option value="${b.id}" ${b.id===a.destBucketId?"selected":""}>${esc(b.label)}${ownerTag(b)}</option>`).join("") +
+        `</select>`;
+      if (!roths.some(b => !b.isHSA))
+        h += ` <span class="note" style="color:#B6543F">⚠ no eligible Roth bucket exists — this conversion will be skipped. Add a Roth bucket on the balance sheet (a $0 placeholder is the legitimate way to stage a future conversion — you'd open the account at conversion time anyway) and pick it as the destination here.</span>`;
+    }
+    if (a.type === "taxFreeReimbursement"){
+      const srcs = (DATA.balanceSheet||[]).filter(b => b.taxType==="roth" || b.taxType==="cash");
+      h += `withdraw ${fin("actions."+i+".amount", a.amount, "num", 'style="width:110px"')}
+        tax-free from <select onchange="fset('actions.${i}.sourceBucketId', this.value)">` +
+        `<option value="">— Roth/HSA or cash bucket —</option>` +
+        srcs.map(b => `<option value="${b.id}" ${b.id===a.sourceBucketId?"selected":""}>${esc(b.label)}</option>`).join("") + `</select>`;
+      if ((DATA.liabilities||[]).length){
+        h += ` · apply to <select onchange="fset('actions.${i}.payoffLiability', this.value)">` +
+          `<option value="">— cash (no liability) —</option>` +
+          DATA.liabilities.map(l => `<option value="${l.id}" ${l.id===a.payoffLiability?"selected":""}>${esc(l.label)}</option>`).join("") + `</select>`;
+      }
+      h += ` <span class="note hoverhint" title="HSA doctrine: model the HSA as a Roth-type bucket and keep it LAST in the draw order — the app never spends it on its own. Money exits only through this action, sized to documented medical receipts, tax-free and outside the waterfall. Estate note: a spouse inherits an HSA as an HSA, but a non-spouse inheritor is taxed on the whole balance in one year — an argument for emptying it during life via saved receipts.">(saved HSA receipts etc. — model the HSA as a Roth-type bucket; bypasses the tax waterfall — hover for the full HSA doctrine)</span>`;
+    }
+    if (a.type === "payDownDebt"){
+      h += `pay <select onchange="fset('actions.${i}.liabilityId', this.value)">` +
+        `<option value="">— liability —</option>` +
+        (DATA.liabilities||[]).map(l => `<option value="${l.id}" ${l.id===a.liabilityId?"selected":""}>${esc(l.label)}</option>`).join("") +
+        `</select> down by ${fin("actions."+i+".amount", a.amount, "num", 'style="width:110px"')}
+        from <select onchange="fset('actions.${i}.fromBucket', this.value)">` +
+        ["cash","taxable","deferred","roth"].map(t =>
+          `<option value="${t}" ${t===(a.fromBucket||"cash")?"selected":""}>${t}</option>`).join("") +
+        `</select> <span class="note">(deferred = ordinary income that year · taxable realizes gains)</span>`;
+    }
+    h += `</td><td>${fin("actions."+i+".label", a.label, "str", 'placeholder="label for chart"')}</td>
+      <td style="width:34px"><button class="mini" onclick="DATA.actions.splice(${i},1); renderForms(); formEdit()">×</button></td></tr>`;
+  });
+  h += `</tbody></table>
+    <button class="mini" onclick="DATA.actions.push({year:new Date().getFullYear()+2,type:'sellAsset',label:''}); renderForms(); formEdit()">+ add action</button>
+  </fieldset>`;
+
+  $("forms").innerHTML = h;
+}
+
+/* ---------------- Render everything --------------------------------- */
+/* ---------------- #23: one switch, four displays ---------------------- */
+/* The ribbon, year table, headroom strip, and fixed-percent panel can be
+   drawn at capacity (default) or at the entered spending. The headline,
+   milestones, Section 1, and estate line always stay at capacity — the
+   meter never moves. UI + solver invocation only; engine untouched. */
+function viewModeState(){
+  const D = DATA.display || {};
+  const cur = (DATA.spending||{}).currentAnnual;
+  return { mode: (D.viewMode === "spending" && cur) ? "spending" : "capacity", cur };
+}
+function displayRun(capRun){
+  const vm = viewModeState();
+  if (vm.mode === "spending")
+    return { run: runTimeline(toEngine(DATA), {}), mode: "spending", cur: vm.cur };
+  return { run: capRun, mode: "capacity", cur: vm.cur };
+}
+function modeBar(disp, capacity){
+  if (disp.mode !== "spending") return "";
+  const failed = disp.run.failed;
+  return `<div class="modebar${failed?" fail":""}">Drawn at <strong>your entered spending</strong> —
+    ${fmt$(disp.cur)}/yr today's $, rising with inflation${failed
+      ? " — <strong>this path exhausts liquid assets before the horizon</strong>"
+      : ""}. Capacity remains <span class="num">${fmt$(capacity)}/yr</span>.</div>`;
+}
+
+function render(){
+  if (!DATA) return;
+  const capacity = solveCapacity();
+  const capRun = runTimeline(toEngine(DATA), { spendOverride: capacity });
+  const disp = displayRun(capRun);
+  renderNow(capRun);
+  renderHeadline(capacity, capRun);
+  renderRibbon(disp, capacity);
+  renderMilestones(capRun);
+  renderYearTable(disp, capacity);
+  renderSliders();
+  renderDrawOrder();
+  renderHeadroom(disp, capacity);
+  renderScenario();
+  renderCompare(capacity);
+  renderFixedDraw();
+  renderEstate(capRun);
+}
+
+/* ---------------- Economic net worth (index008) ----------------------- */
+const CAPITALIZABLE = ["socialSecurity","pension","annuity"];
+
+function ssCapitalized(){
+  const D = DATA.display || {};
+  return D.capitalizeSS !== false;   // default: included
+}
+function capitalizableStreams(){
+  return (DATA.incomeStreams||[]).filter(st =>
+    CAPITALIZABLE.includes(st.taxCharacter) &&
+    (st.taxCharacter !== "socialSecurity" || ssCapitalized()));
+}
+
+function discountRate(){
+  const A = DATA.assumptions || {};
+  return A.discountRatePct != null ? A.discountRatePct : 4.5;   // nominal
+}
+
+/* Economic NW addition per year-offset: sum of remaining-stream PVs. */
+function econPVSeries(nYears){
+  const rate = discountRate();
+  const streams = capitalizableStreams();
+  const out = [];
+  for (let t = 0; t < nYears; t++)
+    out.push(streams.reduce((s,st)=>s+streamRemainingPV(st, rate, t).pv, 0));
+  return out;
+}
+
+/* PV of remaining payments from year-offset fromT, in dollars of year fromT.
+   Payments nominal, discount rate nominal. fromT=0 => today's PV. */
+function streamRemainingPV(st, ratePct, fromT){
+  const hh = DATA.household;
+  const now = new Date(DATA.meta.asOfDate||"2026-01-01").getFullYear();
+  const infl = inflPct()/100;
+  const rn = ratePct/100;
+  const p1 = hh.person1;
+  const by1 = p1.dob ? parseInt(p1.dob.slice(0,4)) : p1.birthYear;
+  const horizon = planEndYear(hh);
+  const owner = hh[st.owner] || p1;
+  let pv = 0, years = 0;
+  for (let year = now + fromT; year <= horizon; year++){
+    const t = year - now;
+    const af = streamActiveFactor(st, owner, year);   // v004: dates override ages
+    if (af === 0) continue;
+    let real = st.annual;
+    if (typeof st.growth === "number"){
+      const gReal = (1 + st.growth/100)/(1 + infl) - 1;   // nominal input
+      real *= Math.pow(1 + gReal, t);
+    }
+    if (st.growth === "fixed") real /= Math.pow(1 + infl, t);
+    real *= af;
+    const nominal = real * Math.pow(1 + infl, t);
+    pv += nominal / Math.pow(1 + rn, t - fromT);
+    years++;
+  }
+  return { pv, years };
+}
+
+function streamPV(st, ratePct){ return streamRemainingPV(st, ratePct, 0); }
+
+function economicNW(){
+  const rate = discountRate();
+  const items = capitalizableStreams()
+    .map(st => Object.assign({ name: st.name, annual: st.annual }, streamPV(st, rate)));
+  const streamsPV = items.reduce((s,x)=>s+x.pv,0);
+  return { items, streamsPV, rate };
+}
+
+/* ---------------- Section 1: Where you are + flow statement ---------- */
+function renderNow(run){
+  const bs = DATA.balanceSheet || [];
+  const byType = {}; ORDER.forEach(t => byType[t] = 0);
+  bs.forEach(b => byType[b.taxType] = (byType[b.taxType]||0) + b.value);
+  const total = ORDER.reduce((s,t)=>s+byType[t],0);
+  const debt = (DATA.liabilities||[]).reduce((s,l)=>s+l.balance,0);
+  const hh = DATA.household;
+  const now = new Date(DATA.meta.asOfDate||"2026-01-01").getFullYear();
+
+  let bar = '<div class="bigbar" role="img" aria-label="Assets by bucket">';
+  ORDER.forEach(t => { if (byType[t] > 0)
+    bar += `<div style="width:${(byType[t]/Math.max(total,1)*100).toFixed(2)}%;background:${BUCKET_META[t].color}" title="${BUCKET_META[t].label} ${fmt$(byType[t])}"></div>`; });
+  bar += '</div><div class="legend">';
+  ORDER.forEach(t => { if (byType[t] > 0)
+    bar += `<span><span class="sw" style="background:${BUCKET_META[t].color}"></span>${BUCKET_META[t].label} <span class="num">${fmtK(byType[t])}</span></span>`; });
+  bar += '</div>';
+
+  /* Flow statement: current-year trajectory row (today $) */
+  const traj = runTimeline(toEngine(DATA), {});
+  const r0 = traj.rows[0];
+  const incTotal = r0.income.wages + r0.income.pension + r0.income.ss +
+                   r0.income.interest + r0.income.rental + r0.income.qualDiv + r0.income.rmd;
+  const surplus = incTotal - r0.spend - r0.taxes.total;
+  const flowRows = [
+    ["Wages", r0.income.wages], ["Social Security", r0.income.ss],
+    ["Pension / annuity", r0.income.pension], ["RMD", r0.income.rmd],
+    ["Dividends & interest", r0.income.qualDiv + r0.income.interest],
+    ["Rental", r0.income.rental]
+  ].filter(x => x[1] > 0);
+  let flow = `<table class="data" style="max-width:560px"><thead>
+    <tr><th colspan="2">Flow statement — current year, today's dollars</th></tr></thead><tbody>`;
+  flowRows.forEach(([k,v]) => flow += `<tr><td>${k}</td><td class="n num">${fmt$(v)}</td></tr>`);
+  flow += `<tr><td><strong>Income</strong></td><td class="n num"><strong>${fmt$(incTotal)}</strong></td></tr>
+    <tr><td>Spending (incl. debt service &amp; events)</td><td class="n num">−${fmt$(r0.spend)}</td></tr>
+    <tr><td>Taxes (federal + state, est.)</td><td class="n num">−${fmt$(r0.taxes.total)}</td></tr>
+    <tr><td><strong>Net ${surplus>=0?"surplus":"draw on assets"}</strong></td>
+        <td class="n num"><strong>${surplus>=0?"+":"−"}${fmt$(Math.abs(surplus))}</strong></td></tr>
+  </tbody></table>`;
+
+  const people = [hh.person1, hh.person2].filter(Boolean)
+    .map(p => `${esc(p.name)||"—"} (${now - p.birthYear})`).join(" · ");
+  const eco = economicNW();
+
+  $("nowBody").innerHTML = `
+    <p class="note">${people} · ${hh.filingStatus} · ${hh.stateModule} · plan through ${planEndYear(hh)} (${endYearAges(hh)})</p>
+    ${keyDatesHTML()}
+    ${bar}
+    <div class="statgrid">
+      <div class="stat"><div class="lab">Total assets</div><div class="val num">${fmtK(total)}</div></div>
+      <div class="stat"><div class="lab">Debt</div><div class="val num">${debt>0?"−":""}${fmtK(debt)}</div></div>
+      <div class="stat"><div class="lab">Net worth</div><div class="val num">${fmtK(total-debt)}</div></div>
+      <div class="stat"><div class="lab">Liquid</div><div class="val num">${fmtK(byType.cash+byType.taxable+byType.deferred+byType.roth)}</div></div>
+      <div class="stat" style="border-left-color:var(--accent)"><div class="lab">Economic net worth</div>
+        <div class="val num">${fmtK(total-debt+eco.streamsPV)}</div>
+        <div class="note">incl. streams @ ${eco.rate}%</div></div>
+    </div>
+    ${ecoDetails(eco, total-debt)}
+    <div style="margin-top:14px">${flow}</div>`;
+}
+
+function rmdStartAgeUI(by){ return by >= 1960 ? 75 : 73; }
+
+function keyDatesHTML(){
+  const hh = DATA.household;
+  const parts = [];
+  ["person1","person2"].forEach(pk => {
+    const p = hh[pk]; if (!p) return;
+    const by = p.dob ? parseInt(p.dob.slice(0,4)) : p.birthYear;
+    const bm = p.dob ? parseInt(p.dob.slice(5,7)) : null;
+    const mName = bm ? ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][bm] : null;
+    const bits = [];
+    const MN = ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    (DATA.incomeStreams||[]).forEach(st => {
+      if ((st.owner||"person1") !== pk) return;
+      const nm = st.taxCharacter === "socialSecurity" ? "SS" : esc(st.name);
+      if (st.startDate){
+        const sy = st.startDate.slice(0,4), sm = MN[parseInt(st.startDate.slice(5,7))||1];
+        let s = `${nm} from ${sm} ${sy} (exact date`;
+        if (st.endDate) s += `, through ${MN[parseInt(st.endDate.slice(5,7))||12]} ${st.endDate.slice(0,4)}`;
+        bits.push(s + ")");
+      } else if (st.startAge != null){
+        const yr = by + st.startAge;
+        if (st.taxCharacter === "socialSecurity")
+          bits.push(`SS from ${mName ? mName + " " : ""}${yr} (age ${st.startAge}${bm ? ", first year prorated" : ""})`);
+        else bits.push(`${nm} from ${yr} (age ${st.startAge})`);
+      }
+    });
+    const ra = rmdStartAgeUI(by);
+    bits.push(`RMDs from ${by + ra} (age ${ra})`);
+    parts.push(`<strong>${esc(p.name)||pk}</strong>: ` + bits.join(" · "));
+  });
+  return `<p class="note" style="margin-top:6px">Key dates — ${parts.join(" &nbsp;|&nbsp; ")}</p>`;
+}
+
+function ecoDetails(eco, bsNW){
+  const anyCapType = (DATA.incomeStreams||[]).some(st => CAPITALIZABLE.includes(st.taxCharacter));
+  if (!anyCapType) return "";
+  if (!eco.items.length && !ssCapitalized()){
+    eco = Object.assign({}, eco);
+    eco.excludedNote = true;
+  }
+  let rows = eco.excludedNote
+    ? `<div class="wline wsub">Social Security is currently excluded (toggle below).</div>`
+    : "";
+  rows += eco.items.map(x =>
+    `<div class="wline"><span>${esc(x.name)} — ${fmt$(x.annual)}/yr over ${x.years} yrs, discounted</span>
+     <span class="num">${fmt$(x.pv)}</span></div>`).join("");
+  return `<details id="ecoDet" ${window._ecoOpen ? "open" : ""}
+    ontoggle="window._ecoOpen = this.open">
+    <summary style="cursor:pointer; font-size:12.5px; font-weight:600">
+    Economic net worth — the math</summary>
+    <div class="wcol" style="max-width:620px; padding:8px 0">
+      <div class="wline"><span>Balance-sheet net worth (assets − debts)</span><span class="num">${fmt$(bsNW)}</span></div>
+      <div class="wline wsub" style="margin-top:4px">Income streams capitalized to present value, pretax
+        (each year's payment ÷ (1 + rate)^years, summed to your plan horizon — like valuing a deferred buyout):</div>
+      ${rows}
+      <div class="wline wsum"><span>= Economic net worth (pretax)</span><span class="num">${fmt$(bsNW + eco.streamsPV)}</span></div>
+      <div class="wline" style="margin-top:6px"><span>
+        <label><input type="checkbox" ${ssCapitalized() ? "checked" : ""}
+          onchange="(DATA.display=DATA.display||{}).capitalizeSS=this.checked; setJSON(DATA); renderCoreNoSliders();">
+        Include Social Security in Economic NW</label>
+        <span class="note">— its PV runs to your plan-to-age, so that slider is the longevity
+        assumption; the income projection is never affected by this toggle.</span></span><span></span></div>
+      <div class="wline" style="margin-top:6px"><span>Discount rate
+        <input type="number" step="0.25" style="width:70px" value="${eco.rate}"
+        onchange="(DATA.assumptions=DATA.assumptions||{}).discountRatePct=parseFloat(this.value)||0; setJSON(DATA); renderCoreNoSliders();"> %
+        <span class="note">(nominal, like a bond yield; higher rate → lower PV)</span></span><span></span></div>
+      <div class="wline wsub">This value amortizes: each year a payment arrives and the remaining
+        PV falls — watch the dashed Economic NW path on the chart decline as streams pay out and end.</div>
+      <div class="wline wsub">Wages and rental are not capitalized — labor isn't an asset here, and rentals
+        already sit on the balance sheet. Stream PVs are pretax by design (your method); taxes are applied
+        year-by-year in the projection, not here.</div>
+    </div></details>`;
+}
+
+/* ---------------- Section 2: headline + ribbon ----------------------- */
+let _last = { cap: null, eco: null };
+function renderDelta(capacity){
+  const bar = $("delta");
+  if (!bar) return;
+  const bs = (DATA.balanceSheet||[]).reduce((s,b)=>s+b.value,0) -
+             (DATA.liabilities||[]).reduce((s,l)=>s+l.balance,0);
+  const eco = Math.round(bs + economicNW().streamsPV);
+  const dCap = _last.cap != null ? capacity - _last.cap : 0;
+  const dEco = _last.eco != null ? eco - _last.eco : 0;
+  const chip = (label, v, d) => `<span class="dtchip">${label}
+      <span class="num">${fmt$(v)}</span>
+      ${d ? `<span class="dtd ${d>0?"pos":"neg"}">${d>0?"+":"−"}${fmt$(Math.abs(d))}</span>` : ""}</span>`;
+  bar.innerHTML = chip("Capacity", capacity, dCap) + chip("Economic NW", eco, dEco);
+  if (dCap || dEco){ bar.classList.remove("flash"); void bar.offsetWidth; bar.classList.add("flash"); }
+  _last = { cap: capacity, eco };
+}
+
+function renderHeadline(capacity, run){
+  renderDelta(capacity);
+  const hh = DATA.household;
+  const horizonYear = planEndYear(hh);
+  const floor = legacyFloor();
+  $("headline").innerHTML = `
+    <div class="big num">${fmt$(capacity)}<span class="per"> / yr starting now, growing with inflation</span></div>
+    <div class="sub">Supported through <strong>${horizonYear} (${endYearAges(hh)})</strong>${floor ? `, leaving at least <span class="num">${fmt$(floor)}</span> (today's $) in liquid assets` : ""}.
+    Taxes computed year by year (federal engine + ${hh.stateModule} module).</div>
+    <details style="margin-top:6px"><summary style="cursor:pointer; font-size:12px; font-weight:600">How this number is found</summary>
+      <p class="note" style="max-width:640px; margin-top:4px">The app tries a spending level and simulates every
+      year: collect income → pay taxes → fund spending, drawing from buckets in your draw order → grow what remains.
+      If the liquid buckets ${floor ? "would fall below your floor" : "run out"} before ${horizonYear}, the level is too high;
+      if money is left over, it can go higher. It narrows this down (about 40 trials) to the highest starting spend
+      that survives every year. The chart and table below show the path at exactly that spending. Home and illiquid
+      assets are not spent unless you add a sale action.</p></details>
+    <div class="row" style="margin-top:8px">
+      <label class="note">Leave at the end (liquid, today's $):
+      <input type="number" step="10000" style="width:120px" value="${floor||0}"
+        onchange="(DATA.assumptions=DATA.assumptions||{}).legacyFloor=parseFloat(this.value)||0; setJSON(DATA); renderCoreNoSliders();"></label>
+    </div>
+    ${viewModeToggleHTML(capacity)}`;
+}
+
+/* #23: one switch, four displays (ribbon · year table · headroom · fixed-%) */
+function viewModeToggleHTML(capacity){
+  const vm = viewModeState();
+  const cur = vm.cur;
+  return `<div class="row vmode" style="margin-top:8px">
+    <span class="note" style="font-weight:600">Draw the chart, table &amp; headroom at:</span>
+    <label class="note"><input type="radio" name="vmode" ${vm.mode==="capacity"?"checked":""}
+      onchange="(DATA.display=DATA.display||{}).viewMode='capacity'; setJSON(DATA); renderCoreNoSliders();">
+      capacity (${fmt$(capacity)}/yr)</label>
+    <label class="note" ${cur?"":'style="opacity:.55" title="Enter annual spending in the data section to enable"'}>
+      <input type="radio" name="vmode" ${vm.mode==="spending"?"checked":""} ${cur?"":"disabled"}
+      onchange="(DATA.display=DATA.display||{}).viewMode='spending'; setJSON(DATA); renderCoreNoSliders();">
+      my entered spending${cur?` (${fmt$(cur)}/yr)`:""}</label>
+  </div>`;
+}
+
+function ribbonLiquidOnly(){ return !!((DATA.display||{}).ribbonLiquidOnly); }
+
+function ribbonDollars(){ return ((DATA.display||{}).ribbonDollars) === "today" ? "today" : "nominal"; }
+
+function renderRibbon(disp, capacity){
+  const run = disp.run;
+  const lo = ribbonLiquidOnly();
+  const td = ribbonDollars() === "today";
+  $("ribbon").innerHTML =
+    modeBar(disp, capacity) +
+    `<div class="row" style="justify-content:flex-end; gap:14px; margin-bottom:2px">
+      <span class="note" title="The engine works in today's dollars internally; nominal is applied only at display. This switch just skips that last step.">
+        <label class="note"><input type="radio" name="ribdol" ${!td?"checked":""}
+          onchange="(DATA.display=DATA.display||{}).ribbonDollars='nominal'; setJSON(DATA); renderCoreNoSliders();"> nominal (future) $</label>
+        <label class="note" style="margin-left:8px"><input type="radio" name="ribdol" ${td?"checked":""}
+          onchange="(DATA.display=DATA.display||{}).ribbonDollars='today'; setJSON(DATA); renderCoreNoSliders();"> today's $</label>
+      </span>
+      <label class="note"><input type="checkbox" ${lo?"checked":""}
+        onchange="(DATA.display=DATA.display||{}).ribbonLiquidOnly=this.checked; setJSON(DATA); renderCoreNoSliders();">
+        liquid buckets only</label></div>` +
+    ribbonSVG(run, { liquidOnly: lo, todayDollars: td }) +
+    /* index018: warning reasons attached to the chart they mark — the hover
+       tooltip was the only carrier before, unreadable on touch and easy to miss */
+    warningsBanner(run) +
+    ribbonLegend(run, disp.mode);
+}
+
+function ribbonLegend(run, mode){
+  const dOrd = ((DATA.assumptions||{}).drawOrder || ["cash","taxable","deferred","roth"])
+    .map(t => BUCKET_META[t].label).join(" → ");
+  const lo = ribbonLiquidOnly();
+  const types = lo ? ORDER.filter(t => ["cash","taxable","deferred","roth"].includes(t)) : ORDER;
+  const atWhat = mode === "spending" ? "your entered spending" : "capacity spending";
+  const td = ribbonDollars() === "today";
+  const dolTxt = td ? "today's dollars (inflation removed — every year directly comparable to your current budget)"
+                    : "nominal dollars";
+  return `<div class="legend" style="margin-top:2px">` +
+    types.filter(t => run.rows.some(r => (r.byType[t]||0) > 0))
+      .map(t => `<span><span class="sw" style="background:${BUCKET_META[t].color}"></span>${BUCKET_META[t].label}</span>`).join("") +
+    `</div>
+    <p class="note" style="margin-top:4px">Height of the colored stack = <strong>total ${lo?"liquid ":""}assets that year</strong>
+    (the small numbers); the colors just show which account type the total sits in, because account type decides
+    how withdrawals get taxed. What you <em>hold</em>, projected at ${atWhat}
+    in ${dolTxt} — this is not an income chart. Liquid buckets drain in draw order
+    (${dOrd}), so the first bucket in the order is spent down first and disappears earliest.${
+      lo ? " Residence and illiquid assets are hidden by the liquid-only view, not gone." : ""}${
+      legacyFloor() > 0 ? (lo
+        ? (td
+          ? ` The dashed blue line is your <strong>leave-at-end floor</strong> of ${fmt$(legacyFloor())} — flat, because
+             this chart is in today's dollars; the stack landing on it at the horizon is the floor being honored exactly.`
+          : ` The dashed blue line is your <strong>leave-at-end floor</strong> — entered as ${fmt$(legacyFloor())} in today's dollars,
+           drawn rising with inflation because this chart is nominal; the stack landing on that line at the horizon
+           is the floor being honored, not overshot.`)
+        : ` A leave-at-end floor of ${fmt$(legacyFloor())} (today's $) is set — it constrains <em>liquid</em> assets,
+           so switch on the liquid-only view to see it drawn against the stack.`) : ""}</p>`;
+}
+
+function ribbonSVG(run, opts){
+  const rows = run.rows;
+  if (!rows.length) return "";
+  /* index017: padR widened for a right-edge value axis (cross-checkable) */
+  const W = 1000, H = opts.height || 300, padL = 8, padR = 64, padT = 14, padB = 26;
+  const iw = W - padL - padR, ih = H - padT - padB;
+  const n = rows.length;
+  const x = i => padL + (n === 1 ? 0 : (i/(n-1)) * iw);
+  const TYPES = opts.liquidOnly
+    ? ORDER.filter(t => ["cash","taxable","deferred","roth"].includes(t)) : ORDER;
+  /* index018: today's-$ mode skips the nominal conversion — the engine is
+     real-terms internally, nominal only at display, so this is a removal,
+     not an added transform */
+  const dF = r => opts.todayDollars ? 1 : r.nomF;
+  const stacks = rows.map(r => TYPES.map(t => (r.byType[t]||0) * dF(r)));
+  const econ = (opts.noEcon || opts.liquidOnly) ? null : econPVSeries(rows.length);
+  const econLine = econ ? rows.map((r,i) => (r.netWorth * dF(r)) + econ[i] * dF(r) / Math.pow(1+inflPct()/100, 1)) : null;
+  const maxTot = opts.maxTot || Math.max(1, ...stacks.map(v => v.reduce((a,b)=>a+b,0)),
+    ...(econLine || [0]));
+  const y = v => padT + ih - (v/maxTot)*ih;
+  /* haloed text helper — index017 legibility pass */
+  const hal = (tx, ty, txt, size, anchor, col, weight) =>
+    `<text x="${tx}" y="${ty}" font-size="${size}" fill="${col||"#3A4756"}" text-anchor="${anchor||"start"}"
+      ${weight?`font-weight="${weight}"`:""} stroke="#FFFFFF" stroke-width="2.6" paint-order="stroke">${txt}</text>`;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Projected assets by bucket, ${opts.todayDollars ? "today's" : "nominal"} dollars">`;
+  /* right-edge axis: nice-step horizontal gridlines with $ labels */
+  const niceStep = raw => { const p = Math.pow(10, Math.floor(Math.log10(raw)));
+    const m = raw/p; return (m < 1.5 ? 1 : m < 2.2 ? 2 : m < 3.5 ? 2.5 : m < 7.5 ? 5 : 10) * p; };
+  const tickN = H < 220 ? 3 : 4;
+  const stepV = niceStep(maxTot / tickN);
+  for (let v = stepV; v <= maxTot * 1.001; v += stepV){
+    const gy = y(v);
+    if (gy < padT - 1) break;
+    svg += `<line x1="${padL}" y1="${gy}" x2="${padL+iw}" y2="${gy}" stroke="#8A93A0" stroke-width="0.6" stroke-dasharray="2,4" opacity="0.55"></line>` +
+      hal(padL + iw + 6, gy + 3.5, fmtK(v), 10, "start", "#5A6470", 600);
+  }
+  svg += hal(padL + iw + 6, padT + ih + 3.5, "$0", 10, "start", "#5A6470", 600);
+  let base = new Array(n).fill(0);
+  TYPES.forEach((t, ti) => {
+    const tops = stacks.map((v,i) => base[i] + v[ti]);
+    if (Math.max(...tops.map((v,i)=>v-base[i])) <= 0) return;
+    let path = "M" + x(0) + "," + y(base[0]);
+    for (let i = 0; i < n; i++) path += " L" + x(i) + "," + y(tops[i]);
+    for (let i = n-1; i >= 0; i--) path += " L" + x(i) + "," + y(base[i]);
+    svg += `<path d="${path} Z" fill="${BUCKET_META[t].hex}" fill-opacity="0.85"></path>`;
+    base = tops;
+  });
+  /* leave-at-end floor line: today's-$ floor rises with inflation in nominal
+     terms — this is why the end-of-chart liquid looks ~2–3× the number you
+     typed. Drawn against the liquid-only stack (the floor is a liquid concept). */
+  const floorV = legacyFloor();
+  if (floorV > 0 && opts.liquidOnly){
+    let fp = "M" + x(0) + "," + y(floorV * dF(rows[0]));
+    for (let i = 1; i < n; i++) fp += " L" + x(i) + "," + y(floorV * dF(rows[i]));
+    svg += `<path d="${fp}" fill="none" stroke="#FFFFFF" stroke-width="3.2" opacity="0.75"></path>
+      <path d="${fp}" fill="none" stroke="#3E6B8F" stroke-width="1.6" stroke-dasharray="7,3"></path>` +
+      hal(x(0)+4, Math.max(y(floorV*dF(rows[0]))-6, 11),
+        opts.todayDollars
+          ? "leave-at-end floor " + fmtK(floorV) + " — flat, because this chart is in today's dollars"
+          : "leave-at-end floor " + fmtK(floorV) + " today's $ → " + fmtK(floorV*rows[n-1].nomF) + " nominal at horizon",
+        10, "start", "#3E6B8F", 600);
+  }
+  const step = n > 55 ? 10 : 5;
+  for (let i = 0; i < n; i++){
+    if (rows[i].year % step !== 0 && i !== 0 && i !== n-1) continue;
+    const tot = stacks[i].reduce((a,b)=>a+b,0);
+    svg += `<text x="${x(i)}" y="${H-8}" font-size="10" fill="#6B7482" text-anchor="${i===0?"start":i===n-1?"end":"middle"}">${rows[i].year}</text>`;
+    if (!opts.noNumbers)
+      svg += hal(x(i), Math.max(y(tot)-4, 10), fmtK(tot), 9.5, i===0?"start":i===n-1?"end":"middle");
+  }
+  svg += `<line x1="${x(0)}" y1="${padT}" x2="${x(0)}" y2="${padT+ih}" stroke="#1B2A3A" stroke-width="1.5"></line>` +
+    hal(x(0)+4, padT+11, "NOW", 10, "start", "#1B2A3A", 600);
+  /* markers: sort by x; stagger labels onto up to 3 tiers when neighbors
+     would collide (~90px of label room). NOW occupies the first slot.
+     index017: labels within 100px of the right edge flip to end-anchor so
+     they no longer merge and clip at the top right. */
+  const mk = (run.actionMarkers||[])
+    .map(m => ({ m, i: rows.findIndex(r => r.year === m.year) }))
+    .filter(o => o.i >= 0)
+    .sort((a,b) => a.i - b.i);
+  let lastLabelX = x(0), lastTier = 0;
+  mk.forEach(o => {
+    const mx = x(o.i);
+    const tier = (mx - lastLabelX < 90) ? (lastTier + 1) % 3 : 0;
+    const ly = padT + 11 + tier * 12;
+    const flip = mx > padL + iw - 100;
+    svg += `<line x1="${mx}" y1="${padT}" x2="${mx}" y2="${padT+ih}" stroke="#1B2A3A" stroke-width="1" stroke-dasharray="3,3"></line>` +
+      hal(flip ? mx-3 : mx+3, ly, esc(o.m.label), 9.5, flip ? "end" : "start", "#1B2A3A");
+    lastLabelX = mx; lastTier = tier;
+  });
+  /* #26: hollow amber markers where an action was skipped or refused —
+     a solid marker means it happened; a hollow one means it did not. */
+  const wYears = [...new Set((run.warnings||[]).filter(w => !/ambiguous/.test(w.reason)).map(w => w.year))];
+  wYears.forEach(wy => {
+    const i = rows.findIndex(r => r.year === wy);
+    if (i < 0) return;
+    const mx = x(i);
+    const reasons = (run.warnings||[]).filter(w => w.year === wy)
+      .map(w => w.action + ": " + w.reason).join(" · ");
+    svg += `<line x1="${mx}" y1="${padT}" x2="${mx}" y2="${padT+ih}" stroke="#C97B2F" stroke-width="1.2" stroke-dasharray="1.5,3.5"></line>
+      <circle cx="${mx}" cy="${padT+6}" r="5" fill="#FFFFFF" stroke="#C97B2F" stroke-width="1.6"><title>${esc(reasons)}</title></circle>
+      <text x="${mx}" y="${padT+9.5}" font-size="8.5" fill="#C97B2F" text-anchor="middle" font-weight="700">!</text>`;
+  });
+  if (econLine && econ.some(v => v > 1)){
+    let ep = "M" + x(0) + "," + y(econLine[0]);
+    for (let i = 1; i < n; i++) ep += " L" + x(i) + "," + y(econLine[i]);
+    svg += `<path d="${ep}" fill="none" stroke="#FFFFFF" stroke-width="3.4" stroke-dasharray="5,4" opacity="0.7"></path>
+      <path d="${ep}" fill="none" stroke="#1B2A3A" stroke-width="1.8" stroke-dasharray="5,4" opacity="0.9"></path>` +
+      hal(x(1), Math.max(y(econLine[0])-6, 11), "Net worth + remaining pension/SS value", 10, "start", "#1B2A3A");
+  }
+  /* index017 + index020: the peak label only earns its ink at an interior
+     peak. In capacity mode that peak sits near the right edge, in the same
+     top-right zone as the right-gutter $ tick labels and the final-year
+     endpoint total — the reported crunch. Treat those as occupied slots:
+     tier the peak label down until it clears them, pull it in from the
+     gutter, and suppress it rather than overprint if it can't find clear air. */
+  const peakI = stacks.map(v=>v.reduce((a,b)=>a+b,0)).reduce((bi,v,i,arr)=>v>arr[bi]?i:bi,0);
+  const peakV = stacks[peakI].reduce((a,b)=>a+b,0);
+  if (peakI !== 0 && peakI !== n-1){
+    const flip = x(peakI) > padL + iw - 80;
+    /* occupied right-edge slots: the $ tick labels (recomputed) + the endpoint total */
+    const occ = [];
+    if (flip){
+      for (let v = stepV; v <= maxTot * 1.001; v += stepV){ const gy = y(v); if (gy < padT-1) break; occ.push(gy); }
+      occ.push(padT + ih);                                   // the "$0" gutter label
+      if (!opts.noNumbers) occ.push(Math.max(y(stacks[n-1].reduce((a,b)=>a+b,0))-4, 10));
+    }
+    const clash = yy => occ.some(o => Math.abs(o - yy) < 12);
+    let py = Math.max(y(peakV)-5, 11), tier = 0;
+    while (clash(py) && tier < 3){ py += 13; tier++; }
+    if (!clash(py))                                          // give up rather than collide
+      svg += hal(flip ? x(peakI)-10 : x(peakI)+4, py,
+        fmtK(peakV) + " peak", 10.5, flip ? "end" : "start", "#1B2A3A", 600);
+  }
+  svg += "</svg>";
+  return svg;
+}
+
+/* peak helper for shared scaling */
+function runPeak(run, liquidOnly, todayDollars){
+  const types = liquidOnly
+    ? ORDER.filter(t => ["cash","taxable","deferred","roth"].includes(t)) : ORDER;
+  return Math.max(1, ...run.rows.map(r =>
+    types.reduce((s,t)=>s+(r.byType[t]||0),0) * (todayDollars ? 1 : r.nomF)));
+}
+
+/* ---------------- Scenario comparison (index004) ---------------------- */
+function renderScenario(){
+  const box = $("scenario");
+  const actsAll = DATA.actions || [];
+  const acts = actsAll.filter(a => a.enabled !== false);   // #24
+  if (!actsAll.length){
+    box.innerHTML = `<p class="note" style="margin-top:14px">Add actions in the data
+      section above (a sale, a move, a death, a conversion) and the base-vs-scenario
+      comparison will appear here.</p>`;
+    return;
+  }
+  if (!acts.length){
+    box.innerHTML = `<p class="note" style="margin-top:14px">All ${actsAll.length} action${actsAll.length>1?"s are":" is"}
+      currently unchecked (set aside) — base and scenario would be identical. Check an action above to compare.</p>`;
+    return;
+  }
+  const lo = ribbonLiquidOnly();
+  const td = ribbonDollars() === "today";
+  const baseData = toEngine(DATA); baseData.actions = [];
+  const scenData = toEngine(DATA);
+  const capBase = capacityFor(baseData);
+  const capScen = capacityFor(scenData);
+  const runBase = runTimeline(baseData, { spendOverride: capBase });
+  const runScen = runTimeline(scenData, { spendOverride: capScen });
+  const shared = Math.max(runPeak(runBase, lo, td), runPeak(runScen, lo, td));
+  const lastB = runBase.rows[runBase.rows.length-1];
+  const lastS = runScen.rows[runScen.rows.length-1];
+  const taxB = runBase.rows.reduce((s,r)=>s+r.taxes.total*r.nomF,0);
+  const taxS = runScen.rows.reduce((s,r)=>s+r.taxes.total*r.nomF,0);
+  const d = capScen - capBase;
+  box.innerHTML = `
+    <h3 style="font-size:14px; margin:18px 0 4px">Base vs scenario
+      <span class="note" style="font-weight:400">(same vertical scale)</span></h3>
+    <div class="twin">
+      <div>
+        <div class="twinlab">BASE — no actions</div>
+        <div class="twincap num">${fmt$(capBase)}/yr</div>
+        ${ribbonSVG(runBase, { maxTot: shared, height: 190, noEcon: true, noNumbers: true, liquidOnly: lo, todayDollars: td })}
+        <div class="note num">NW at horizon ${fmtK(lastB.netWorth*(td?1:lastB.nomF))}${td?" today's $":""} · lifetime taxes ${fmtK(taxB)} (nominal-summed)</div>
+      </div>
+      <div>
+        <div class="twinlab">SCENARIO — ${acts.length} of ${actsAll.length} action${actsAll.length>1?"s":""} checked</div>
+        <div class="twincap num">${fmt$(capScen)}/yr
+          <span class="delta ${d>=0?"pos":"neg"}">${d>=0?"+":"−"}${fmt$(Math.abs(d))}</span></div>
+        ${ribbonSVG(runScen, { maxTot: shared, height: 190, noEcon: true, noNumbers: true, liquidOnly: lo, todayDollars: td })}
+        <div class="note num">NW at horizon ${fmtK(lastS.netWorth*(td?1:lastS.nomF))}${td?" today's $":""} · lifetime taxes ${fmtK(taxS)} (nominal-summed)</div>
+      </div>
+    </div>
+    ${ribbonLegend(runScen, "capacity")}
+    <p class="note" style="margin-top:6px">Capacity, net worth, and lifetime taxes under each path.
+    The difference is stated, not judged.</p>`;
+}
+
+/* ---------------- Ages & stages (index005) ---------------------------- */
+function defaultMilestoneAges(){
+  const now = new Date(DATA.meta.asOfDate||"2026-01-01").getFullYear();
+  const a0 = now - DATA.household.person1.birthYear;
+  const ages = [];
+  const endAge = planEndYear(DATA.household) - DATA.household.person1.birthYear;
+  for (let a = Math.ceil((a0+1)/10)*10; a < endAge; a += 10) ages.push(a);
+  ages.push(endAge);
+  return ages;
+}
+
+function milestoneAges(){
+  const D = DATA.display || {};
+  return (D.milestoneAges && D.milestoneAges.length) ? D.milestoneAges : defaultMilestoneAges();
+}
+
+function renderMilestones(run){
+  const ages = milestoneAges();
+  const econ = econPVSeries(run.rows.length);
+  const now = new Date(DATA.meta.asOfDate||"2026-01-01").getFullYear();
+  const by = DATA.household.person1.birthYear;
+  const cards = ages.map(a => {
+    const r = run.rows.find(x => x.year === by + a);
+    if (!r) return "";
+    const inc = (r.income.wages + r.income.pension + r.income.ss + r.income.interest +
+                 r.income.rental + r.income.qualDiv + r.income.rmd) * r.nomF;
+    const outflow = (r.spend + r.taxes.total) * r.nomF;
+    const taxShare = outflow > 0 ? (r.taxes.total * r.nomF / outflow * 100) : 0;
+    return `<div class="mcard">
+      <div class="mage">Age ${a} <span class="myr num">· ${r.year}</span></div>
+      <div class="mrow"><span>Net worth</span><span class="num">${fmtK(r.netWorth*r.nomF)}</span></div>
+      <div class="mrow"><span>Liquid</span><span class="num">${fmtK(r.liquid*r.nomF)}</span></div>
+      <div class="mrow"><span>Income</span><span class="num">${fmtK(inc)}/yr</span></div>
+      <div class="mrow"><span>Spending</span><span class="num">${fmtK(r.spend*r.nomF)}/yr</span></div>
+      <div class="mrow"><span>Taxes</span><span class="num">${fmtK(r.taxes.total*r.nomF)}/yr</span></div>
+      <div class="mrow"><span>Tax share of outflow</span><span class="num">${taxShare.toFixed(0)}%</span></div>
+      <div class="mrow"><span>Economic NW</span><span class="num">${fmtK(r.netWorth*r.nomF + econ[r.year-now]*r.nomF/Math.pow(1+inflPct()/100,1))}</span></div>
+    </div>`;
+  }).join("");
+  $("milestones").innerHTML = `
+    <div class="row" style="justify-content:space-between; align-items:baseline; margin-top:16px">
+      <h3 style="font-size:14px">Ages &amp; stages <span class="note" style="font-weight:400">(nominal, at capacity spending)</span></h3>
+      <label class="note">ages: <input type="text" style="width:150px" value="${milestoneAges().join(", ")}"
+        onchange="(DATA.display=DATA.display||{}).milestoneAges=this.value.split(',').map(x=>parseInt(x)).filter(x=>!isNaN(x)); setJSON(DATA); renderCoreNoSliders();"></label>
+    </div>
+    <div class="mgrid">${cards}</div>`;
+}
+
+/* #26: engine runtime warnings — grouped by action+reason, years listed.
+   These are the actions that did NOT do what the file says they do. */
+function warningsBanner(run){
+  const ws = run.warnings || [];
+  if (!ws.length) return "";
+  const groups = {};
+  ws.forEach(w => {
+    const k = w.action + "\u0000" + w.reason;
+    (groups[k] = groups[k] || { action: w.action, reason: w.reason, years: [] }).years.push(w.year);
+  });
+  const items = Object.values(groups).map(g => {
+    const ys = g.years.length > 3
+      ? g.years.slice(0,3).join(", ") + " … (" + g.years.length + " years)"
+      : g.years.join(", ");
+    return `<li><strong>${esc(g.action)}</strong> (${ys}): ${esc(g.reason)}</li>`;
+  }).join("");
+  return `<div class="modebar" style="margin:8px 0 0">⚠ <strong>Action warnings — the model did not do everything the file asks:</strong>
+    <ul style="margin:4px 0 0 18px">${items}</ul></div>`;
+}
+
+function renderYearTable(disp, capacity){
+  const run = disp.run;
+  /* #13: staleness — projection starts at the file's as-of year */
+  const asOfY = parseInt(String((DATA.meta||{}).asOfDate||"").slice(0,4)) || null;
+  const nowY = new Date().getFullYear();
+  const stale = (asOfY && nowY > asOfY)
+    ? `<p class="note stale" style="margin:8px 0 0">Heads-up: this file's as-of date is ${esc(DATA.meta.asOfDate)},
+       so the table starts at ${asOfY} and projects from that snapshot. Refresh the balance sheet (and the
+       as-of date) to bring it current.</p>` : "";
+  let h = stale + warningsBanner(run) + modeBar(disp, capacity) +
+  `<p class="note" style="margin:8px 0 4px">All figures nominal (future dollars), at
+  ${disp.mode==="spending" ? "<strong>your entered spending</strong>" : "capacity spending"}: spending rises with
+  inflation, steps down when a loan pays off or a phase applies, and spikes for one-time events.
+  Income shifts as streams start/end and RMDs begin.</p><table class="data"><thead><tr>
+    <th></th><th>Year</th><th>Age</th><th class="n">Income</th><th class="n">Spend</th>
+    <th class="n">Fed tax</th><th class="n">State</th><th class="n">Liquid</th><th class="n">Net worth</th><th>Notes</th>
+    </tr></thead><tbody>`;
+  run.rows.forEach((r, ri) => {
+    const inc = (r.income.wages + r.income.pension + r.income.ss + r.income.interest +
+                 r.income.rental + r.income.qualDiv + r.income.rmd) * r.nomF;
+    h += `<tr class="yrow" onclick="toggleDetail(${ri})" title="Click for the math">
+      <td class="expander" id="exp${ri}">▸</td>
+      <td class="num">${r.year}</td><td class="num">${r.ages.join("/")}</td>
+      <td class="n num">${fmtK(inc)}</td><td class="n num">${fmtK(r.spend*r.nomF)}</td>
+      <td class="n num">${fmtK(r.taxes.federal*r.nomF)}</td><td class="n num">${fmtK(r.taxes.state*r.nomF)}</td>
+      <td class="n num">${fmtK(r.liquid*r.nomF)}</td><td class="n num">${fmtK(r.netWorth*r.nomF)}</td>
+      <td class="note">${r.notes.map(esc).join(" · ")}</td></tr>
+      <tr class="drow" id="det${ri}" style="display:none"><td></td><td colspan="9">${detailHTML(r)}</td></tr>`;
+  });
+  $("yearTable").innerHTML = h + "</tbody></table>";
+}
+
+function toggleDetail(ri){
+  const d = $("det"+ri), e = $("exp"+ri);
+  const open = d.style.display !== "none";
+  d.style.display = open ? "none" : "table-row";
+  e.textContent = open ? "▸" : "▾";
+}
+
+function dline(label, v, nomF, cls){
+  return `<div class="wline ${cls||""}"><span>${label}</span><span class="num">${fmt$(v*nomF)}</span></div>`;
+}
+
+function detailHTML(r){
+  const d = r.detail, f = d.fed, nf = r.nomF;
+  /* Federal walk */
+  let fed = `<div class="wcol"><div class="wtitle">Federal tax — 2026 tables, assumed to stay inflation-indexed</div>`;
+  fed += dline("Ordinary income (wages, pension, IRA/401k draws, RMD, conversions, interest, rental)", f.otherOrd, nf);
+  if (f.ssGross > 0) fed += dline(`+ Taxable part of Social Security (${fmt$(f.ssTaxable*nf)} of ${fmt$(f.ssGross*nf)})`, f.ssTaxable, nf);
+  fed += dline("− Standard deduction (incl. 65+ additions)", -f.deduction, nf);
+  fed += dline("= Taxable ordinary income", f.ordTaxable, nf, "wsum");
+  fed += dline("Tax via brackets", f.ordTax, nf);
+  if (f.gains > 0) fed += dline(`+ Tax on gains & dividends (${fmt$(f.gains*nf)} stacked on top)`, f.gainsTax, nf);
+  if (f.driftTax) fed += dline("+ Tax drift assumption", f.driftTax, nf);
+  fed += dline("= Federal tax", r.taxes.federal, nf, "wsum");
+  fed += `</div>`;
+  /* State walk */
+  let st = `<div class="wcol"><div class="wtitle">State — ${r.stateId}</div>`;
+  if (r.stateId === "FL" || !d.state){
+    st += `<div class="wline"><span>No state income tax</span><span class="num">$0</span></div>`;
+  } else if (r.stateId === "NJ"){
+    const n = d.state;
+    st += dline("NJ gross income (cap gains taxed as ordinary)", n.gross, nf);
+    if (n.ssExempt > 0) st += `<div class="wline"><span>Social Security exempt in NJ</span><span class="num">excluded</span></div>`;
+    if (n.exclusion > 0) st += dline(`− Retirement income exclusion (${Math.round(n.exclPct*100)}%)`, -n.exclusion, nf);
+    st += dline("= NJ taxable (after exemptions)", n.njTaxable, nf, "wsum");
+    st += dline("= NJ tax via brackets", r.taxes.state, nf, "wsum");
+  } else {
+    const n = d.state;
+    st += dline("Taxable base", n.base, nf);
+    st += `<div class="wline"><span>× effective rate</span><span class="num">${(n.ratePct+(n.localPct||0)).toFixed(1)}%</span></div>`;
+    st += dline("= State tax", r.taxes.state, nf, "wsum");
+  }
+  st += `</div>`;
+  /* Funding + net worth build */
+  let nw = `<div class="wcol"><div class="wtitle">Funding & net worth build</div>`;
+  const dr = d.draws || {};
+  const anyDraw = Object.values(dr).some(v => v > 0.5);
+  if (anyDraw){
+    nw += `<div class="wline wsub">Drawn to fund the year:</div>`;
+    ["cash","taxable","deferred","roth"].forEach(t => {
+      if (dr[t] > 0.5) nw += dline("from " + BUCKET_META[t].label, dr[t], nf);
+    });
+  } else {
+    nw += `<div class="wline"><span>Income covered spending — no draws</span><span></span></div>`;
+  }
+  nw += `<div class="wline wsub" style="margin-top:6px">End-of-year buckets:</div>`;
+  (d.bucketList||[]).forEach(b => nw += dline(b.label, b.value, nf));
+  (d.liabList||[]).forEach(l => nw += dline("− " + l.label, -l.balance, nf));
+  nw += dline("= Net worth", r.netWorth, nf, "wsum");
+  nw += `</div>`;
+  return `<div class="walk">${fed}${st}${nw}</div>`;
+}
+
+/* ---------------- Section 3: sliders --------------------------------- */
+function slider(id, label, min, max, step, val, suffix){
+  return `<div class="slider"><label for="${id}">${label}<span class="v" id="${id}v">${val}${suffix}</span></label>
+    <input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${val}"
+      oninput="$('${id}v').textContent=this.value+'${suffix}'; sliderChange('${id}', parseFloat(this.value))"></div>`;
+}
+
+function currentDrawOrder(){
+  return ((DATA.assumptions=DATA.assumptions||{}).drawOrder =
+    DATA.assumptions.drawOrder || ["cash","taxable","deferred","roth"]);
+}
+
+function moveDraw(i, dir){
+  const o = currentDrawOrder();
+  const j = i + dir;
+  if (j < 0 || j >= o.length) return;
+  [o[i], o[j]] = [o[j], o[i]];
+  setJSON(DATA);
+  renderDrawOrder();
+  renderCoreNoSliders();
+}
+
+function renderDrawOrder(){
+  const o = currentDrawOrder();
+  const A = DATA.assumptions || (DATA.assumptions = {});
+  const tb = A.maxTargetBracket;           // decimal (0.24) or null
+  // lifetime taxes at capacity under this strategy
+  const cap = solveCapacity();
+  const run = runTimeline(toEngine(DATA), { spendOverride: cap });
+  const lifeTax = run.rows.reduce((s,r)=>s+r.taxes.total*r.nomF,0);
+  const rates = [0.10,0.12,0.22,0.24,0.32,0.35,0.37];
+  /* #42-C: which target brackets draw identically on THIS file (same lifetime tax
+     at capacity) — the ceiling only "bites" where the group breaks. */
+  let equivNote = "";
+  if (tb != null){
+    const eng = toEngine(DATA);
+    const sig = rate => {
+      const d = JSON.parse(JSON.stringify(eng));
+      (d.assumptions = d.assumptions || {}).maxTargetBracket = rate;
+      const rr = runTimeline(d, { spendOverride: cap });
+      return Math.round(rr.rows.reduce((s,x)=>s+x.taxes.total*x.nomF,0));
+    };
+    const groups = {};
+    rates.forEach(r => { const k = sig(r); (groups[k] = groups[k] || []).push(r); });
+    const cur = tb > 1 ? tb/100 : tb;
+    const g = (groups[sig(cur)] || []).map(r => (r*100).toFixed(0) + "%");
+    if (g.length > 1)
+      equivNote = ` <em>On this file, targets ${g.join(", ")} draw identically (same lifetime tax at capacity) —
+        switching among them does nothing here; the ceiling only bites outside that group.</em>`;
+  }
+  $("draworder").innerHTML = `
+    <div class="wtitle" style="margin-top:16px">Draw strategy — how spending gets funded</div>
+    <div class="row" style="margin:6px 0 8px">
+      <label class="note">Strategy:
+        <select onchange="if(this.value==='static'){delete DATA.assumptions.maxTargetBracket;}else{DATA.assumptions.maxTargetBracket=DATA.assumptions.maxTargetBracket||0.22;} setJSON(DATA); renderDrawOrder(); renderCoreNoSliders();">
+          <option value="static" ${tb==null?"selected":""}>Static order (buckets in sequence)</option>
+          <option value="bracket" ${tb!=null?"selected":""}>Deferred (IRA-equivalent) first, up to a tax ceiling</option>
+        </select></label>
+      ${tb!=null ? `<label class="note">Target bracket:
+        <select onchange="DATA.assumptions.maxTargetBracket=parseFloat(this.value); setJSON(DATA); renderDrawOrder(); renderCoreNoSliders();">` +
+        rates.map(r => `<option value="${r}" ${Math.abs(r-(tb>1?tb/100:tb))<1e-9?"selected":""}>${(r*100).toFixed(0)}%</option>`).join("") +
+        `</select></label>` : ""}
+    </div>
+    <div class="dorder">` +
+    o.map((t,i) => `<span class="dchip">
+        <button class="mini" ${i===0?"disabled":""} onclick="moveDraw(${i},-1)" aria-label="move ${BUCKET_META[t].label} earlier">◀</button>
+        <span class="dnum">${i+1}</span> ${BUCKET_META[t].label}
+        <button class="mini" ${i===o.length-1?"disabled":""} onclick="moveDraw(${i},1)" aria-label="move ${BUCKET_META[t].label} later">▶</button>
+      </span>`).join("") +
+    `</div>
+    <p class="note" style="margin-top:6px">${tb!=null
+      ? `Bracket-fill: each year the shortfall is funded from <strong>Tax-deferred first, up to the top of the
+         ${((tb>1?tb/100:tb)*100).toFixed(0)}% federal bracket</strong> (after RMDs, conversions, and Social Security
+         phase-in), then spills through the order above with deferred removed. If only deferred remains, the
+         ceiling is exceeded rather than leaving spending unfunded (noted in the year table). The headroom strip
+         below shows the terrain this strategy works.${equivNote}`
+      : `Buckets fund spending in the order above.`}
+    RMDs are always forced from tax-deferred regardless of strategy.
+    <span class="hoverhint" title="Two different clocks: capacity is a real, today's-dollar annual level; lifetime taxes are nominal dollars summed across every year of the plan. Each is comparable across strategies — but don't net one against the other. A strategy can cut lifetime tax by $330K while moving capacity only −$1,863/yr, and both are true.">At
+    this strategy: capacity <span class="num">${fmt$(cap)}/yr</span> · lifetime taxes at capacity
+    <span class="num">${fmtK(lifeTax)}</span> (nominal, summed)</span>. Switch strategies and compare —
+    the difference is stated, not judged.
+    <em>Roadmap: the dual-objective view — current-tax-optimal vs estate-optimal mixes side by side.</em></p>`;
+}
+
+function renderSliders(){
+  const A = DATA.assumptions || (DATA.assumptions = {});
+  const drift = (A.taxDrift && A.taxDrift.deltaPP) || 0;
+  $("sliders").innerHTML =
+    slider("sInfl", "Inflation", 0, 6, 0.25, A.inflationPct != null ? A.inflationPct : 2.5, "%") +
+    slider("sAge", "Plan through (end year)", endYearSliderMin(), endYearSliderMax(), 1, planEndYear(DATA.household), "") +
+    slider("sDrift", "Tax drift (all rates, from 2030)", -5, 10, 0.5, drift, "pp") +
+    slider("sRet", "Set ALL bucket returns (nominal)", 0, 12, 0.25, blendedReturn(), "%");
+}
+
+function blendedReturn(){
+  const bs = DATA.balanceSheet||[]; const tot = bs.reduce((s,b)=>s+b.value,0);
+  if (!tot) return 7;
+  return +(bs.reduce((s,b)=>s+(b.expectedReturnPct||0)*b.value,0)/tot).toFixed(2);
+}
+
+function sliderChange(id, v){
+  const A = DATA.assumptions;
+  if (id === "sInfl") A.inflationPct = v;
+  if (id === "sAge") DATA.household.endYear = v;
+  if (id === "sDrift") A.taxDrift = { fromYear: 2030, deltaPP: v };
+  if (id === "sRet"){
+    (DATA.balanceSheet||[]).forEach(b => b.expectedReturnPct = v);
+    renderForms();
+  }
+  setJSON(DATA);
+  renderCoreNoSliders();
+}
+
+function renderCoreNoSliders(){
+  const capacity = solveCapacity();
+  const capRun = runTimeline(toEngine(DATA), { spendOverride: capacity });
+  const disp = displayRun(capRun);
+  renderNow(capRun); renderHeadline(capacity, capRun); renderRibbon(disp, capacity);
+  renderMilestones(capRun); renderYearTable(disp, capacity); renderScenario(); renderCompare(capacity);
+  renderHeadroom(disp, capacity); renderFixedDraw(); renderEstate(capRun);
+}
+
+/* ---------------- Optional comparison -------------------------------- */
+function renderCompare(capacity){
+  const panel = $("cmpPanel");
+  const cur = (DATA.spending||{}).currentAnnual;
+  if (!panel.classList.contains("open")){ $("cmpBody").innerHTML = ""; return; }
+  if (!cur){
+    $("cmpBody").innerHTML = `<p class="note">No annual spending entered above — the capacity number stands on its own.</p>`;
+    return;
+  }
+  const run = runTimeline(toEngine(DATA), {});
+  const diff = capacity - cur;
+  $("cmpBody").innerHTML = `
+    <div class="statgrid">
+      <div class="stat"><div class="lab">Capacity</div><div class="val num">${fmt$(capacity)}/yr</div></div>
+      <div class="stat"><div class="lab">Current spending</div><div class="val num">${fmt$(cur)}/yr</div></div>
+      <div class="stat"><div class="lab">Difference</div><div class="val num">${diff>=0?"+":""}${fmt$(diff)}/yr</div></div>
+      <div class="stat"><div class="lab">Trajectory at current spending</div>
+        <div class="val">${run.failed ? '<span class="failflag">exhausts liquid assets</span>' : "holds to horizon"}</div></div>
+    </div>
+    <p class="note" style="margin-top:10px"><strong>${viewModeState().mode === "spending"
+      ? "The chart, table, and headroom strip above are currently drawn at your entered spending (view toggle in Section 2); capacity remains the meter. Your spending affects reality through next year's balance sheet."
+      : "Everything above is drawn at capacity. Your entered spending affects the model only here — and affects reality through next year's balance sheet."}</strong>
+    Descriptive only: capacity is what the resources support;
+    the difference is simply the distance between the two numbers.</p>`;
+}
+
+/* ---------------- Bracket headroom (index013 · #016, display only) ---- */
+function renderHeadroom(disp, capacity){
+  const box = $("headroom"); if (!box) return;
+  const run = disp.run;
+  const rows = run.rows;
+  if (!rows.length){ box.innerHTML = ""; return; }
+  const pts = rows.map(r => {
+    const ot = r.detail.fed.ordTaxable;                    // real $
+    const br = TAX.ordinary[r.filing];
+    let rate = br[0][1], nextLo = null;
+    for (let i = 0; i < br.length; i++){
+      if (ot >= br[i][0]) rate = br[i][1];
+      else { nextLo = br[i][0]; break; }
+    }
+    return { year: r.year, nomF: r.nomF, rate,
+      head: nextLo == null ? null : (nextLo - ot),         // real $; null = top bracket
+      rmdNote: r.notes.some(n => /RMD/i.test(n)) };
+  });
+  /* #28: taller strip, on-chart text, distinct top-bracket marker, split 32/35/37 */
+  const W = 1000, H = 210, padL = 8, padR = 8, padT = 34, padB = 24;
+  const iw = W - padL - padR, ih = H - padT - padB, n = pts.length;
+  const x = i => padL + (n === 1 ? 0 : (i/(n-1)) * iw);
+  const vals = pts.map(p => p.head == null ? 0 : p.head * p.nomF);
+  const maxV = Math.max(1, ...vals);
+  const bw = Math.max(2, iw/n - 2);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Ordinary-income headroom to the next federal bracket, per year">`;
+  const shade = r => r <= .12 ? "#3E8F6B" : r <= .22 ? "#8FB03E" : r <= .24 ? "#C9A227"
+               : r <= .32 ? "#C97B2F" : r <= .35 ? "#B03030" : "#6B2D5B";   /* index017: 32/35/37 split orange/red/plum */
+  const TOPC = "#6B2D5B";
+  const cased = (tx, ty, txt, size, anchor, weight) =>
+    `<text x="${tx}" y="${ty}" font-size="${size}" fill="#3A4756" text-anchor="${anchor}"
+      ${weight?`font-weight="${weight}"`:""} stroke="#FFFFFF" stroke-width="2.6" paint-order="stroke">${txt}</text>`;
+  pts.forEach((p,i) => {
+    const labeled = p.year % 5 === 0 || i === 0 || i === n-1;
+    const anchor = i===0 ? "start" : i===n-1 ? "end" : "middle";
+    if (p.head == null){
+      /* top bracket: full-height distinct column, not a 1px sliver */
+      svg += `<rect x="${x(i)-bw/2}" y="${padT}" width="${bw}" height="${ih}" style="cursor:pointer" onclick="ladderPick(${p.year})"
+        fill="${TOPC}" fill-opacity="0.16"><title>${p.year}: top bracket — no headroom · marginal ${(p.rate*100).toFixed(0)}% · click for the bracket ladder</title></rect>
+        <rect x="${x(i)-bw/2}" y="${padT}" width="${bw}" height="5" fill="${TOPC}" fill-opacity="0.9"></rect>`;
+      if (labeled) svg += cased(x(i), padT-16, "TOP", 9, anchor, 700) + cased(x(i), padT-6, (p.rate*100).toFixed(0)+"%", 8.5, anchor);
+    } else {
+      const v = vals[i], bh = (v/maxV)*ih, topY = padT+ih-bh;
+      /* #41: an invisible full-height hit zone so short bars are still clickable */
+      svg += `<rect x="${x(i)-bw/2}" y="${padT}" width="${bw}" height="${ih}" fill="transparent" style="cursor:pointer" onclick="ladderPick(${p.year})"><title>${p.year}: room to the next edge ${fmtK(v)} nominal (${fmtK(p.head)} today's) · marginal ${(p.rate*100).toFixed(0)}% · click for the bracket ladder</title></rect>
+      <rect x="${x(i)-bw/2}" y="${topY}" width="${bw}" height="${Math.max(bh,1)}" style="cursor:pointer" onclick="ladderPick(${p.year})"
+        fill="${shade(p.rate)}" fill-opacity="0.8"><title>${p.year}: room to the next edge ${fmtK(v)} nominal (${fmtK(p.head)} today's) · marginal ${(p.rate*100).toFixed(0)}%</title></rect>`;
+      if (labeled){
+        const ty = Math.max(topY - 14, 12);
+        svg += cased(x(i), ty, fmtK(v), 9, anchor, 600) + cased(x(i), ty+10, (p.rate*100).toFixed(0)+"%", 8.5, anchor);
+      }
+    }
+    if (labeled)
+      svg += `<text x="${x(i)}" y="${H-8}" font-size="10" fill="#6B7482" text-anchor="${anchor}">${p.year}</text>`;
+  });
+  // RMD start markers per person
+  const now = new Date(DATA.meta.asOfDate||"2026-01-01").getFullYear();
+  ["person1","person2"].forEach(pk => {
+    const p = DATA.household[pk]; if (!p) return;
+    const by = p.dob ? parseInt(p.dob.slice(0,4)) : p.birthYear;
+    const ry = by + rmdStartAgeUI(by);
+    const i = pts.findIndex(q => q.year === ry);
+    if (i < 0) return;
+    svg += `<line x1="${x(i)}" y1="${padT}" x2="${x(i)}" y2="${padT+ih}" stroke="#1B2A3A" stroke-width="1" stroke-dasharray="3,3"></line>
+      <text x="${x(i)+3}" y="${padT+12}" font-size="9.5" fill="#1B2A3A" stroke="#FFFFFF" stroke-width="2.4" paint-order="stroke">RMDs ${esc(p.name)||pk}</text>`;
+  });
+  svg += `</svg>`;
+  const rateChips = [[.12,"≤12%"],[.22,"22%"],[.24,"24%"],[.32,"32%"],[.35,"35%"],[.37,"37%"]].map(([r,l]) =>
+    `<span><span class="sw" style="background:${shade(r)}"></span>${l}</span>`).join("") +
+    `<span><span class="sw" style="background:${TOPC}; opacity:.45"></span>top bracket (full-height column)</span>`;
+  const atWhat = disp.mode === "spending" ? "at <strong>your entered spending</strong>" : "at capacity spending";
+  box.innerHTML = `
+    <div class="wtitle" style="margin-top:18px">Bracket headroom — room by year · tap a year to move the Roth-conversion ladder</div>
+    ${modeBar(disp, capacity)}
+    ${svg}
+    <div class="legend">${rateChips}<span class="note">bar color = marginal bracket that year</span></div>
+    <p class="note" style="margin-top:4px">Each bar is the distance (nominal $) from that year's taxable ordinary
+    income — ${atWhat}, under the active draw strategy — to the next federal bracket edge. Tall bars are the
+    terrain where added ordinary income (a Roth conversion, an extra IRA draw) is taxed at the current rate;
+    the strip typically narrows when RMDs begin. Bracket-fill mode shows <em>worked</em> terrain (the strategy
+    already climbed to its ceiling), not natural terrain. Descriptive only: place conversions as actions above
+    and watch this strip, capacity, and lifetime taxes respond. State tax (e.g. the NJ exclusion cliff) is not
+    shown here. <strong>Tap any year</strong> to move the Roth-conversion ladder below to that year — its
+    non-negotiable floor and the priced room above it. Heads-up on units: this strip is in <em>nominal</em>
+    dollars, while the expanded ladder is in <em>today's</em> dollars — the same room, differing only by that
+    year's inflation factor (e.g. ~$61K nominal ≈ ~$40K today's in the 2040s), so the two numbers are consistent,
+    not conflicting.</p>`;
+  /* #41: the ladder reads this run; refresh it if a year is selected */
+  window._headroomRun = run; window._headroomMode = disp.mode;
+  renderLadder();
+}
+
+/* ---------------- #41/#42: Bracket ladder — windowed (display only) ---- */
+/* One question per column: given that year's NON-NEGOTIABLE ordinary income
+   (wages/pension/interest/rental, taxable SS at the floor, forced RMD), how
+   much negotiable room exists in the current bracket and each bracket above —
+   the space a Roth conversion or deferred-sourced paydown pours into.
+   METHOD — SIMULATE, DON'T DECOMPOSE: room is measured by re-invoking
+   federalTax() with incremental ordinary income (the conversions channel) on
+   the year's fixed inputs, bisecting to each bracket top, so SS phase-in and
+   the deduction are captured exactly rather than by edge-minus-income
+   arithmetic. UI only — no engine touch; same pattern as the fixed-percent
+   panel.
+   #42 — the headroom strip is the NAVIGATOR (click sets the window start); the
+   ladder is the primary view, extended from one year to a selectable window
+   (1–6 yr). Width 1 is the original single-year ladder in nominal $. Width ≥ 2
+   places the columns on ONE shared vertical scale in today's (real) dollars —
+   the only basis on which a bracket edge lands at the same height in every
+   column — so the gray floor stepping up at RMD onset, or the priced room
+   collapsing in a survivor-filing-Single year, reads as a shape across
+   adjacent columns. */
+
+function ladderPick(year){
+  window._ladderYear = (window._ladderYear === year) ? null : year;   // click again to close
+  renderLadder();
+}
+function ladderShiftStart(delta){                                     // move the window's start year without the strip
+  const run = window._headroomRun; if (!run || !run.rows.length) return;
+  const first = run.rows[0].year, last = run.rows[run.rows.length-1].year;
+  const cur = window._ladderYear != null ? window._ladderYear : first;
+  window._ladderYear = Math.max(first, Math.min(last, cur + delta));
+  renderLadder();
+}
+function ladderWidthGet(){
+  if (window._ladderWidth != null) return Math.max(1, Math.min(6, window._ladderWidth));
+  const d = (DATA.display||{}).ladderWidth;
+  return d ? Math.max(1, Math.min(6, d)) : 2;                          // #42 default: 2 years
+}
+function ladderWidth(delta){
+  const next = Math.max(1, Math.min(6, ladderWidthGet() + delta));
+  window._ladderWidth = next;
+  (DATA.display = DATA.display || {}).ladderWidth = next;              // persist the preference
+  setJSON(DATA);
+  renderLadder();
+}
+
+/* #022 — "spending needs" marker: where this year's ordinary taxable income
+   would land if the IRA were drawn only for what spending needs, i.e. WITHOUT
+   the forced RMD. Display-only; the engine is untouched.
+   METHOD — TRUE SINGLE-YEAR COUNTERFACTUAL (not an alternate timeline):
+   seed from the ACTUAL trajectory's opening balances for year Y (the prior
+   row's post-growth byType — exactly what the engine carries into Y), then
+   re-solve JUST this year's funding with rmd=0 using the same draw order
+   (and bracket-fill branch) the engine uses, reading the landing back through
+   the frozen federalTax so the SS phase-in and deduction re-solve. Because it
+   restarts from the real trajectory every year it never drifts, and realized
+   gains are held at the year's actual value (the marker is the ordinary/RMD
+   axis). The counterfactual can only draw MORE (rmd cash is gone), so we clamp
+   the result to ≤ the actual landing — the marker sits on or below the dark
+   landing line, never above it, and coincides with it whenever the RMD forced
+   nothing extra (normal and pre-RMD years). Reconstructed federalTax inputs
+   reproduce the recorded landing to the cent (gated in test_spend_marker). */
+function ladderSpendingNeeds(run, year){
+  const rows = run.rows, idx = rows.findIndex(x => x.year === year), r = rows[idx];
+  if (!r) return null;
+  const inc = r.income, fed = r.detail && r.detail.fed;
+  if (!fed) return null;
+  const rmd = inc.rmd || 0;
+  const A = DATA.assumptions || {};
+  const drawOrder = A.drawOrder || ["cash","taxable","deferred","roth"];
+  const stateId = DATA.household.stateModule || "GENERIC";
+  const driftPP = (A.taxDrift && year >= (A.taxDrift.fromYear||Infinity)) ? A.taxDrift.deltaPP : 0;
+  const tb = A.maxTargetBracket, targetRate = tb == null ? null : (tb > 1 ? tb/100 : tb);
+  /* opening balances entering year Y = prior row's post-growth byType (the value
+     the engine carries into the loop); year 0 = the initial balance sheet. */
+  let open;
+  if (idx > 0){ const b = rows[idx-1].byType || {};
+    open = { cash: b.cash||0, taxable: b.taxable||0, deferred: b.deferred||0, roth: b.roth||0 }; }
+  else { open = { cash:0, taxable:0, deferred:0, roth:0 };
+    (DATA.balanceSheet||[]).forEach(x => { if (open[x.taxType] != null) open[x.taxType] += x.value; }); }
+  const conversions = fed.conversions || 0;
+  /* deliberate ordinary actions (a deferred-sourced debt paydown) stay in the
+     landing — only the FORCED RMD is suppressed. Back the payoff amount out of
+     otherOrd (engine folds it into the tax call but records only voluntary + rmd). */
+  const payoffDeferred = Math.max(0, fed.otherOrd - inc.wages - inc.pension - inc.interest
+    - inc.rental - conversions - fed.deferredDraws - rmd);
+  /* recover the year's realized LTCG from MAGI (magi = otherOrd + ssTaxable + qualDiv + ltcg). */
+  const ltcgRealized = Math.max(0, fed.magi - fed.otherOrd - fed.ssTaxable - inc.qualDiv);
+  const nomF = r.nomF, spendNeed = r.spend;
+  const cashExRmd = inc.wages + inc.pension + inc.ss + inc.interest + inc.rental + inc.qualDiv;
+  const mkY = D => ({ filing: r.filing, ages: r.ages, wages: inc.wages, pension: inc.pension,
+    deferredDraws: D + payoffDeferred, conversions, interest: inc.interest, rental: inc.rental,
+    ss: inc.ss, qualDiv: inc.qualDiv, ltcgRealized, taxDriftPP: driftPP, nomF, stateCfg: A.stateOverrides });
+  const stateMod = STATE_MODULES[stateId] || STATE_MODULES.GENERIC;
+  const totalTax = D => { const y = mkY(D); return federalTax(y).tax + stateMod.computeTax(y).stateTax; };
+  /* fidelity check the caller/battery can read: reconstructing the ACTUAL deferred
+     ordinary (voluntary + rmd) must reproduce the recorded landing. */
+  const reconLanding = federalTax(mkY(fed.deferredDraws + rmd)).ordTaxable;
+  /* re-solve the deferred draw D that funds spending with rmd = 0 (3–5 passes,
+     mirroring the engine's fixed point), from the actual opening balances. */
+  let D = 0, tax = r.taxes.total;
+  for (let pass = 0; pass < 5; pass++){
+    let need = spendNeed + tax - cashExRmd;
+    const avail = { cash: open.cash, taxable: open.taxable, deferred: open.deferred, roth: open.roth };
+    D = 0;
+    if (targetRate != null){                              /* bracket-fill: deferred-first to the ceiling */
+      const ceil = bracketCeiling(targetRate, r.filing);
+      const evalOrd = dx => federalTax(mkY(dx)).ordTaxable;
+      const hiCap = Math.min(Math.max(need,0), avail.deferred);
+      let dd = 0;
+      if (hiCap > 0 && ceil > 0 && evalOrd(0) < ceil - 0.5){
+        if (evalOrd(hiCap) <= ceil) dd = hiCap;
+        else { let lo = 0, hi = hiCap; for (let it = 0; it < 24; it++){ const m = (lo+hi)/2; if (evalOrd(m) <= ceil) lo = m; else hi = m; } dd = lo; }
+      }
+      if (dd > 0){ D += dd; avail.deferred -= dd; need -= dd; }
+      for (const tt of drawOrder.filter(t => t !== "deferred")){ if (need <= 0) break; const t = Math.min(avail[tt], need); avail[tt] -= t; need -= t; }
+      if (need > 1){ const t = Math.min(avail.deferred, need); D += t; need -= t; }
+    } else {
+      for (const tt of drawOrder){ if (need <= 0) break; const t = Math.min(avail[tt], need); if (tt === "deferred") D += t; avail[tt] -= t; need -= t; }
+    }
+    tax = totalTax(D);
+  }
+  const rawCF = federalTax(mkY(D)).ordTaxable;
+  const spendLanding = Math.min(rawCF, fed.ordTaxable);   /* clamp: never above the actual landing */
+  const forcedOrd = Math.max(0, fed.ordTaxable - spendLanding);  /* ordinary income the RMD forced above spending (incl. SS re-solve), real $ */
+  const cashSurplus = Math.max(0, rmd - D);               /* RMD cash beyond what spending would have drawn from the IRA, real $ */
+  const margRate = (() => { const br = TAX.ordinary[r.filing]; let rt = br[0][1]; br.forEach(b => { if (fed.ordTaxable >= b[0]) rt = b[1]; }); return rt; })();
+  const surplusAfterTax = cashSurplus * (1 - margRate); /* ≈ redeployable after federal marginal tax, real $ */
+  return { spendLanding, forcedOrd, cashSurplus, surplusAfterTax, margRate, rmd, deferredCF: D, reconLanding, landingActual: fed.ordTaxable };
+}
+
+/* Pure per-year column model — no DOM. Shared by the single- and multi-column
+   paths so the five fixes stay in one place. Positions are in real $ (the
+   engine's native basis); labels are formatted per-caller (nominal in width 1,
+   today's $ in the shared window). */
+function ladderColumnModel(run, year){
+  const r = run.rows.find(x => x.year === year);
+  if (!r) return null;
+  const A = DATA.assumptions || {};
+  const driftPP = (A.taxDrift && year >= (A.taxDrift.fromYear||Infinity)) ? A.taxDrift.deltaPP : 0;
+  const inc = r.income;
+  const fixed = { filing: r.filing, ages: r.ages, wages: inc.wages, pension: inc.pension,
+    deferredDraws: inc.rmd, conversions: 0, interest: inc.interest, rental: inc.rental,
+    ss: inc.ss, qualDiv: inc.qualDiv, ltcgRealized: 0, taxDriftPP: driftPP,
+    nomF: r.nomF, stateCfg: A.stateOverrides };
+  const at = delta => federalTax(Object.assign({}, fixed, { conversions: delta }));
+  const floorFed = at(0);
+  const floorOrd = floorFed.ordTaxable;                      // real $
+  const landing  = r.detail.fed.ordTaxable;                  // real $, the model's actual
+  const br = TAX.ordinary[r.filing];
+  const edges = br.slice(1).map(b => b[0]);                  // upper edges of all but top
+  const rateAt = ord => { let rt = br[0][1]; br.forEach(b => { if (ord >= b[0]) rt = b[1]; }); return rt; };
+  const deltaTo = E => {                                     // gross Δ so ordTaxable(floor+Δ)=E
+    if (at(0).ordTaxable >= E) return 0;
+    let lo = 0, hi = (E - floorOrd) * 2 + 1000;
+    for (let k = 0; k < 8 && at(hi).ordTaxable < E; k++) hi *= 2;
+    for (let i = 0; i < 42; i++){ const m = (lo+hi)/2; if (at(m).ordTaxable < E) lo = m; else hi = m; }
+    return (lo+hi)/2;
+  };
+  const bands = [];
+  let prevDelta = 0, prevTax = floorFed.tax, prevOrd = floorOrd;
+  edges.forEach(E => {
+    if (E <= floorOrd + 0.5) return;                          // floor already past this edge
+    const d = deltaTo(E), f = at(d);
+    bands.push({ lo: prevOrd, hi: E, rate: rateAt(Math.max(prevOrd, E-1)),
+      gross: d - prevDelta, cost: f.tax - prevTax });
+    prevDelta = d; prevTax = f.tax; prevOrd = E;
+  });
+  const topRate = br[br.length-1][1];
+  const topEdge = edges.length ? edges[edges.length-1] : Math.max(floorOrd, landing) * 1.15;
+  const colScaleMax = Math.max(topEdge * 1.06, floorOrd * 1.15, landing * 1.1, 1);
+  /* #5: does the model's landing sit exactly on the active bracket-fill ceiling? */
+  let ceilBind = null;
+  const tb = A.maxTargetBracket;
+  if (tb != null){
+    const targetRate = tb > 1 ? tb/100 : tb;
+    const ceilOrd = bracketCeiling(targetRate, r.filing);
+    if (isFinite(ceilOrd) && Math.abs(landing - ceilOrd) <= Math.max(2, Math.abs(ceilOrd)*1e-4))
+      ceilBind = { targetRate, ceilOrd };
+  }
+  const floorBits = [["wages",inc.wages],["pension",inc.pension],["interest",inc.interest],
+    ["rental",inc.rental],["taxable SS at the floor",floorFed.ssTaxable],["forced RMD",inc.rmd]]
+    .filter(x => x[1] > 0.5);
+  /* #022: where ordinary income would land funding spending with the RMD off */
+  const sn = ladderSpendingNeeds(run, year);
+  const spendLanding = sn ? sn.spendLanding : landing;
+  const rmdForcedOrd = sn ? sn.forcedOrd : 0;
+  return { year, r, inc, filing: r.filing, ages: r.ages, nomF: r.nomF,
+    floorFed, floorOrd, landing, spendLanding, rmdForcedOrd, spendNeeds: sn,
+    bands, topRate, topEdge, edges, rateAt,
+    colScaleMax, ceilBind, floorBits };
+}
+
+const _ladShade = rt => rt <= .12 ? "#3E8F6B" : rt <= .22 ? "#8FB03E" : rt <= .24 ? "#C9A227"
+              : rt <= .32 ? "#C97B2F" : rt <= .35 ? "#B03030" : "#6B2D5B";
+const _ladCased = (tx, ty, txt, size, anchor, col, weight) =>
+  `<text x="${tx}" y="${ty}" font-size="${size}" fill="${col||"#3A4756"}" text-anchor="${anchor||"start"}"
+    ${weight?`font-weight="${weight}"`:""} stroke="#FFFFFF" stroke-width="2.6" paint-order="stroke">${txt}</text>`;
+
+function renderLadder(){
+  const box = $("ladder"); if (!box) return;
+  const run = window._headroomRun;
+  if (run && window._ladderYear === undefined && run.rows.length)
+    window._ladderYear = run.rows[0].year;     // default-open at the first year (Roth-conversion planner); an explicit close sets null and sticks within the session
+  const start = window._ladderYear;
+  if (!run || !start){ box.innerHTML = ""; return; }
+  if (!run.rows.some(x => x.year === start)){ box.innerHTML = ""; window._ladderYear = null; return; }
+
+  const width = ladderWidthGet();
+  const years = [];                                          // contiguous window, clamped to horizon
+  for (let y = start; y < start + width; y++){ if (run.rows.some(x => x.year === y)) years.push(y); else break; }
+  const cols = years.map(y => ladderColumnModel(run, y)).filter(Boolean);
+  if (!cols.length){ box.innerHTML = ""; return; }
+  window._ladderDrawers = window._ladderDrawers || new Set();
+  window._ladderDrawers = new Set([...window._ladderDrawers].filter(y => years.includes(y)));  // drawers only for years still in the window (ephemeral, not persisted)
+  const single = cols.length === 1;
+  const scaleMax = Math.max(1, ...cols.map(c => c.colScaleMax));       // #42 shared vertical scale
+  const modeNote = window._headroomMode === "spending" ? "your entered spending" : "capacity spending";
+  const shadeL = _ladShade, cased = _ladCased;
+
+  if (single){
+    /* ---- width 1: the original single-year ladder, nominal $ (five fixes applied) ---- */
+    const c = cols[0];
+    const H = 320, W = 1000, colX = 60, colW = 150, padT = 26, padB = 20;
+    const yv = v => padT + (H - padT - padB) * (1 - Math.min(v, scaleMax)/scaleMax);
+    const N = v => fmtK(v * c.nomF);
+    const yearLbl = c.year + (c.ages.length ? " (age " + c.ages.join("/") + ")" : "");
+    let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Bracket ladder for ${c.year}">`;
+    /* #1: gray non-negotiable floor — hover itemizes its components */
+    const floorTitle = "Non-negotiable floor: " + N(c.floorOrd) + " taxable ordinary — "
+      + (c.floorBits.map(x => x[0] + " " + N(x[1])).join(" · ") || "none");
+    if (c.floorOrd > 0)
+      svg += `<rect x="${colX}" y="${yv(c.floorOrd)}" width="${colW}" height="${yv(0)-yv(c.floorOrd)}" fill="#8A93A0" fill-opacity="0.55"><title>${floorTitle}</title></rect>`;
+    svg += cased(colX + colW + 10, Math.min(yv(c.floorOrd/2)+3, H-padB-4), "non-negotiable floor · " + N(c.floorOrd) + " taxable", 10.5, "start", "#5A6470", 600);
+    /* bands — #2: fill-opacity 0.8 to match the headroom strip */
+    c.bands.forEach(b => {
+      const y1 = yv(b.hi), y0 = yv(b.lo);
+      svg += `<rect x="${colX}" y="${y1}" width="${colW}" height="${Math.max(y0-y1,1)}" fill="${shadeL(b.rate)}" fill-opacity="0.8" stroke="#FFFFFF" stroke-width="1"><title>${(b.rate*100).toFixed(0)}% band: ${N(b.gross)} of gross room · filling it costs ${N(b.cost)} federal tax</title></rect>`;
+      if (y0 - y1 > 13)
+        svg += cased(colX + colW + 10, (y0+y1)/2 + 3.5,
+          (b.rate*100).toFixed(0) + "% · room " + N(b.gross) + " gross · costs " + N(b.cost), 10.5, "start", "#3A4756");
+    });
+    /* #3: top rate as a proper translucent band from the last edge to the chart top (no white gap) */
+    const topY0 = c.bands.length ? yv(c.bands[c.bands.length-1].hi) : yv(c.floorOrd);
+    svg += `<rect x="${colX}" y="${padT}" width="${colW}" height="${Math.max(topY0-padT,1)}" fill="${shadeL(c.topRate)}" fill-opacity="0.8" stroke="#FFFFFF" stroke-width="1"><title>${(c.topRate*100).toFixed(0)}% and above — unbounded ordinary room</title></rect>`
+      + cased(colX + colW + 10, padT + 9, (c.topRate*100).toFixed(0) + "% above — unbounded", 10, "start", "#6B2D5B", 600);
+    /* landing line — #5: name the coincidence when the model lands on the bracket-fill ceiling */
+    const ly = yv(Math.min(c.landing, scaleMax));
+    const landLbl = c.ceilBind
+      ? "model landed exactly at your " + (c.ceilBind.targetRate*100).toFixed(0) + "% ceiling (bracket-fill target) · " + N(c.landing) + " taxable"
+      : "model landed here · " + N(c.landing) + " taxable (" + (c.rateAt(c.landing)*100).toFixed(0) + "%)";
+    svg += `<line x1="${colX-14}" y1="${ly}" x2="${colX+colW+14}" y2="${ly}" stroke="#1B2A3A" stroke-width="2" stroke-dasharray="6,3"></line>`
+      + cased(colX + colW + 10, ly - 6, landLbl, 10.5, "start", "#1B2A3A", 700);
+    /* #022: spending-needs marker — where ordinary income lands with the RMD suppressed */
+    if (c.rmdForcedOrd > 500 && c.spendNeeds){
+      const sy = yv(Math.min(c.spendLanding, scaleMax)), sn = c.spendNeeds;
+      const stip = c.year + " · spending needs ≈ " + N(c.spendLanding) + " taxable — where ordinary income "
+        + "lands funding this year's spending with the forced RMD off. RMD pushed ordinary income +"
+        + N(c.rmdForcedOrd) + " above what spending needed" + (sn.surplusAfterTax > 0
+          ? "; after-tax surplus ≈ " + N(sn.surplusAfterTax) + " to redeploy" : "") + ".";
+      svg += `<line x1="${colX-14}" y1="${sy}" x2="${colX+colW+14}" y2="${sy}" stroke="#2E6E8E" stroke-width="1.6" stroke-dasharray="5,3" stroke-opacity="0.9"><title>${esc(stip)}</title></line>`
+        + cased(colX + colW + 10, sy + 11, "spending needs · " + N(c.spendLanding), 10, "start", "#2E6E8E", 600);
+    }
+    svg += `</svg>`;
+    const floorNote = "Gross floor components: " + (c.floorBits.map(x => x[0] + " " + N(x[1])).join(" · ") || "none") + ". ";
+    const colGeo = [{ year: c.year, leftPct: 6, widthPct: 15 }];         // single column: colX 60 / colW 150 of W 1000
+    const hd = ladderHeaderAndDrawers(cols, colGeo, true, false);
+    box.innerHTML = ladderShell(cols, yearLbl, true, svg, floorNote, modeNote, hd.header, hd.drawers);
+    return;
+  }
+
+  /* ---- width ≥ 2: side-by-side columns on one shared real-$ scale ---- */
+  const H = 372, W = 1000, padT = 46, padB = 28, axisW = 52, rightPad = 12;
+  const plotL = axisW, plotR = W - rightPad, plotW = plotR - plotL, n = cols.length;
+  const yv = v => padT + (H - padT - padB) * (1 - Math.min(v, scaleMax)/scaleMax);
+  const gap = n <= 3 ? 26 : n <= 5 ? 18 : 12;
+  const colW = Math.max(26, (plotW - gap*(n-1)) / n);
+  const colXof = i => plotL + i*(colW + gap);
+  const thin = n >= 4;                                        // thin per-column labels; hover carries detail
+  const N = v => fmtK(v);                                     // shared scale is today's (real) $
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Windowed bracket ladder ${cols[0].year}–${cols[n-1].year}, shared today's-dollar scale">`;
+  /* shared-scale gridlines at the union of bracket edges (real $) — the horizontal lines columns align to */
+  const edgeMap = new Map();
+  cols.forEach(c => c.edges.forEach(e => { if (e < scaleMax) edgeMap.set(Math.round(e), e); }));
+  let lastLabelY = -1e9;
+  [...edgeMap.values()].sort((a,b)=>a-b).forEach(e => {
+    const y = yv(e);
+    svg += `<line x1="${plotL}" y1="${y}" x2="${plotR}" y2="${y}" stroke="#C7CDD6" stroke-width="1" stroke-dasharray="2,4"></line>`;
+    if (y - lastLabelY > 13){                                 // avoid crowding the gutter
+      svg += `<text x="${plotL-6}" y="${y+3}" font-size="9" fill="#8A93A0" text-anchor="end">${fmtK(e)}</text>`;
+      lastLabelY = y;
+    }
+  });
+  svg += cased(2, padT - 33, "today's $", 10.5, "start", "#5A6470", 700);
+  /* columns */
+  cols.forEach((c,i) => {
+    const x = colXof(i);
+    if (c.floorOrd > 0){
+      const fTitle = c.year + " floor: " + N(c.floorOrd) + " taxable — "
+        + (c.floorBits.map(b => b[0] + " " + N(b[1])).join(" · ") || "none");
+      svg += `<rect x="${x}" y="${yv(c.floorOrd)}" width="${colW}" height="${yv(0)-yv(c.floorOrd)}" fill="#8A93A0" fill-opacity="0.55"${ladTipAttrs(fTitle)}></rect>`;
+      svg += cased(x + colW/2, Math.min(yv(c.floorOrd/2)+3, yv(0)-4), N(c.floorOrd), thin?8:8.5, "middle", "#4A535F", 600);
+    }
+    c.bands.forEach(b => {
+      const y1 = yv(b.hi), y0 = yv(b.lo);
+      svg += `<rect x="${x}" y="${y1}" width="${colW}" height="${Math.max(y0-y1,1)}" fill="${shadeL(b.rate)}" fill-opacity="0.8" stroke="#FFFFFF" stroke-width="1"${ladTipAttrs(c.year+" · "+(b.rate*100).toFixed(0)+"% band: "+N(b.gross)+" of gross room · filling it costs "+N(b.cost)+" federal tax (incl. NIIT exposure)")}></rect>`;
+      if (y0 - y1 > 15)
+        svg += cased(x + colW/2, (y0+y1)/2 + 3.5,
+          thin ? (b.rate*100).toFixed(0)+"%" : (b.rate*100).toFixed(0)+"% · "+N(b.gross), thin?9:9.5, "middle", "#3A4756");
+    });
+    /* #3: top-rate band to chart top */
+    const topY0 = c.bands.length ? yv(c.bands[c.bands.length-1].hi) : yv(c.floorOrd);
+    svg += `<rect x="${x}" y="${padT}" width="${colW}" height="${Math.max(topY0-padT,1)}" fill="${shadeL(c.topRate)}" fill-opacity="0.8" stroke="#FFFFFF" stroke-width="1"${ladTipAttrs(c.year+" · "+(c.topRate*100).toFixed(0)+"% and above — unbounded ordinary room")}></rect>`;
+    /* landing line (per column) — #5 aware via hover + marker */
+    const ly = yv(Math.min(c.landing, scaleMax));
+    const nextE = c.edges.find(e => e > c.landing);
+    const landTitle = c.year + " · model landed at " + N(c.landing) + " taxable (" + (c.rateAt(c.landing)*100).toFixed(0) + "%)"
+      + (c.ceilBind ? " — exactly at your " + (c.ceilBind.targetRate*100).toFixed(0) + "% ceiling (bracket-fill target)" : "")
+      + (nextE != null
+          ? " · room to the next edge " + N(nextE - c.landing) + " today's (" + fmtK((nextE - c.landing) * c.nomF) + " nominal) — the strip's number"
+          : " · top bracket, no headroom");
+    svg += `<line x1="${x-3}" y1="${ly}" x2="${x+colW+3}" y2="${ly}" stroke="#1B2A3A" stroke-width="2" stroke-dasharray="6,3"${ladTipAttrs(landTitle)}></line>`;
+    if (c.ceilBind) svg += `<circle cx="${x+colW-4}" cy="${ly}" r="2.8" fill="#1B2A3A"${ladTipAttrs(landTitle)}></circle>`;
+    /* #022: spending-needs marker (per column) — where ordinary income lands with the RMD off */
+    if (c.rmdForcedOrd > 500 && c.spendNeeds){
+      const sy = yv(Math.min(c.spendLanding, scaleMax)), sn = c.spendNeeds;
+      const stip = c.year + " · spending needs ≈ " + N(c.spendLanding) + " taxable (today's) — where ordinary "
+        + "income lands funding spending with the forced RMD off. The RMD pushed ordinary income +"
+        + N(c.rmdForcedOrd) + " above what spending needed" + (sn.surplusAfterTax > 0
+          ? "; after-tax surplus ≈ " + N(sn.surplusAfterTax) + " today's (" + fmtK(sn.surplusAfterTax * c.nomF) + " nominal) to redeploy" : "") + ".";
+      svg += `<line x1="${x-3}" y1="${sy}" x2="${x+colW+3}" y2="${sy}" stroke="#2E6E8E" stroke-width="1.6" stroke-dasharray="5,3" stroke-opacity="0.9"${ladTipAttrs(stip)}></line>`;
+      if (!thin) svg += cased(x + colW/2, sy + 10, "spending", 8.5, "middle", "#2E6E8E", 600);
+    }
+    /* header: year · ages · filing (thinned at width ≥ 4; flag a filing flip) */
+    const flip = i > 0 && cols[i-1].filing !== c.filing;
+    const hdr = thin ? String(c.year) : c.year + (c.ages.length ? " · " + c.ages.join("/") : "");
+    svg += cased(x + colW/2, padT - 24, hdr, thin?10.5:11, "middle", "#1B2A3A", 700);
+    svg += cased(x + colW/2, padT - 12, (flip?"→ ":"") + c.filing, thin?8.5:9, "middle", flip?"#6B2D5B":"#6B7482", flip?700:400);
+  });
+  svg += `</svg>`;
+  const colGeo = cols.map((c,i) => ({ year: c.year, leftPct: colXof(i)/W*100, widthPct: colW/W*100 }));
+  const hd = ladderHeaderAndDrawers(cols, colGeo, false, thin);
+  box.innerHTML = ladderShell(cols, null, false, svg, "", modeNote, hd.header, hd.drawers);
+}
+
+function ladderShell(cols, yearLbl, single, svg, floorNote, modeNote, headerBar, drawers){
+  const start = cols[0].year, end = cols[cols.length-1].year, n = cols.length;
+  const w = ladderWidthGet();
+  const _run = window._headroomRun;
+  const _first = _run && _run.rows.length ? _run.rows[0].year : start;
+  const _last  = _run && _run.rows.length ? _run.rows[_run.rows.length-1].year : end;
+  const startStepper = `<span class="ladder-win">start
+    <button class="mini" ${start<=_first?"disabled":""} onclick="ladderShiftStart(-1)" title="earlier start year">‹</button>
+    <b>${start}</b>
+    <button class="mini" ${start>=_last?"disabled":""} onclick="ladderShiftStart(1)" title="later start year">›</button></span>`;
+  const stepper = `<span class="ladder-win">window
+    <button class="mini" ${w<=1?"disabled":""} onclick="ladderWidth(-1)" title="narrower window">−</button>
+    <b>${n} yr</b>
+    <button class="mini" ${w>=6?"disabled":""} onclick="ladderWidth(1)" title="wider window">+</button></span>`;
+  const head = single
+    ? `Bracket ladder · Roth-conversion planner — ${yearLbl} · nominal dollars`
+    : `Bracket ladder · Roth-conversion planner — ${start}–${end} · ${n} yrs · shared scale · today's dollars`;
+  const introSingle = `${floorNote}Bands are <em>gross</em> ordinary dollars addable (a Roth conversion, an extra
+    deferred draw) before crossing each edge, with the federal cost of filling each — simulated through the full
+    tax calc, so the SS phase-in and deduction are in the numbers, not approximated. Hover the gray floor for its
+    components. The dark dashed line is the model's <strong>actual</strong> ordinary taxable income this year —
+    funded at ${modeNote} and <em>including any forced RMD</em>, so once RMDs begin it can sit above what spending
+    alone requires. When it does, a lighter teal <strong>“spending needs”</strong> line marks where ordinary income
+    would land drawing the IRA only for spending (RMD off, SS re-solved); the gap between the two is the RMD-forced
+    excess — hover it for the redeployable after-tax surplus.`;
+  const introMulti = `Each column is one year on a <strong>shared vertical scale in today's dollars</strong>, so a
+    given bracket edge sits at the same height in every column (the dashed gridlines). Watch the gray floor step up
+    as RMDs begin, or the priced room collapse if filing turns Single — that shift is the shape to read. Bands are
+    <em>gross</em> ordinary dollars addable before crossing each edge; hover any band, floor, or landing line for
+    the exact figures and the federal cost of filling it. The dark dashed line per column is the model's
+    <strong>actual</strong> ordinary taxable income — funded at ${modeNote} and <em>including forced RMD</em>, so it
+    can rise above what spending alone needs once RMDs begin; a lighter teal <strong>“spending needs”</strong> line
+    then marks where ordinary income would land drawing the IRA only for spending, and the gap is the RMD-forced
+    excess (hover it). Simulated through the full tax calc — SS phase-in
+    and the deduction are in the numbers, not approximated. Width 1 returns the single-year ladder in nominal $.`;
+  return `
+    <div class="wtitle" style="margin-top:14px">${head}
+      ${startStepper}
+      ${stepper}
+      <button class="mini" style="margin-left:10px" onclick="ladderPick(${start})">close</button></div>
+    <p class="note" style="margin:4px 0 2px"><strong>Find cheap bracket room to fill</strong> — with Roth conversions or extra deferred draws, before RMDs and IRMAA arrive. ${single ? introSingle : introMulti}</p>
+    ${headerBar || ""}
+    ${svg}
+    ${ladderLegendAndFlags(cols)}
+    ${drawers || ""}
+    <p class="note" style="margin-top:2px"><strong>Estimated terrain, clearly labeled:</strong> 2026 federal tables
+    treated as inflation-indexed (the tax-drift slider stress-tests that assumption) · the taxable-SS floor itself
+    moves with other income, so the floor is an estimate, not an invoice · realized capital gains are excluded from
+    the floor (they claim no ordinary-bracket room but do interact through SS phase-in and LTCG stacking) · state
+    tax (e.g. the NJ exclusion cliff) not shown.</p>`;
+}
+
+/* ---- Feature 2 + 1 (index020): clickable per-column headers + tax-table drawers ---- */
+function ladderDrawer(year){
+  const S = (window._ladderDrawers = window._ladderDrawers || new Set());
+  if (S.has(year)) S.delete(year); else S.add(year);
+  renderLadder();
+}
+
+/* Header buttons are absolutely positioned over their SVG column (leftPct/widthPct
+   come from the same geometry the chart is drawn with, so they track the columns
+   exactly). Each is the affordance that opens/closes that year's drawer. */
+function ladderHeaderAndDrawers(cols, colGeo, single, thin){
+  const S = (window._ladderDrawers = window._ladderDrawers || new Set());
+  const btns = cols.map((c,i) => {
+    const g = colGeo[i], open = S.has(c.year), chev = open ? "▾" : "▸";
+    const cue = thin ? "" : ` <span class="cue">${open ? "collapse" : "tables"}</span>`;
+    const ttl = (open ? "Collapse" : "Open") + " " + c.year + " nominal tax tables";
+    return `<button class="ladcol-btn${open?" open":""}" style="left:${g.leftPct.toFixed(3)}%; width:${g.widthPct.toFixed(3)}%"
+      onclick="ladderDrawer(${c.year})" title="${ttl}"><span class="chev">${chev}</span>${c.year}${cue}</button>`;
+  }).join("");
+  const header = `<div class="ladhead" style="height:24px" role="group" aria-label="Open a year's tax tables">${btns}</div>`;
+  const openCols = cols.filter(c => S.has(c.year));
+  const drawers = openCols.length
+    ? `<div class="laddrawers">${openCols.map(c => ladderDrawerHTML(c, single)).join("")}</div>` : "";
+  return { header, drawers };
+}
+
+function ladderRateTable(rows, headL, headR){
+  const body = rows.map(r => `<tr><td class="r">${r.rate}</td><td>${r.range}</td></tr>`).join("");
+  return `<table class="ladtax"><thead><tr><th>${headL}</th><th>${headR}</th></tr></thead><tbody>${body}</tbody></table>`;
+}
+
+/* real bracket edges × this column's nomF = that year's nominal edges */
+function ladderNominalRows(brackets, nomF){
+  return brackets.map((b,i) => {
+    const loN = b[0]*nomF, hiN = i+1 < brackets.length ? brackets[i+1][0]*nomF : null;
+    return { rate: (b[1]*100).toFixed(0)+"%",
+      range: hiN == null ? fmt$(loN)+" +" : fmt$(loN)+" – "+fmt$(hiN) };
+  });
+}
+
+/* where this year's realized gains / QD land on the LTCG schedule, read from the
+   engine's own numbers (detail.fed) — the cheap way to convey the stacking. */
+function ladderGainsLine(c){
+  const fed = (c.r.detail && c.r.detail.fed) || {};
+  const g = fed.gains || 0, ord = fed.ordTaxable || 0, nomF = c.nomF;
+  const br = TAX.ltcg[c.filing], zeroCeil = br[1][0];         // top of the 0% LTCG band (real $)
+  if (g < 1)
+    return `No realized gains or qualified dividends land in ${c.year} — the 0% LTCG room (up to ${fmt$(zeroCeil*nomF)} of taxable income) sits unused.`;
+  const rateAtOrd = (() => { let rt = br[0][1]; br.forEach(b => { if (ord >= b[0]) rt = b[1]; }); return rt; })();
+  const eff = fed.gainsTax > 0 ? fed.gainsTax / g : rateAtOrd;
+  if (ord >= zeroCeil)
+    return `Your ${fmt$(g*nomF)} of gains / qualified dividends sit at ${(rateAtOrd*100).toFixed(0)}% — ordinary income already used up the 0% room (its ceiling is ${fmt$(zeroCeil*nomF)} taxable).`;
+  return `Your ${fmt$(g*nomF)} of gains / qualified dividends stack on ${fmt$(ord*nomF)} of ordinary taxable income, starting in the 0% band (effective ${(eff*100).toFixed(1)}% this year).`;
+}
+
+/* Option 2 (deferred): gains as a mini stacked strip on top of ordinary income,
+   showing where they land against the LTCG breakpoints. Stubbed behind a flag so
+   it drops in later (mock_opt2_strip.png) without touching the drawer wiring. */
+const LADDER_GAINS_STRIP = true;   /* index021: Option 2 shipped */
+function ladderGainsStrip(c){
+  if (!LADDER_GAINS_STRIP) return "";
+  const fed = (c.r.detail && c.r.detail.fed) || {};
+  const g = fed.gains || 0, ord = fed.ordTaxable || 0, nomF = c.nomF;
+  const br = TAX.ltcg[c.filing], e15 = br[1][0], e20 = br[2][0];   // real $
+  let span = Math.max((ord + g) * 1.08, e15 * 1.3);
+  if (ord + g > e20 * 0.8) span = Math.max(span, e20 * 1.06);
+  const W = 400, H = 46, barY = 14, barH = 16;
+  const X = v => Math.min(v, span) / span * (W - 4) + 2;
+  const seg = (lo, hi, fill, op) =>
+    `<rect x="${X(lo).toFixed(1)}" y="${barY}" width="${Math.max(X(hi)-X(lo),0).toFixed(1)}" height="${barH}" fill="${fill}" fill-opacity="${op}"></rect>`;
+  /* background: the LTCG bands on the taxable-income scale */
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Where ${c.year}'s gains land on the LTCG schedule">`;
+  svg += seg(0, e15, "#3E8F6B", 0.18) + seg(e15, e20, "#C9A227", 0.18) + seg(e20, span, "#B03030", 0.18);
+  /* edge ticks with nominal labels (same basis as the drawer tables) */
+  [[e15,"0→15% "+fmtK(e15*nomF)],[e20,"15→20% "+fmtK(e20*nomF)]].forEach(([e,lbl]) => {
+    if (e < span) svg += `<line x1="${X(e).toFixed(1)}" y1="${barY-4}" x2="${X(e).toFixed(1)}" y2="${barY+barH+4}" stroke="#7A8494" stroke-width="1" stroke-dasharray="2,2"></line>`
+      + _ladCased(Math.min(X(e)+2, W-90), barY+barH+13, lbl, 9.5, "start", "#5A6472");
+  });
+  /* overlay: ordinary income claims the base of the scale, gains stack on top of it */
+  svg += seg(0, ord, "#8A93A0", 0.55);
+  if (g > 0.5) svg += `<rect x="${X(ord).toFixed(1)}" y="${barY}" width="${Math.max(X(ord+g)-X(ord),1.5).toFixed(1)}" height="${barH}" fill="#2E6E8E" fill-opacity="0.9" stroke="#FFFFFF" stroke-width="1"></rect>`;
+  svg += _ladCased(2, barY-4, g > 0.5
+      ? "gains " + fmtK(g*nomF) + " stacked on " + fmtK(ord*nomF) + " ordinary (nominal)"
+      : "no gains — " + fmtK(Math.max(e15-ord,0)*nomF) + " of 0% LTCG room unused (nominal)", 9.5, "start", "#1B2A3A", 600);
+  svg += `</svg>`;
+  return `<div class="gstrip">${svg}</div>`;
+}
+
+/* ---- F3 (index021): reading legend + per-year action flags ---- */
+function ladderLegendAndFlags(cols){
+  const yrs = new Set(cols.map(c => c.year));
+  const acts = (DATA.actions || []).filter(a => a.enabled !== false && yrs.has(a.year));
+  const amt = a => a.amount != null ? " " + fmt$(a.amount) : "";
+  const flag = a => {
+    const nm = esc(a.label || "");
+    if (a.type === "rothConversion") return `⚑ ${a.year} Roth conversion${amt(a)} — ordinary income, <strong>in the landing</strong>`;
+    if (a.type === "payDownDebt" && a.fromBucket === "deferred") return `⚑ ${a.year} debt paydown${amt(a)} from deferred — ordinary income, <strong>in the landing</strong>`;
+    if (a.type === "payDownDebt" && a.fromBucket === "taxable") return `⚑ ${a.year} debt paydown${amt(a)} from taxable — realizes gains, <em>not on this scale</em>`;
+    if (a.type === "payDownDebt") return `⚑ ${a.year} debt paydown${amt(a)} — cash-sourced, no bracket effect here`;
+    if (a.type === "taxFreeReimbursement") return `⚑ ${a.year} ${nm || "tax-free draw (HSA)"}${amt(a)} — tax-free, <em>not on this scale</em>`;
+    if (a.type === "sellAsset") return `⚑ ${a.year} ${nm || "asset sale"} — gains are LTCG, <em>not on this scale</em>`;
+    if (a.type === "death") return `⚑ ${a.year} ${nm || "death"} — filing flips; brackets and this ladder reshape from here`;
+    if (a.type === "relocate") return `⚑ ${a.year} ${nm || "relocation"} — state module changes (not on this federal ladder)`;
+    return `⚑ ${a.year} ${nm || esc(a.type)}`;
+  };
+  const flags = acts.map(a => `<span class="ladflag">${flag(a)}</span>`).join("");
+  return `<p class="note ladlegend"><strong>Reading it:</strong> gray <strong>floor</strong> = non-negotiable ordinary
+    income (wages · pension · interest · rental · taxable SS · forced RMD) · dark dashed <strong>landing</strong> = the
+    model's actual ordinary taxable income, <em>including</em> forced RMD and ordinary-income actions (Roth conversions,
+    deferred-sourced draws / paydowns) · lighter teal <strong>“spending needs”</strong> (RMD years only) = where
+    ordinary income would land drawing the IRA only for spending — the gap up to the landing is the RMD-forced excess,
+    hover it for the after-tax surplus to redeploy · <strong>not shown here:</strong>
+    HSA / tax-free draws and realized gains — they claim no ordinary-bracket room (the drawer's gains strip shows where gains land).</p>`
+    + (flags ? `<p class="note ladflags">${flags}</p>` : "");
+}
+
+/* ---- F4 (index021): custom pinnable tooltip — native SVG <title> is slow,
+   unstylable, and has no touch path on the Pixel. Fast show on hover;
+   tap once to pin, tap the tip or elsewhere to release. ---- */
+function ladTipEl(){
+  let el = document.getElementById("ladtip");
+  if (!el){ el = document.createElement("div"); el.id = "ladtip"; el.className = "ladtip";
+    document.body.appendChild(el);
+    document.addEventListener("click", ev => {
+      if (window._ladTipPinned && !ev.target.closest("[data-tip]") && ev.target !== el) ladTipHide(true);
+    }, true); }
+  return el;
+}
+function ladTipShow(ev, el){
+  if (window._ladTipPinned) return;
+  const tip = ladTipEl(); tip.textContent = el.getAttribute("data-tip");
+  tip.style.display = "block"; tip.classList.remove("pin");
+  const x = Math.min(ev.clientX + 14, (window.innerWidth || 380) - 310);
+  tip.style.left = Math.max(4, x) + "px";
+  tip.style.top = Math.max(4, ev.clientY + 16) + "px";
+}
+function ladTipPin(ev, el){
+  const tip = ladTipEl();
+  if (window._ladTipPinned){ ladTipHide(true); return; }
+  ladTipShow(ev, el); window._ladTipPinned = true; tip.classList.add("pin");
+  ev.stopPropagation();
+}
+function ladTipHide(force){
+  if (window._ladTipPinned && !force) return;
+  window._ladTipPinned = false;
+  const tip = document.getElementById("ladtip");
+  if (tip){ tip.style.display = "none"; tip.classList.remove("pin"); }
+}
+const ladTipAttrs = txt => ` data-tip="${esc(txt)}" onmousemove="ladTipShow(event,this)" onmouseleave="ladTipHide()" onclick="ladTipPin(event,this)"`;
+
+function ladderDrawerHTML(c, single){
+  const basis = single
+    ? "This year's <strong>nominal</strong> tables — same basis as the chart above (the single-year ladder is nominal)."
+    : "Chart above is today's $ (edges align across years); these tables are this column's <strong>nominal</strong> dollars, so the edges drift up with inflation column-to-column.";
+  const ordT = ladderRateTable(ladderNominalRows(TAX.ordinary[c.filing], c.nomF), "rate", `ordinary income · nominal ${c.year}`);
+  const ltT  = ladderRateTable(ladderNominalRows(TAX.ltcg[c.filing], c.nomF), "LTCG / QD", `taxable income · nominal ${c.year}`);
+  const age = c.ages && c.ages.length ? " · age " + c.ages.join("/") : "";
+  return `<div class="laddrawer">
+    <h4>${c.year} tax tables${age} · ${c.filing}</h4>
+    <p class="dbasis">${basis}</p>
+    ${ordT}
+    ${ltT}
+    <p class="gl">${ladderGainsLine(c)}</p>
+    <p class="niit">NIIT (3.8%) <strong>is modeled</strong> (index021): it adds 3.8% on investment income once MAGI clears ${fmt$(TAX.niit.threshold[c.filing])} (${c.filing}). That threshold is frozen in nominal dollars — ≈ ${fmt$(TAX.niit.threshold[c.filing]/c.nomF)} in today's $ by ${c.year} — so it bites harder every year, and it's included in the band costs above.</p>
+    ${ladderGainsStrip(c)}
+  </div>`;
+}
+
+/* ---------------- Fixed-percent draw view (index013 · #017) ----------- */
+function renderFixedDraw(){
+  const panel = $("fpdPanel"); if (!panel) return;
+  if (!panel.classList.contains("open")){ $("fpdBody").innerHTML = ""; return; }
+  const D = DATA.display || (DATA.display = {});
+  const pct = D.fixedDrawPct != null ? D.fixedDrawPct : 4;
+  const run = runTimeline(toEngine(DATA), { spendOverride: 0 });
+  const years = run.rows.map(r => r.year);
+  const y0 = years[0], yN = years[years.length-1];
+  const retRow = run.rows.find(r => (r.income.wages||0) < 1);
+  const retYear = retRow ? retRow.year : y0;
+  let selYear = D.fixedDrawYear, autoRetired = false;
+  if (selYear == null){                                     // land on the first fully-retired year (no wages/buyout) so the retired monthly shows — with whatever SS has started by then
+    if (retRow && retRow.year !== y0){ selYear = retRow.year; autoRetired = true; }
+    else selYear = y0;
+  }
+  selYear = Math.max(y0, Math.min(yN, selYear));
+  /* #021 F6: through the first fully-retired year this panel is the "is 4%
+     enough?" check on UNTOUCHED balances; past it, balances follow the
+     entered-spending plan (actually drawn down) so the later-year monthly is
+     honest about what will still be there. */
+  const hasPlan = ((DATA.spending||{}).currentAnnual || 0) > 0;
+  const usePath = hasPlan && selYear > retYear;
+  const srcRun = usePath ? runTimeline(toEngine(DATA), {}) : run;
+  const rowY = srcRun.rows.find(r => r.year === selYear) || srcRun.rows[0];
+  const row0 = srcRun.rows[0];
+  const inc = rowY.income;                                   // income at the selected year (RMD, SS, pension…)
+  const isNow = selYear === y0;
+  const hh = DATA.household;
+  // untouched-growth balances at the selected year (path-independent); each account is
+  // scaled by its bucket's aggregate growth ratio so the per-account view survives at any year.
+  const liquid = ["cash","taxable","deferred","roth"];
+  const growth = {};
+  liquid.forEach(t => { growth[t] = row0.byType[t] > 0 ? rowY.byType[t]/row0.byType[t] : 1; });
+  const perBucket = (DATA.balanceSheet||[]).filter(b => liquid.includes(b.taxType) && b.value > 0)
+    .map(b => {
+      const proj = b.value * (isNow ? 1 : growth[b.taxType]);
+      const draw = proj * pct/100;
+      const basis = b.costBasis != null ? b.costBasis : b.value;
+      const gainFrac = b.value > 0 ? Math.max(0, b.value - basis)/b.value : 0;   // today's gain fraction carried forward
+      return { label: b.label, taxType: b.taxType, draw, gain: b.taxType==="taxable" ? draw*gainFrac : 0 };
+    });
+  const drawTot = perBucket.reduce((s,x)=>s+x.draw,0);
+  const defDraw = perBucket.filter(x=>x.taxType==="deferred").reduce((s,x)=>s+x.draw,0);
+  const ltcg = perBucket.reduce((s,x)=>s+x.gain,0);
+  // RMD (at the selected year) counts toward the deferred percent-draw when larger
+  const defOrd = Math.max(defDraw, inc.rmd);
+  const ages = rowY.ages;                                    // ages + filing at the selected year (handles a filing flip)
+  const yTax = { filing: rowY.filing, ages,
+    wages: inc.wages, pension: inc.pension, deferredDraws: defOrd, conversions: 0,
+    interest: inc.interest, rental: inc.rental, ss: inc.ss, qualDiv: inc.qualDiv,
+    ltcgRealized: ltcg, taxDriftPP: 0, nomF: rowY.nomF,
+    stateCfg: (DATA.assumptions||{}).stateOverrides };
+  const fed = federalTax(yTax);
+  const st = (STATE_MODULES[hh.stateModule] || STATE_MODULES.GENERIC).computeTax(yTax);
+  const tax = fed.tax + st.stateTax;
+  const grossDraws = drawTot + Math.max(0, inc.rmd - defDraw);   // RMD excess adds cash
+  const cashIn = inc.wages + inc.pension + inc.ss + inc.interest + inc.rental + inc.qualDiv
+               + grossDraws;
+  const net = cashIn - tax;
+  let rows = perBucket.map(x =>
+    `<div class="wline"><span>${pct}% of ${esc(x.label)} (${BUCKET_META[x.taxType].label})</span><span class="num">${fmt$(x.draw)}</span></div>`).join("");
+  if (inc.rmd > defDraw) rows += `<div class="wline wsub"><span>+ RMD forced minimum, above the 4% deferred draw (full RMD this year ${fmt$(inc.rmd)})</span><span class="num">${fmt$(inc.rmd - defDraw)}</span></div>`;
+  const incBits = [["Wages",inc.wages],["Social Security",inc.ss],["Pension / annuity",inc.pension],
+    ["Dividends & interest",inc.qualDiv+inc.interest],["Rental",inc.rental]].filter(x=>x[1]>0)
+    .map(([k,v]) => `<div class="wline"><span>${k}</span><span class="num">${fmt$(v)}</span></div>`).join("");
+  $("fpdBody").innerHTML = `
+    <div class="row" style="margin-bottom:6px; align-items:center">
+      <span class="ladder-win">year
+        <button class="mini" ${selYear<=y0?"disabled":""} onclick="fpdYear(-1)" title="earlier year">−</button>
+        <b>${selYear}${ages.length?" · age "+ages.join("/"):""} · ${rowY.filing}</b>
+        <button class="mini" ${selYear>=yN?"disabled":""} onclick="fpdYear(1)" title="later year">+</button></span>
+      <span class="note" style="margin-left:10px">${isNow ? "today's balances" : "projected balances at "+selYear+" · today's $ · " + (usePath ? "your plan's drawn-down path" : "untouched-growth baseline")}${autoRetired ? " · first fully-retired year" : ""}</span>
+    </div>
+    <div class="row" style="margin-bottom:8px">
+      <label class="note">Draw <input type="number" step="0.25" style="width:70px" value="${pct}"
+        onchange="(DATA.display=DATA.display||{}).fixedDrawPct=parseFloat(this.value)||0; setJSON(DATA); renderFixedDraw();"> %
+        of each liquid bucket, ${isNow ? "today" : "in "+selYear}, today's dollars</label>
+    </div>
+    <div class="fpd-headline">≈ ${fmt$(net/12)} / month <span class="sub">net cash · today's $${isNow ? "" : " &nbsp;·&nbsp; ≈ "+fmt$(net/12*rowY.nomF)+" nominal in "+selYear}</span></div>
+    <div class="walk">
+      <div class="wcol"><div class="wtitle">Draws at ${pct}%</div>${rows}
+        <div class="wline wsum"><span>= Total drawn</span><span class="num">${fmt$(grossDraws)}</span></div></div>
+      <div class="wcol"><div class="wtitle">Plus ${isNow ? "this year's" : selYear} income</div>${incBits || '<div class="wline wsub">none</div>'}
+        <div class="wline wsum"><span>= Gross cash <span class="note" style="font-weight:400">(drawn + income)</span></span><span class="num">${fmt$(cashIn)}</span></div></div>
+      <div class="wcol"><div class="wtitle">Tax at this composition</div>
+        <div class="wline"><span>Federal${fed.niit > 0.5 ? "" : ""}</span><span class="num">${fmt$(fed.tax)}</span></div>
+        ${fed.niit > 0.5 ? `<div class="wline wsub"><span>— includes NIIT 3.8% (MAGI ${fmt$(fed.magi)} over the ${fmt$(fed.niitThr)} threshold)</span><span class="num">${fmt$(fed.niit)}</span></div>` : ""}
+        <div class="wline"><span>State (${hh.stateModule})</span><span class="num">${fmt$(st.stateTax)}</span></div>
+        <div class="wline wsum"><span>= Net cash</span><span class="num">${fmt$(net)}</span></div>
+        <div class="wline wsum"><span>≈ Monthly</span><span class="num">${fmt$(net/12)}</span></div></div>
+    </div>
+    <p class="note" style="margin-top:8px">The back-of-napkin view: a flat ${pct}% from each liquid bucket at
+    ${isNow ? "today's" : selYear+"'s projected"} balances, taxed at exactly this composition (Roth and cash draws
+    tax-free; taxable draws realize gains pro-rata; deferred draws are ordinary income). <strong>RMD:</strong> if the
+    forced minimum tops your 4% deferred draw, the excess is added into <em>Total drawn</em> above, so Gross cash =
+    Total drawn + income. <strong>Today's dollars:</strong> every figure here is inflation-adjusted — comparable to
+    what money buys now${isNow ? "" : "; the nominal note by the monthly is the actual "+selYear+" dollars, larger only by inflation"}.
+    <strong>Actions:</strong> your planned Roth conversions / sales shape the balances and RMD you see here (through the
+    projection), but the 4% draw itself is a standalone overlay — conversions aren't added as extra draws. One year only,
+    no draw ordering — the capacity headline above is the multi-year answer.
+    ${isNow ? "" : usePath
+      ? "Balances at " + selYear + " follow your <strong>entered-spending plan</strong> — actually drawn down year by year (each account scaled by its bucket's path), so this is 4% of what the plan says will still be there. "
+      : "Through the first fully-retired year the balances are the <strong>untouched-growth</strong> projection (nothing drawn) — the &ldquo;is 4% enough?&rdquo; check on what you arrive with. "}Descriptive: the number may be more or less than the optimal mix would give.</p>`;
+}
+
+function fpdYear(delta){
+  const D = DATA.display || (DATA.display = {});
+  const run = runTimeline(toEngine(DATA), { spendOverride: 0 });
+  const years = run.rows.map(r => r.year);
+  const cur = D.fixedDrawYear != null ? D.fixedDrawYear : years[0];
+  D.fixedDrawYear = Math.max(years[0], Math.min(years[years.length-1], cur + delta));
+  setJSON(DATA); renderFixedDraw();
+}
+
+/* ---------------- Estate line ----------------------------------------- */
+function renderEstate(run){
+  const e = run.estate;
+  if (!e){ $("estBody").textContent = "—"; return; }
+  const last = run.rows[run.rows.length-1];
+  $("estBody").innerHTML = `
+    Projected net worth at horizon (nominal): <span class="num"><strong>${fmtK(e.netWorthAtHorizon*last.nomF)}</strong></span>
+    &nbsp;·&nbsp; Federal exemption (today's law): <span class="num">${fmtK(e.federalExemption)}</span>
+    ${e.aboveExemption>0 ? ` &nbsp;·&nbsp; <span class="failflag">Above exemption by ${fmtK(e.aboveExemption)}</span>` : ""}
+    <br><span class="note">${e.stateNote}</span>`;
+}
+
+/* ---------------- Wiring ---------------------------------------------- */
+/* #4: always show whose data is on screen */
+function setSource(label){
+  window._SOURCE = label;
+  const el = $("loadedName");
+  if (el) el.textContent = "Loaded: " + label;
+}
+$("applyBtn").onclick = applyJSON;
+$("personaSel").onchange = e => {
+  if (!e.target.value) return;
+  setJSON(PERSONAS[e.target.value]); applyJSON();
+  setSource("Sample " + e.target.value + " (synthetic)");
+};
+$("saveBtn").onclick = () => {
+  const blob = new Blob([$("jsonBox").value], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "pfs_household.json"; a.click(); URL.revokeObjectURL(a.href);
+};
+$("loadBtn").onclick = () => $("fileInput").click();
+$("fileInput").onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    $("jsonBox").value = r.result; applyJSON();
+    /* #4: the file on screen is the file named here; persona dropdown resets */
+    $("personaSel").value = "";
+    const who = DATA && DATA.household && DATA.household.person1 && DATA.household.person1.name;
+    setSource(f.name + (who ? " — household of " + who : ""));
+  };
+  r.readAsText(f);
+};
+$("jsonToggle").onclick = () => {
+  const box = $("jsonArea");
+  box.style.display = box.style.display === "none" ? "block" : "none";
+};
+
+/* boot with Sample B */
+setJSON(PERSONAS.B); applyJSON();
+setSource("Sample B (synthetic)");
+
+</script>
+</body>
+</html>
