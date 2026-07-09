@@ -170,9 +170,9 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
 <body>
 <header>
   <div class="hwrap">
-    <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px">index031 · v009</span></h1>
+    <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px">index032 · v009</span></h1>
     <div class="subtitle">Now and in the Future · <a href="https://github.com/lougualtieri-AMI/PFS/blob/main/README.md" target="_blank" rel="noopener">User Guide &#8599;</a></div>
-    <div class="buildline">pfs_index031 · engine v009 (Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
+    <div class="buildline">pfs_index032 · engine v009 (Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
   </div>
 </header>
 <div id="delta" aria-live="polite"></div>
@@ -1999,7 +1999,7 @@ function renderHeadline(capacity, run){
       that survives every year. The chart and table below show the path at exactly that spending. Home and illiquid
       assets are not spent unless you add a sale action.</p></details>
     <div class="row" style="margin-top:8px">
-      <label class="note">Leave at the end (liquid, today's $):
+      <label class="note">Leave at the end (liquid, today's $):${helpChip("A legacy / cushion floor: the model won't draw your liquid buckets below this amount (today's dollars), and capacity is solved so this much still remains at the horizon. Set 0 to spend down fully.")}
       <input type="number" step="10000" style="width:120px" value="${floor||0}"
         onchange="(DATA.assumptions=DATA.assumptions||{}).legacyFloor=parseFloat(this.value)||0; setJSON(DATA); renderCoreNoSliders();"></label>
     </div>
@@ -2011,7 +2011,7 @@ function viewModeToggleHTML(capacity){
   const vm = viewModeState();
   const cur = vm.cur;
   return `<div class="row vmode" style="margin-top:8px">
-    <span class="note" style="font-weight:600">Draw the chart, table &amp; headroom at:</span>
+    <span class="note" style="font-weight:600">Draw the chart, table &amp; headroom at:${helpChip("Which spending level the chart, year table, and headroom strip are drawn at. capacity = the most you could safely spend. my entered spending = the Annual spending you typed in the data section. Switch between them to compare.")}</span>
     <label class="note"><input type="radio" name="vmode" ${vm.mode==="capacity"?"checked":""}
       onchange="(DATA.display=DATA.display||{}).viewMode='capacity'; setJSON(DATA); renderCoreNoSliders();">
       capacity (${fmt$(capacity)}/yr)</label>
@@ -2037,11 +2037,11 @@ function renderRibbon(disp, capacity){
         <label class="note"><input type="radio" name="ribdol" ${!td?"checked":""}
           onchange="(DATA.display=DATA.display||{}).ribbonDollars='nominal'; setJSON(DATA); renderCoreNoSliders();"> nominal (future) $</label>
         <label class="note" style="margin-left:8px"><input type="radio" name="ribdol" ${td?"checked":""}
-          onchange="(DATA.display=DATA.display||{}).ribbonDollars='today'; setJSON(DATA); renderCoreNoSliders();"> today's $</label>
+          onchange="(DATA.display=DATA.display||{}).ribbonDollars='today'; setJSON(DATA); renderCoreNoSliders();"> today's $</label>${helpChip("How dollars are shown. today's $ = adjusted for inflation, comparable to today's prices. nominal (future) $ = the actual larger numbers you'd see in that future year. Same money, different yardstick.")}
       </span>
       <label class="note"><input type="checkbox" ${lo?"checked":""}
         onchange="(DATA.display=DATA.display||{}).ribbonLiquidOnly=this.checked; setJSON(DATA); renderCoreNoSliders();">
-        liquid buckets only</label></div>` +
+        liquid buckets only${helpChip("Show only spendable accounts (cash, taxable, IRA, Roth) and hide your home and any illiquid assets — so the chart reflects what you can actually live on.")}</label></div>` +
     ribbonSVG(run, { liquidOnly: lo, todayDollars: td }) +
     /* index018: warning reasons attached to the chart they mark — the hover
        tooltip was the only carrier before, unreadable on touch and easy to miss */
@@ -2499,7 +2499,7 @@ function renderDrawOrder(){
           <option value="static" ${tb==null?"selected":""}>Static order (buckets in sequence)</option>
           <option value="bracket" ${tb!=null?"selected":""}>Deferred (IRA-equivalent) first, up to a tax ceiling</option>
         </select></label>
-      ${tb!=null ? `<label class="note">Target bracket:
+      ${tb!=null ? `<label class="note">Target bracket:${helpChip("With bracket-fill, this is the ceiling: each year the model pulls from tax-deferred until taxable income reaches the top of this bracket, then stops. A higher ceiling draws/converts more now at that rate; lower keeps income down. Watch lifetime taxes respond.")}
         <select onchange="DATA.assumptions.maxTargetBracket=parseFloat(this.value); setJSON(DATA); renderDrawOrder(); renderCoreNoSliders();">` +
         rates.map(r => `<option value="${r}" ${Math.abs(r-(tb>1?tb/100:tb))<1e-9?"selected":""}>${(r*100).toFixed(0)}%</option>`).join("") +
         `</select></label>` : ""}
@@ -3316,14 +3316,15 @@ function renderFixedDraw(){
     .map(([k,v]) => `<div class="wline"><span>${k}</span><span class="num">${fmt$(v)}</span></div>`).join("");
   $("fpdBody").innerHTML = `
     <div class="row" style="margin-bottom:6px; align-items:center">
-      <span class="ladder-win">year
+      <span class="ladder-win">start year${helpChip("The year to view a pure percent-of-buckets snapshot — the point where you're living off your buckets. Set it to when you actually START drawing (e.g. after a pension or deferred buyout ends), which may be years from now, not today. Type a year or step with −/+.")}
         <button class="mini" ${selYear<=y0?"disabled":""} onclick="fpdYear(-1)" title="earlier year">−</button>
-        <b>${selYear}${ages.length?" · age "+ages.join("/"):""} · ${rowY.filing}</b>
-        <button class="mini" ${selYear>=yN?"disabled":""} onclick="fpdYear(1)" title="later year">+</button></span>
+        <input type="number" min="${y0}" max="${yN}" value="${selYear}" style="width:74px;text-align:center" onchange="fpdYearSet(this.value)">
+        <button class="mini" ${selYear>=yN?"disabled":""} onclick="fpdYear(1)" title="later year">+</button>
+        <b style="margin-left:6px">${ages.length?"age "+ages.join("/"):""} · ${rowY.filing}</b></span>
       <span class="note" style="margin-left:10px">${isNow ? "today's balances" : "projected balances at "+selYear+" · today's $ · " + (usePath ? "your plan's drawn-down path" : "untouched-growth baseline")}${autoRetired ? " · first fully-retired year" : ""}</span>
     </div>
     <div class="row" style="margin-bottom:8px">
-      <label class="note">Draw <input type="number" step="0.25" style="width:70px" value="${pct}"
+      <label class="note">Draw${helpChip("The withdrawal rate to test — 4% is the classic rule-of-thumb. This snapshot shows what that percent of your liquid buckets, plus that year's income, nets you per month after tax.")} <input type="number" step="0.25" style="width:70px" value="${pct}"
         onchange="(DATA.display=DATA.display||{}).fixedDrawPct=parseFloat(this.value)||0; setJSON(DATA); renderFixedDraw();"> %
         of each liquid bucket, ${isNow ? "today" : "in "+selYear}, today's dollars</label>
     </div>
@@ -3354,6 +3355,10 @@ function renderFixedDraw(){
       : "Through the first fully-retired year the balances are the <strong>untouched-growth</strong> projection (nothing drawn) — the &ldquo;is 4% enough?&rdquo; check on what you arrive with. "}Descriptive: the number may be more or less than the optimal mix would give.</p>`;
 }
 
+function fpdYearSet(v){
+  const y = parseInt(v, 10);
+  if (!isNaN(y)){ (DATA.display = DATA.display || {}).fixedDrawYear = y; setJSON(DATA); renderFixedDraw(); }
+}
 function fpdYear(delta){
   const D = DATA.display || (DATA.display = {});
   const run = runTimeline(toEngine(DATA), { spendOverride: 0 });
