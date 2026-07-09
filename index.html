@@ -59,16 +59,20 @@ section.panel{
 #delta.flash .dtchip{animation:dflash .9s ease-out;}
 @keyframes dflash{0%{background:var(--accent);}100%{background:var(--ink);}}
 @media (prefers-reduced-motion: reduce){#delta.flash .dtchip{animation:none;}}
-fieldset{border:1px solid var(--line); border-radius:5px; padding:10px 12px; margin-top:12px;}
+fieldset{border:1px solid var(--line); border-radius:5px; padding:10px 12px; margin-top:12px; min-width:0;}
 legend{font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); padding:0 6px;}
 table.form{border-collapse:collapse; font-size:12.5px;}
 table.form th{text-align:left; font-weight:600; padding:4px 8px 4px 0; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; vertical-align:middle;}
 table.form td{padding:4px 10px 4px 0; vertical-align:middle;}
 table.form.wide{width:100%;}
+/* index034: the income-streams row is the densest (two date pickers + a growth
+   dropdown), so trim the inter-column padding on wide tables to let it fit the
+   MacBook width without a horizontal scrollbar. */
+table.form.wide td, table.form.wide th{padding-right:6px;}
 /* index034 (display-only): keep wide form tables from spilling off the right of
    the page on narrow viewports (Pixel). On the MacBook they still fit and no
    scrollbar shows; when they don't, the table scrolls inside its own box. */
-.tscroll{overflow-x:auto; -webkit-overflow-scrolling:touch; max-width:100%;}
+.tscroll{overflow-x:auto; -webkit-overflow-scrolling:touch; max-width:100%; min-width:0;}
 table.form input[type=text]{font-family:'Archivo'; font-size:12.5px; padding:5px 7px; border:1px solid var(--line); border-radius:4px; width:100%; min-width:80px;}
 table.form input[type=number]{width:100px;}
 button.mini{font-size:11px; padding:3px 8px; background:transparent; color:var(--ink); border:1px solid var(--line); border-radius:3px;}
@@ -1528,8 +1532,8 @@ function renderForms(){
       <td>${(() => {
         const g = s.growth, mode = (g === "inflation" || g === "fixed") ? g : "custom";
         return `<select onchange="setGrowthMode(${i}, this.value)">
-          <option value="inflation" ${mode==="inflation"?"selected":""}>inflation (rises w/ prices)</option>
-          <option value="fixed" ${mode==="fixed"?"selected":""}>fixed (constant $)</option>
+          <option value="inflation" ${mode==="inflation"?"selected":""}>inflation-adjusted</option>
+          <option value="fixed" ${mode==="fixed"?"selected":""}>fixed $</option>
           <option value="custom" ${mode==="custom"?"selected":""}>custom %/yr…</option>
         </select>` + (mode==="custom"
           ? ` <input type="number" style="width:52px" value="${esc(g)}" onchange="fset('incomeStreams.${i}.growth', this.value, 'numOrInflation')">%`
