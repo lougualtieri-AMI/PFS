@@ -69,6 +69,14 @@ table.form.wide{width:100%;}
    dropdown), so trim the inter-column padding on wide tables to let it fit the
    MacBook width without a horizontal scrollbar. */
 table.form.wide td, table.form.wide th{padding-right:6px;}
+/* index034: the "?" chips carry the explanations, so the controls in the dense
+   income-streams row can be compact. Smaller control font + tighter native date
+   pickers reclaim the left-to-right space so the whole row fits without a
+   scrollbar (the Character select was sizing to "qualifiedDividends"). */
+table.form.wide select,
+table.form.wide input[type=number],
+table.form.wide input[type=date]{font-size:11px;}
+table.form.wide input[type=date]{width:118px; padding:3px 4px; box-sizing:border-box;}
 /* index034 (display-only): keep wide form tables from spilling off the right of
    the page on narrow viewports (Pixel). On the MacBook they still fit and no
    scrollbar shows; when they don't, the table scrolls inside its own box. */
@@ -1522,11 +1530,11 @@ function renderForms(){
     h += `<tr>
       <td>${fin("incomeStreams."+i+".name", s.name)}</td>
       <td>${fsel("incomeStreams."+i+".owner", s.owner||"person1", owners.filter(o=>o!=="joint"))}</td>
-      <td>${fin("incomeStreams."+i+".annual", s.annual, "num", 'style="width:100px"')}</td>
-      <td>${fin("incomeStreams."+i+".startAge", s.startAge, "num", 'style="width:56px" title="start age"')}<br>
+      <td>${fin("incomeStreams."+i+".annual", s.annual, "num", 'style="width:84px"')}</td>
+      <td>${fin("incomeStreams."+i+".startAge", s.startAge, "num", 'style="width:46px" title="start age"')}<br>
           <input type="date" title="exact start date — overrides age, prorates first year"
             value="${esc(s.startDate||"")}" onchange="fset('incomeStreams.${i}.startDate', this.value)"></td>
-      <td>${fin("incomeStreams."+i+".endAge", s.endAge, "num", 'style="width:56px" title="end age"')}<br>
+      <td>${fin("incomeStreams."+i+".endAge", s.endAge, "num", 'style="width:46px" title="end age"')}<br>
           <input type="date" title="exact end date — overrides age, prorates last year"
             value="${esc(s.endDate||"")}" onchange="fset('incomeStreams.${i}.endDate', this.value)"></td>
       <td>${(() => {
