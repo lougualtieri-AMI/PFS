@@ -77,6 +77,13 @@ table.form.wide select,
 table.form.wide input[type=number],
 table.form.wide input[type=date]{font-size:11px;}
 table.form.wide input[type=date]{width:118px; padding:3px 4px; box-sizing:border-box;}
+/* index034: each Action is one table row whose controls wrap and can grow tall
+   (a Roth conversion carries two dropdowns + a possible warning; a spending
+   change opens a whole note block). Separate the rows with a hairline and real
+   vertical breathing room, and top-align them, so an expanded block reads as
+   belonging to its own action rather than blurring into the neighbours. */
+table.form.acttable td{vertical-align:top; padding-top:11px; padding-bottom:11px;}
+table.form.acttable tr + tr td{border-top:1px solid var(--line);}
 /* index034 (display-only): keep wide form tables from spilling off the right of
    the page on narrow viewports (Pixel). On the MacBook they still fit and no
    scrollbar shows; when they don't, the table scrolls inside its own box. */
@@ -1630,7 +1637,7 @@ function renderForms(){
   const acts = DATA.actions || (DATA.actions = []);
   h += `<fieldset><legend>Actions — what could happen${helpChip("Things that happen in a specific future year: sell an asset, relocate to another state, a death, a Roth conversion, pay down debt, a tax-free (HSA) draw, or a spending change. Add them and watch capacity, taxes, and the bracket ladder respond.")}</legend>`;
   if (!acts.length) h += `<p class="note">No actions yet. Actions are one-time events injected into the timeline: a sale, a move, a death, a conversion. Markers appear on the horizon chart.</p>`;
-  h += `<table class="form wide"><tbody>`;
+  h += `<table class="form wide acttable"><tbody>`;
   acts.forEach((a,i) => {
     const on = a.enabled !== false;
     h += `<tr class="${on?"":"actoff"}"><td style="width:26px">
