@@ -170,9 +170,9 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
 <body>
 <header>
   <div class="hwrap">
-    <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px">index032 · v009</span></h1>
+    <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px">index033 · v009</span></h1>
     <div class="subtitle">Now and in the Future · <a href="https://github.com/lougualtieri-AMI/PFS/blob/main/README.md" target="_blank" rel="noopener">User Guide &#8599;</a></div>
-    <div class="buildline">pfs_index032 · engine v009 (Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
+    <div class="buildline">pfs_index033 · engine v009 (Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
   </div>
 </header>
 <div id="delta" aria-live="polite"></div>
@@ -3254,24 +3254,27 @@ function renderFixedDraw(){
   if (!panel.classList.contains("open")){ $("fpdBody").innerHTML = ""; return; }
   const D = DATA.display || (DATA.display = {});
   const pct = D.fixedDrawPct != null ? D.fixedDrawPct : 4;
-  const run = runTimeline(toEngine(DATA), { spendOverride: 0 });
+  /* (A): balances at the start year follow your ACTIVE view mode — capacity or
+     your entered spending — drawn down from today until the start year. So
+     (i) waiting to draw (when income covers the early years) leaves more later,
+     and (ii) capacity vs. entered spending leave different balances → different
+     monthly figure. */
+  const vm = viewModeState();
+  const capacity = solveCapacity();
+  const run = vm.mode === "spending"
+    ? runTimeline(toEngine(DATA), {})                            // drawn down at your entered spending
+    : runTimeline(toEngine(DATA), { spendOverride: capacity });  // drawn down at capacity
   const years = run.rows.map(r => r.year);
   const y0 = years[0], yN = years[years.length-1];
   const retRow = run.rows.find(r => (r.income.wages||0) < 1);
   const retYear = retRow ? retRow.year : y0;
   let selYear = D.fixedDrawYear, autoRetired = false;
-  if (selYear == null){                                     // land on the first fully-retired year (no wages/buyout) so the retired monthly shows — with whatever SS has started by then
+  if (selYear == null){                                     // default to the first no-wages year
     if (retRow && retRow.year !== y0){ selYear = retRow.year; autoRetired = true; }
     else selYear = y0;
   }
   selYear = Math.max(y0, Math.min(yN, selYear));
-  /* #021 F6: through the first fully-retired year this panel is the "is 4%
-     enough?" check on UNTOUCHED balances; past it, balances follow the
-     entered-spending plan (actually drawn down) so the later-year monthly is
-     honest about what will still be there. */
-  const hasPlan = ((DATA.spending||{}).currentAnnual || 0) > 0;
-  const usePath = hasPlan && selYear > retYear;
-  const srcRun = usePath ? runTimeline(toEngine(DATA), {}) : run;
+  const srcRun = run;
   const rowY = srcRun.rows.find(r => r.year === selYear) || srcRun.rows[0];
   const row0 = srcRun.rows[0];
   const inc = rowY.income;                                   // income at the selected year (RMD, SS, pension…)
@@ -3321,7 +3324,7 @@ function renderFixedDraw(){
         <input type="number" min="${y0}" max="${yN}" value="${selYear}" style="width:74px;text-align:center" onchange="fpdYearSet(this.value)">
         <button class="mini" ${selYear>=yN?"disabled":""} onclick="fpdYear(1)" title="later year">+</button>
         <b style="margin-left:6px">${ages.length?"age "+ages.join("/"):""} · ${rowY.filing}</b></span>
-      <span class="note" style="margin-left:10px">${isNow ? "today's balances" : "projected balances at "+selYear+" · today's $ · " + (usePath ? "your plan's drawn-down path" : "untouched-growth baseline")}${autoRetired ? " · first fully-retired year" : ""}</span>
+      <span class="note" style="margin-left:10px">${isNow ? "today's balances" : "projected balances at "+selYear+" · today's $ · drawn down at "+(vm.mode==="spending"?"your entered spending":"capacity")+" until then"}${autoRetired ? " · first no-wages year" : ""}</span>
     </div>
     <div class="row" style="margin-bottom:8px">
       <label class="note">Draw${helpChip("The withdrawal rate to test — 4% is the classic rule-of-thumb. This snapshot shows what that percent of your liquid buckets, plus that year's income, nets you per month after tax.")} <input type="number" step="0.25" style="width:70px" value="${pct}"
@@ -3350,9 +3353,8 @@ function renderFixedDraw(){
     <strong>Actions:</strong> your planned Roth conversions / sales shape the balances and RMD you see here (through the
     projection), but the 4% draw itself is a standalone overlay — conversions aren't added as extra draws. One year only,
     no draw ordering — the capacity headline above is the multi-year answer.
-    ${isNow ? "" : usePath
-      ? "Balances at " + selYear + " follow your <strong>entered-spending plan</strong> — actually drawn down year by year (each account scaled by its bucket's path), so this is 4% of what the plan says will still be there. "
-      : "Through the first fully-retired year the balances are the <strong>untouched-growth</strong> projection (nothing drawn) — the &ldquo;is 4% enough?&rdquo; check on what you arrive with. "}Descriptive: the number may be more or less than the optimal mix would give.</p>`;
+    ${isNow ? "" :
+      "Balances at " + selYear + " follow your active view mode — <strong>" + (vm.mode==="spending"?"your entered spending":"capacity") + "</strong> — drawn down year by year until then (each account scaled by its bucket's path), so this is " + pct + "% of what will still be there. If income (a pension or buyout) covers the early years, little is drawn and a later start year leaves more. "}Descriptive: the number may be more or less than the optimal mix would give.</p>`;
 }
 
 function fpdYearSet(v){
