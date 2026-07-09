@@ -65,6 +65,10 @@ table.form{border-collapse:collapse; font-size:12.5px;}
 table.form th{text-align:left; font-weight:600; padding:4px 8px 4px 0; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; vertical-align:middle;}
 table.form td{padding:4px 10px 4px 0; vertical-align:middle;}
 table.form.wide{width:100%;}
+/* index034 (display-only): keep wide form tables from spilling off the right of
+   the page on narrow viewports (Pixel). On the MacBook they still fit and no
+   scrollbar shows; when they don't, the table scrolls inside its own box. */
+.tscroll{overflow-x:auto; -webkit-overflow-scrolling:touch; max-width:100%;}
 table.form input[type=text]{font-family:'Archivo'; font-size:12.5px; padding:5px 7px; border:1px solid var(--line); border-radius:4px; width:100%; min-width:80px;}
 table.form input[type=number]{width:100px;}
 button.mini{font-size:11px; padding:3px 8px; background:transparent; color:var(--ink); border:1px solid var(--line); border-radius:3px;}
@@ -170,9 +174,9 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
 <body>
 <header>
   <div class="hwrap">
-    <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px">index033 · v009</span></h1>
+    <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px">index034 · v009</span></h1>
     <div class="subtitle">Now and in the Future · <a href="https://github.com/lougualtieri-AMI/PFS/blob/main/README.md" target="_blank" rel="noopener">User Guide &#8599;</a></div>
-    <div class="buildline">pfs_index033 · engine v009 (Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
+    <div class="buildline">pfs_index034 · engine v009 (Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · index034 display-only: wide-table horizontal scroll · rate inputs 2dp + 0.25 step · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
   </div>
 </header>
 <div id="delta" aria-live="polite"></div>
@@ -1439,6 +1443,12 @@ function setGrowthMode(i, mode){
   else s.growth = mode;   // "inflation" | "fixed"
   renderForms(); formEdit();
 }
+/* index034 (display-only): rate assumptions are stored in full precision (a
+   nominal derived from a real rate can land on 7.1125), which reads as noise in
+   the box. Show them at ≤2 dp so 7.1125 → 7.11. DATA — and therefore the engine
+   input — is left at full precision, so golden is byte-identical; the moment the
+   spinner is nudged (min 0, step 0.25) the value snaps onto a clean quarter. */
+function rateDisp(v){ return (v == null || v === "") ? v : +(+v).toFixed(2); }
 function fin(path, val, kind, extra){
   const type = kind === "num" ? "number" : "text";
   return `<input type="${type}" ${extra||""} value="${esc(val == null ? "" : val)}"
@@ -1502,7 +1512,7 @@ function renderForms(){
   </tbody></table></fieldset>`;
 
   /* Income streams */
-  h += `<fieldset><legend>Income streams</legend><table class="form wide"><thead>
+  h += `<fieldset><legend>Income streams</legend><div class="tscroll"><table class="form wide"><thead>
     <tr><th>Name</th><th>Owner${helpChip("Whose income this is. Matters for taxing Social Security and for the Survivor % when one spouse dies.")}</th><th>Annual $${helpChip("The gross yearly amount in today's dollars, before tax. Enter the full amount; the model applies tax based on the Character you pick.")}</th><th>Start${helpChip("When this income begins — an age (starts when that person reaches it) or an exact date. A date prorates the first year.")}<br><span class="note">age · or exact date</span></th><th>End${helpChip("When it stops — an age or exact date. Leave blank if it continues for life, e.g. Social Security or a lifetime pension.")}<br><span class="note">age · or exact date</span></th><th>Growth<br><span class="note">how it changes each year</span>${helpChip("How this income grows over time. inflation = keeps its buying power (flat in today's $). fixed = the same dollar figure every year (loses ground to inflation) — good for a level pension with no COLA. custom %/yr = your own nominal growth rate.")}</th><th>Character${helpChip("How this income is taxed: wages, Social Security, pension, interest, or qualified dividends. It sets which federal and state rules apply.")}</th><th>Survivor %${helpChip("If the person who owns this income dies, what percent of it continues to the surviving spouse. A pension with a 50% survivor benefit → 50. A stream that stops entirely at death → 0. Social Security is special: the survivor keeps the LARGER of the two benefits, so set 100 on the higher SS and it will take over.")}</th><th></th></tr></thead><tbody>`;
   (DATA.incomeStreams||[]).forEach((s,i) => {
     h += `<tr>
@@ -1529,12 +1539,12 @@ function renderForms(){
       <td>${fin("incomeStreams."+i+".survivorPct", s.survivorPct, "num", 'style="width:64px"')}</td>
       <td><button class="mini" onclick="DATA.incomeStreams.splice(${i},1); renderForms(); formEdit()">×</button></td></tr>`;
   });
-  h += `</tbody></table>
+  h += `</tbody></table></div>
     <button class="mini" onclick="(DATA.incomeStreams=DATA.incomeStreams||[]).push({name:'New stream',owner:'person1',annual:0,startAge:null,endAge:null,growth:'inflation',taxCharacter:'wages',survivorPct:0}); renderForms(); formEdit()">+ add stream</button>
   </fieldset>`;
 
   /* Buckets */
-  h += `<fieldset><legend>Balance sheet — buckets</legend><table class="form wide"><thead>
+  h += `<fieldset><legend>Balance sheet — buckets</legend><div class="tscroll"><table class="form wide"><thead>
     <tr><th>Label</th><th>Type${helpChip("The tax treatment of this account: cash · taxable (brokerage) · deferred (traditional IRA/401k, taxed on withdrawal) · roth (tax-free) · residence (a home) · illiquid. It drives how growth and withdrawals are taxed.")}</th><th>Value $${helpChip("Current market value today, in today's dollars.")}</th><th>Cost basis $${helpChip("What you originally paid (your basis). Used to figure capital-gains tax when a taxable account or home is sold. Not needed for IRA/Roth.")}</th><th>Owner${helpChip("Whose account this is. Affects RMDs and what happens at a death.")}</th><th>Return %/yr<br><span class="note">nominal</span>${helpChip("Expected average annual growth, nominal (before inflation). Set them all at once with the slider below, or fine-tune each here.")}</th><th>Yield %${helpChip("The share of the return paid out each year as taxable dividends or interest (vs. price growth). Higher yield = more tax each year in a taxable account.")}</th><th></th></tr></thead><tbody>`;
   (DATA.balanceSheet||[]).forEach((b,i) => {
     h += `<tr>
@@ -1547,11 +1557,11 @@ function renderForms(){
       <td>${fin("balanceSheet."+i+".value", b.value, "num", 'style="width:110px"')}</td>
       <td>${fin("balanceSheet."+i+".costBasis", b.costBasis, "num", 'style="width:110px"')}</td>
       <td>${fsel("balanceSheet."+i+".owner", b.owner||"joint", owners)}</td>
-      <td>${fin("balanceSheet."+i+".expectedReturnPct", b.expectedReturnPct, "num", 'style="width:64px" step="0.25"')}</td>
-      <td>${fin("balanceSheet."+i+".yieldPct", b.yieldPct, "num", 'style="width:64px" step="0.25"')}</td>
+      <td>${fin("balanceSheet."+i+".expectedReturnPct", rateDisp(b.expectedReturnPct), "num", 'style="width:64px" min="0" step="0.25"')}</td>
+      <td>${fin("balanceSheet."+i+".yieldPct", rateDisp(b.yieldPct), "num", 'style="width:64px" min="0" step="0.25"')}</td>
       <td><button class="mini" onclick="DATA.balanceSheet.splice(${i},1); renderForms(); formEdit()">×</button></td></tr>`;
   });
-  h += `</tbody></table>
+  h += `</tbody></table></div>
     <button class="mini" onclick="(DATA.balanceSheet=DATA.balanceSheet||[]).push({id:'b'+Date.now(),label:'New bucket',taxType:'taxable',value:0,costBasis:0,owner:'joint',expectedReturnPct:7,yieldPct:0}); renderForms(); formEdit()">+ add bucket</button>
   </fieldset>`;
 
