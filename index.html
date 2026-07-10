@@ -193,9 +193,9 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
 <body>
 <header>
   <div class="hwrap">
-    <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px">index034 · v009</span></h1>
+    <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px">index035 · v010</span></h1>
     <div class="subtitle">Now and in the Future · <a href="https://github.com/lougualtieri-AMI/PFS/blob/main/README.md" target="_blank" rel="noopener">User Guide &#8599;</a></div>
-    <div class="buildline">pfs_index034 · engine v009 (Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · index034 display-only: wide-table horizontal scroll · rate inputs 2dp + 0.25 step · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
+    <div class="buildline">pfs_index035 · engine v010 (buyAsset · Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · index035 display-only: wide-table horizontal scroll · rate inputs 2dp + 0.25 step · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
   </div>
 </header>
 <div id="delta" aria-live="polite"></div>
@@ -304,7 +304,7 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
   spousal inheritance only · senior bonus deduction omitted · NJ exit-tax as note. All figures are estimates, not advice.</p>
 </footer>
 <script>
-/* PFS-ENGINE-FREEZE-START · v009 · everything between the sentinels is fingerprinted; edit only with a deliberate re-stamp */
+/* PFS-ENGINE-FREEZE-START · v010 · everything between the sentinels is fingerprinted; edit only with a deliberate re-stamp */
 /* =====================================================================
    PFS — Personal Financial Status · Engine v003 · pfs_index007
    Pure functions, no DOM. Real terms internally, nominal at display.
@@ -727,6 +727,52 @@ function runTimeline(data, opts){
           warnings.push({ year, action: act.label || "Sell asset",
             reason: !b ? ("skipped: asset '" + (act.assetId||"(none chosen)") + "' not found on the balance sheet")
                        : ("skipped: '" + (b.label||b.id) + "' already has no value this year") });
+        }
+      }
+      if (act.type === "buyAsset"){
+        /* v010: acquire an asset — a home (residence, gets §121 on a future
+           sale) or other property (illiquid: land, boat, second place —
+           taxed as a normal capital gain on sale). Longhand mirror of
+           sellAsset: debit a funding bucket (taxable realizes pro-rata gains,
+           deferred is ordinary income, cash/roth reduce basis), then book the
+           new asset at cost so the balance sheet stays honest. Never overdraws
+           and never partial-buys — it warns instead. Financing is NOT modeled
+           here; a loan is a separate liability the user adds. */
+        const aName = act.label || "Buy asset";
+        const price = Math.max(0, act.price || 0);
+        const srcType = act.fromBucket || "cash";
+        const src = buckets.find(x => x.taxType === srcType);   // first bucket of that type (where sale proceeds land)
+        if (!(price > 0)){
+          warnings.push({ year, action: aName, reason: "skipped: no purchase price set" });
+        } else if (!src || src.value < price){
+          const avail = src ? src.value : 0;
+          const saleThisYear = (d.actions||[]).some(x => x.year === year && x.type === "sellAsset");
+          warnings.push({ year, action: aName,
+            reason: "skipped: not enough " + srcType + " to buy — need $" + Math.round(price).toLocaleString()
+              + ", have $" + Math.round(avail).toLocaleString()
+              + (saleThisYear ? ". A sale is set for this year — list the Sell action ABOVE this Buy so its proceeds land first."
+                              : ". Fund from another bucket, or add a mortgage/loan as a separate liability.") });
+        } else {
+          src.value -= price;
+          if (srcType === "taxable"){
+            const gainFrac = Math.max(0, (src.value + price) - src.basis) / (src.value + price);
+            src._pendingGain = (src._pendingGain || 0) + price * gainFrac;   // realized this tax year
+            src.basis -= price * (1 - gainFrac);
+          } else if (srcType === "deferred"){
+            act._paidDeferred = price;                     // ordinary income this tax year
+          } else {
+            src.basis = Math.max(0, src.basis - price);
+          }
+          const isHome = act.assetKind !== "other";        // default home (gets §121 on a future sale)
+          buckets.push({
+            id: "buy_" + year + "_" + Math.round(price),
+            label: act.label || (isHome ? "New home" : "New property"),
+            taxType: isHome ? "residence" : "illiquid",
+            value: price, basis: price,
+            expectedRealReturn: 0,                          // flat in real terms unless the user edits it later
+            owner: act.owner || "joint"
+          });
+          actionMarkers.push({ year, label: act.label || ("Buy " + (isHome ? "home" : "property")) });
         }
       }
       if (act.type === "rothConversion"){
@@ -1497,6 +1543,11 @@ function setActionType(i, type){
   DATA.actions[i] = { year: yr, type: type, label: "" };
   if (type === "relocate") maybeNudgeSpendingChange(yr, "Spending change (relocation)");
   else if (type === "death") maybeNudgeSpendingChange(yr, "Spending change (loss of spouse)");
+  else if (type === "buyAsset") maybeNudgeSpendingChange(yr, "Spending change (new asset upkeep)");
+  renderForms(); formEdit();
+}
+function setBuyKind(i, kind){
+  DATA.actions[i].assetKind = (kind === "other" ? "other" : "home");
   renderForms(); formEdit();
 }
 function setSellAsset(i, assetId){
@@ -1635,7 +1686,7 @@ function renderForms(){
 
   /* Actions — scenario events */
   const acts = DATA.actions || (DATA.actions = []);
-  h += `<fieldset><legend>Actions — what could happen${helpChip("Things that happen in a specific future year: sell an asset, relocate to another state, a death, a Roth conversion, pay down debt, a tax-free (HSA) draw, or a spending change. Add them and watch capacity, taxes, and the bracket ladder respond.")}</legend>`;
+  h += `<fieldset><legend>Actions — what could happen${helpChip("Things that happen in a specific future year: buy or sell an asset, relocate to another state, a death, a Roth conversion, pay down debt, a tax-free (HSA) draw, or a spending change. Add them and watch capacity, taxes, and the bracket ladder respond.")}</legend>`;
   if (!acts.length) h += `<p class="note">No actions yet. Actions are one-time events injected into the timeline: a sale, a move, a death, a conversion. Markers appear on the horizon chart.</p>`;
   h += `<table class="form wide acttable"><tbody>`;
   acts.forEach((a,i) => {
@@ -1646,8 +1697,8 @@ function renderForms(){
         onchange="DATA.actions[${i}].enabled=this.checked; renderForms(); formEdit()"></td>
       <td style="width:70px">${fin("actions."+i+".year", a.year, "num", 'style="width:70px"')}</td>
       <td style="width:150px"><select onchange="setActionType(${i}, this.value)">` +
-      ["sellAsset","relocate","death","rothConversion","payDownDebt","taxFreeReimbursement","spendingChange"].map(t =>
-        `<option value="${t}" ${t===a.type?"selected":""}>${{sellAsset:"Sell asset",relocate:"Relocate",death:"Death",rothConversion:"Roth conversion",payDownDebt:"Pay down debt",taxFreeReimbursement:"Tax-free reimbursement",spendingChange:"Spending change"}[t]}</option>`).join("") +
+      ["sellAsset","buyAsset","relocate","death","rothConversion","payDownDebt","taxFreeReimbursement","spendingChange"].map(t =>
+        `<option value="${t}" ${t===a.type?"selected":""}>${{sellAsset:"Sell asset",buyAsset:"Buy asset",relocate:"Relocate",death:"Death",rothConversion:"Roth conversion",payDownDebt:"Pay down debt",taxFreeReimbursement:"Tax-free reimbursement",spendingChange:"Spending change"}[t]}</option>`).join("") +
       `</select></td><td>`;
     if (a.type === "sellAsset"){
       const sellable = (DATA.balanceSheet||[]).filter(b => ["residence","illiquid","taxable"].includes(b.taxType));
@@ -1666,6 +1717,26 @@ function renderForms(){
           const lab = first ? `${t} → "${esc(first.label)}"` : `${t} (no ${t} bucket yet — one will be needed)`;
           return `<option value="${t}" ${t===(a.proceedsTo||"cash")?"selected":""}>${lab}</option>`;
         }).join("") + `</select>`;
+    }
+    if (a.type === "buyAsset"){
+      const isHome = a.assetKind !== "other";
+      const fundType = a.fromBucket || "cash";
+      h += `buy ` + fin("actions."+i+".label", a.label, "str", 'placeholder="e.g. new home" style="width:150px"') +
+        ` · <select title="A home gets the primary-residence tax break (§121) on a future sale. Other property (land, boat, second place) is a normal capital asset — a future sale is taxed as a capital gain." onchange="setBuyKind(${i}, this.value)">` +
+          `<option value="home" ${isHome?"selected":""}>Home (§121 on sale)</option>` +
+          `<option value="other" ${!isHome?"selected":""}>Other property</option>` +
+        `</select>` +
+        ` · cost ` + fin("actions."+i+".price", a.price, "num", 'style="width:120px"') +
+        ` · fund from <select title="Which bucket pays for it. Taxable funding realizes gains pro-rata; deferred funding is ordinary income that year. The buy never overdraws — if the money isn't there it is skipped with a warning." onchange="fset('actions.${i}.fromBucket', this.value)">` +
+          ["cash","taxable","deferred","roth"].map(t => {
+            const first = (DATA.balanceSheet||[]).find(b => b.taxType === t);
+            const lab = first ? `${t} → "${esc(first.label)}"` : `${t} (no ${t} bucket)`;
+            return `<option value="${t}" ${t===fundType?"selected":""}>${lab}</option>`;
+          }).join("") +
+        `</select>`;
+      if ((DATA.actions||[]).some((x,j) => j!==i && x.year===a.year && x.type==="sellAsset"))
+        h += ` <span class="note" style="color:#B6543F">⚠ a sale shares this year — list the Sell above this Buy so its cash lands first</span>`;
+      h += ` <span class="note">(financing isn't modeled — add a loan as a separate liability)</span>`;
     }
     if (a.type === "relocate"){
       h += `move to <select onchange="fset('actions.${i}.to', this.value)">` +
