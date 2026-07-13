@@ -193,9 +193,9 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
 <body>
 <header>
   <div class="hwrap">
-    <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px">index036 · v011</span></h1>
+    <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px">index037 · v012</span></h1>
     <div class="subtitle">Now and in the Future · <a href="https://github.com/lougualtieri-AMI/PFS/blob/main/README.md" target="_blank" rel="noopener">User Guide &#8599;</a></div>
-    <div class="buildline">pfs_index036 · engine v011 (receiveAsset/inheritance · buyAsset · Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · index036 display-only: wide-table horizontal scroll · rate inputs 2dp + 0.25 step · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
+    <div class="buildline">pfs_index037 · engine v012 (level-from streams · amount-as-of · receiveAsset/inheritance · buyAsset · Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · index037 display-only: wide-table horizontal scroll · rate inputs 2dp + 0.25 step · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
   </div>
 </header>
 <div id="delta" aria-live="polite"></div>
@@ -304,7 +304,7 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
   spousal inheritance only · senior bonus deduction omitted · NJ exit-tax as note. All figures are estimates, not advice.</p>
 </footer>
 <script>
-/* PFS-ENGINE-FREEZE-START · v011 · everything between the sentinels is fingerprinted; edit only with a deliberate re-stamp */
+/* PFS-ENGINE-FREEZE-START · v012 · everything between the sentinels is fingerprinted; edit only with a deliberate re-stamp */
 /* =====================================================================
    PFS — Personal Financial Status · Engine v003 · pfs_index007
    Pure functions, no DOM. Real terms internally, nominal at display.
@@ -417,6 +417,37 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
             tax character — every dollar ordinary on the way out — but
             the engine will not force the emptying); state inheritance
             tax on non-lineal heirs (NJ/PA) — enter the NET amount.
+     v012 (this build): additive; golden regression vs v011 — no golden
+     persona uses growth:"level" or amountAsOf, so every prior number is
+     bit-identical.
+       #028 LEVEL-FROM STREAMS: growth:"level" + an anchor, either
+            fixedAtAge (owner's age) or fixedAtYear. Flat in real terms
+            until the anchor, then constant NOMINAL for life:
+            real(Y) = A / (1+i)^max(0, Y - anchor). This is the ordinary
+            private pension and every payout struck at one event and
+            paid out later — severance, deferred comp, an earnout, a
+            structured settlement, a non-COLA pension ladder.
+            THE ANCHOR IS NOT THE START YEAR. A staggered ladder has all
+            its tranches fixed at ONE event and paid out over following
+            years, so tranche 4 is a known nominal number years before
+            its first check. Anchoring each tranche to its own start
+            would hand the late tranches years of indexing they never
+            earn (~10% overstatement by year 9 at 2.5%). Absent an
+            anchor it falls back to the stream's own start. An anchor in
+            the PAST is legitimate — a payout already running was fixed
+            on a date that has been and gone — and in that case "level"
+            reduces exactly to "fixed".
+            Prefer fixedAtAge: change the age and the whole ladder slides
+            (freeze point AND payout dates), which is what makes a file
+            portable to someone retiring in a different year.
+       #029 AMOUNT AS OF: streams accept amountAsOf:<year> — the year's
+            dollars a figure was quoted in. Restated to today's before
+            any growth is applied. Skipped for growth:"fixed", which is
+            a NOMINAL check (the number printed on it) and would be a
+            category error to restate.
+       NOTE: the UI's streamRemainingPV (economic-NW panel) mirrors both
+            #028 and #029. If those two ever drift apart, the PV panel
+            prices a different stream than the timeline pays.
    ===================================================================== */
 "use strict";
 
@@ -677,6 +708,32 @@ function bracketCeiling(target, filing){
     if (br[i][1] <= t + 1e-9) ceil = (i+1 < br.length) ? br[i+1][0] : Infinity;
   }
   return ceil;
+}
+
+/* v012 #028 — the year a "level from" stream's nominal amount is FIXED.
+   Deliberately NOT the same as the year it starts PAYING. A staggered payout
+   ladder (severance, deferred comp, an earnout, a non-COLA pension in tranches)
+   has all its dollar figures set at ONE event — the day you retire, the day the
+   deal closes — and then pays them out over the following years. Tranche 4 is
+   already a known nominal number years before its first check.
+     fixedAtAge   — the owner's age at the event (portable: move the age and the
+                    whole ladder slides — freeze point and payout dates together)
+     fixedAtYear  — an explicit calendar year, when there is no person to hang it on
+     neither      — falls back to the stream's own start (freezes as it begins)
+   An anchor in the PAST is legitimate and common: a payout already running was
+   fixed on a date that has been and gone. */
+function streamAnchorYear(s, owner, now){
+  if (s.fixedAtYear != null) return Math.round(s.fixedAtYear);
+  if (s.fixedAtAge != null && owner){
+    const by = owner.dob ? new Date(owner.dob).getFullYear() : owner.birthYear;
+    if (by != null) return by + Math.round(s.fixedAtAge);
+  }
+  if (s.startDate) return new Date(s.startDate).getFullYear();
+  if (s.startAge != null && owner){
+    const by = owner.dob ? new Date(owner.dob).getFullYear() : owner.birthYear;
+    if (by != null) return by + Math.round(s.startAge);
+  }
+  return now;   // no start either — it is already running, so it is already fixed
 }
 
 function runTimeline(data, opts){
@@ -1029,9 +1086,33 @@ function runTimeline(data, opts){
       const af = streamActiveFactor(s, owner, year);   // v004: dates override ages
       if (af === 0) return;
       let amt = s.annual;
+
+      /* v012 #029 AMOUNT AS OF: every figure anyone quotes you is stamped in
+         some year's dollars. A benefit "worth $60k" was worth $60k in the year
+         someone said so. Restate it into today's dollars rather than making the
+         user compound it in their head. Applies to REAL amounts only — a "fixed"
+         stream is a nominal check ($60,000 is printed on it, in any year), so
+         restating it would be a category error. */
+      if (s.amountAsOf != null && s.growth !== "fixed"){
+        const gap = now - Math.round(s.amountAsOf);
+        if (gap > 0) amt *= Math.pow(1 + infl, gap);
+      }
+
       if (typeof s.growth === "number") amt *= Math.pow(1 + s.growth/100, t); // real growth
       // growth:"inflation" => flat in real terms
       if (s.growth === "fixed") amt /= Math.pow(1 + infl, t); // constant nominal, declining real
+
+      /* v012 #028 LEVEL FROM: keeps pace with inflation until the amount is
+         FIXED at the anchor, then holds the same nominal check for life.
+         Real value in year Y = A / (1+i)^(Y - anchor). Before the anchor it is
+         flat in real terms (the benefit is still tracking); after it, the check
+         is frozen and its purchasing power erodes. This is the ordinary private
+         pension, and every payout whose schedule is struck at one event. */
+      if (s.growth === "level"){
+        const anchor = streamAnchorYear(s, owner, now);
+        amt /= Math.pow(1 + infl, Math.max(0, year - anchor));
+      }
+
       amt *= af;   // start/end gating + calendar-year proration
       switch (s.taxCharacter){
         case "wages": wages += amt; break;
@@ -1589,7 +1670,18 @@ function helpChip(text){
 function setGrowthMode(i, mode){
   const s = DATA.incomeStreams[i];
   if (mode === "custom") s.growth = (typeof s.growth === "number") ? s.growth : 2;
-  else s.growth = mode;   // "inflation" | "fixed"
+  else s.growth = mode;   // "inflation" | "fixed" | "level" (#028)
+  if (mode !== "level"){ delete s.fixedAtAge; delete s.fixedAtYear; }
+  renderForms(); formEdit();
+}
+/* #028: the anchor is EITHER an age (portable — move it and the ladder slides)
+   OR a calendar year. Setting one clears the other, so there is never a silent
+   tie to break. */
+function setAnchor(i, which, value){
+  const s = DATA.incomeStreams[i];
+  const v = value === "" ? null : +value;
+  if (which === "age"){ s.fixedAtAge = v; if (v != null) delete s.fixedAtYear; }
+  else { s.fixedAtYear = v; if (v != null) delete s.fixedAtAge; }
   renderForms(); formEdit();
 }
 /* index034 (display-only): rate assumptions are stored in full precision (a
@@ -1675,12 +1767,17 @@ function renderForms(){
 
   /* Income streams */
   h += `<fieldset><legend>Income streams</legend><div class="tscroll"><table class="form wide"><thead>
-    <tr><th>Name</th><th>Owner${helpChip("Whose income this is. Matters for taxing Social Security and for the Survivor % when one spouse dies.")}</th><th>Annual $${helpChip("The gross yearly amount in today's dollars, before tax. Enter the full amount; the model applies tax based on the Character you pick.")}</th><th>Start${helpChip("When this income begins — an age (starts when that person reaches it) or an exact date. A date prorates the first year.")}<br><span class="note">age · or exact date</span></th><th>End${helpChip("When it stops — an age or exact date. Leave blank if it continues for life, e.g. Social Security or a lifetime pension.")}<br><span class="note">age · or exact date</span></th><th>Growth<br><span class="note">how it changes each year</span>${helpChip("How this income grows over time. inflation = keeps its buying power (flat in today's $). fixed = the same dollar figure every year (loses ground to inflation) — good for a level pension with no COLA. custom %/yr = your own nominal growth rate.")}</th><th>Character${helpChip("How this income is taxed: wages, Social Security, pension, interest, or qualified dividends. It sets which federal and state rules apply.")}</th><th>Survivor %${helpChip("If the person who owns this income dies, what percent of it continues to the surviving spouse. A pension with a 50% survivor benefit → 50. A stream that stops entirely at death → 0. Social Security is special: the survivor keeps the LARGER of the two benefits, so set 100 on the higher SS and it will take over.")}</th><th></th></tr></thead><tbody>`;
+    <tr><th>Name</th><th>Owner${helpChip("Whose income this is. Matters for taxing Social Security and for the Survivor % when one spouse dies.")}</th><th>Annual $<br><span class="note">today's $ · or "as of"</span>${helpChip("The gross yearly amount, before tax. Today's dollars by default — or set 'as of' to the year the figure was quoted in and the app restates it for you. A 'fixed $' stream is different: that is a nominal check, the number actually printed on it.")}</th><th>Start${helpChip("When this income begins — an age (starts when that person reaches it) or an exact date. A date prorates the first year.")}<br><span class="note">age · or exact date</span></th><th>End${helpChip("When it stops — an age or exact date. Leave blank if it continues for life, e.g. Social Security or a lifetime pension.")}<br><span class="note">age · or exact date</span></th><th>Growth<br><span class="note">how it changes each year</span>${helpChip("How this income changes over time. inflation-adjusted = keeps its buying power for life (a true COLA — federal and most public pensions). level from = keeps pace with inflation UNTIL the amount is set, then holds the same nominal check for life — the ordinary private pension, severance, deferred comp, an earnout, a structured settlement. fixed $ = the same dollar figure every year starting NOW (only right for a benefit already frozen today). custom %/yr = your own real growth rate.")}</th><th>Character${helpChip("How this income is taxed: wages, Social Security, pension, interest, or qualified dividends. It sets which federal and state rules apply.")}</th><th>Survivor %${helpChip("If the person who owns this income dies, what percent of it continues to the surviving spouse. A pension with a 50% survivor benefit → 50. A stream that stops entirely at death → 0. Social Security is special: the survivor keeps the LARGER of the two benefits, so set 100 on the higher SS and it will take over.")}</th><th></th></tr></thead><tbody>`;
   (DATA.incomeStreams||[]).forEach((s,i) => {
     h += `<tr>
       <td>${fin("incomeStreams."+i+".name", s.name)}</td>
       <td>${fsel("incomeStreams."+i+".owner", s.owner||"person1", owners.filter(o=>o!=="joint"))}</td>
-      <td>${fin("incomeStreams."+i+".annual", s.annual, "num", 'style="width:84px"')}</td>
+      <td>${fin("incomeStreams."+i+".annual", s.annual, "num", 'style="width:84px"')}
+          ${s.growth === "fixed" ? `<br><span class="note">nominal check</span>` :
+            `<br><span class="note" title="#029: the year this figure was quoted in. Any number anyone gives you is stamped in some year's dollars. Leave blank for today's dollars; set it to 2024 and the app restates it into today's before doing anything else — so you never compound it in your head.">as of</span>
+             <input type="number" style="width:52px" placeholder="today" title="the year's dollars this figure is quoted in — blank = today"
+               value="${s.amountAsOf != null ? esc(s.amountAsOf) : ""}"
+               onchange="fset('incomeStreams.${i}.amountAsOf', this.value, 'num')">`}</td>
       <td>${fin("incomeStreams."+i+".startAge", s.startAge, "num", 'style="width:46px" title="start age"')}<br>
           <input type="date" title="exact start date — overrides age, prorates first year"
             value="${esc(s.startDate||"")}" onchange="fset('incomeStreams.${i}.startDate', this.value)"></td>
@@ -1688,14 +1785,39 @@ function renderForms(){
           <input type="date" title="exact end date — overrides age, prorates last year"
             value="${esc(s.endDate||"")}" onchange="fset('incomeStreams.${i}.endDate', this.value)"></td>
       <td>${(() => {
-        const g = s.growth, mode = (g === "inflation" || g === "fixed") ? g : "custom";
-        return `<select onchange="setGrowthMode(${i}, this.value)">
+        const g = s.growth;
+        const mode = (g === "inflation" || g === "fixed" || g === "level") ? g : "custom";
+        let out = `<select onchange="setGrowthMode(${i}, this.value)">
           <option value="inflation" ${mode==="inflation"?"selected":""}>inflation-adjusted</option>
+          <option value="level" ${mode==="level"?"selected":""}>level from…</option>
           <option value="fixed" ${mode==="fixed"?"selected":""}>fixed $</option>
           <option value="custom" ${mode==="custom"?"selected":""}>custom %/yr…</option>
-        </select>` + (mode==="custom"
-          ? ` <input type="number" style="width:52px" value="${esc(g)}" onchange="fset('incomeStreams.${i}.growth', this.value, 'numOrInflation')">%`
-          : "");
+        </select>`;
+        if (mode === "custom")
+          out += ` <input type="number" style="width:52px" value="${esc(g)}" onchange="fset('incomeStreams.${i}.growth', this.value, 'numOrInflation')">%`;
+        if (mode === "level"){
+          /* #028: the anchor is the year the AMOUNT IS SET — not the year it starts
+             paying. A staggered ladder is struck all at once and paid out later. */
+          const nowY = new Date((DATA.meta&&DATA.meta.asOfDate)||"2026-01-01").getFullYear();
+          const own  = DATA.household[s.owner] || DATA.household.person1;
+          const by   = own.dob ? parseInt(own.dob.slice(0,4)) : own.birthYear;
+          let eff = null;
+          if (s.fixedAtYear != null) eff = Math.round(s.fixedAtYear);
+          else if (s.fixedAtAge != null && by != null) eff = by + Math.round(s.fixedAtAge);
+          else if (s.startAge != null && by != null) eff = by + Math.round(s.startAge);
+          else if (s.startDate) eff = new Date(s.startDate).getFullYear();
+          out += `<br><span class="note" title="The year this amount stops tracking inflation and becomes a fixed check. It is NOT the year it starts paying — a payout ladder is struck at one event (the day you retire, the day a deal closes) and paid out over the years that follow, so a later tranche is already a known number before its first check.">fixed at</span>
+            <input type="number" style="width:44px" placeholder="age" title="owner's age when the amount is set — portable: change it and the whole ladder slides"
+              value="${s.fixedAtAge != null ? esc(s.fixedAtAge) : ""}" onchange="setAnchor(${i}, 'age', this.value)">
+            <span class="note">or</span>
+            <input type="number" style="width:52px" placeholder="year" title="an explicit calendar year, when there is no person to hang it on"
+              value="${s.fixedAtYear != null ? esc(s.fixedAtYear) : ""}" onchange="setAnchor(${i}, 'year', this.value)">`;
+          if (s.fixedAtAge == null && s.fixedAtYear == null)
+            out += `<br><span class="note">↳ no anchor — defaults to its own start${eff!=null?" ("+eff+")":""}</span>`;
+          else if (eff != null)
+            out += `<br><span class="note">↳ ${eff}${eff < nowY ? " (already set — decays from then)" : ""}</span>`;
+        }
+        return out;
       })()}</td>
       <td>${fsel("incomeStreams."+i+".taxCharacter", s.taxCharacter, TAXCHARS)}</td>
       <td>${fin("incomeStreams."+i+".survivorPct", s.survivorPct, "num", 'style="width:64px"')}</td>
@@ -1703,6 +1825,22 @@ function renderForms(){
   });
   h += `</tbody></table></div>
     <button class="mini" onclick="(DATA.incomeStreams=DATA.incomeStreams||[]).push({name:'New stream',owner:'person1',annual:0,startAge:null,endAge:null,growth:'inflation',taxCharacter:'wages',survivorPct:0}); renderForms(); formEdit()">+ add stream</button>
+    <p class="note" style="margin-top:8px"><strong>A word on what this does and does not model.</strong> The app does not model how a
+    pension is <em>earned</em> — salary growth, service credits, benefit formulas. You state the benefit you expect to have,
+    in today's dollars, and pick the year it triggers. That is a deliberate simplification: guessing at accrual would add
+    precision without accuracy.</p>
+    <p class="note"><strong>“Level from” — the one that is easy to get wrong.</strong> Most payouts have their dollar amounts
+    struck at a single event (the day you retire, the day a deal closes) and are then paid out over the years that follow.
+    The amounts track inflation <em>up to</em> that event and are frozen <em>after</em> it. So the anchor year is <strong>not</strong>
+    the year a stream starts paying — a later tranche in a staggered ladder is already a known number years before its first
+    check arrives. Anchor every tranche of one ladder to the <em>same</em> event, and set the anchor as an <strong>age</strong>
+    where you can: change the age, and the whole ladder slides — freeze point and payout dates together — which is what makes
+    a file portable to someone retiring in a different year.</p>
+    <p class="note"><strong>Worked example — a nine-year staggered payout.</strong> Five years at a high rate, then four
+    single years that step down. Someone planning to retire at 62 enters nine streams: the first starts at 62 and runs five
+    years, then one each at 67, 68, 69, 70. Every one of them is set to <em>level from age 62</em> — including the last, which
+    does not pay a cent until 70 but whose amount was fixed eight years earlier. Move that 62 to 65 and the entire ladder
+    moves with it, correctly.</p>
   </fieldset>`;
 
   /* Buckets */
@@ -2029,11 +2167,20 @@ function streamRemainingPV(st, ratePct, fromT){
     const af = streamActiveFactor(st, owner, year);   // v004: dates override ages
     if (af === 0) continue;
     let real = st.annual;
+    /* v012: mirrors the engine's stream math (#028/#029) — if these two ever
+       drift apart, the PV panel starts pricing a different stream than the
+       timeline pays out. */
+    if (st.amountAsOf != null && st.growth !== "fixed"){
+      const gap = now - Math.round(st.amountAsOf);
+      if (gap > 0) real *= Math.pow(1 + infl, gap);
+    }
     if (typeof st.growth === "number"){
       const gReal = (1 + st.growth/100)/(1 + infl) - 1;   // nominal input
       real *= Math.pow(1 + gReal, t);
     }
     if (st.growth === "fixed") real /= Math.pow(1 + infl, t);
+    if (st.growth === "level")
+      real /= Math.pow(1 + infl, Math.max(0, year - streamAnchorYear(st, owner, now)));
     real *= af;
     const nominal = real * Math.pow(1 + infl, t);
     pv += nominal / Math.pow(1 + rn, t - fromT);
