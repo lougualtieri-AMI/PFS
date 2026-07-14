@@ -106,7 +106,7 @@ Those tests re-run three reference households to the exact dollar, confirm the e
 fingerprint matches, and exercise each feature (the tax-bracket views, navigation,
 and edge cases). A build isn't finished until every check passes.
 
-Current build: `pfs_index026` · engine `v008`.
+Current build: `pfs_index041` · engine `v012`.
 
 ---
 
@@ -115,3 +115,12 @@ Current build: `pfs_index026` · engine `v008`.
 PFS is released under the **PolyForm Noncommercial License 1.0.0** — free to use,
 study, and share for personal and other noncommercial purposes. See the `LICENSE`
 file for the full terms.
+
+**Commercial use requires written permission first.** That includes using PFS with
+clients, deploying or using it inside an advisory, planning, or wealth-management
+practice or any other business, and including it in anything you charge for. The
+source is published openly so the methods can be inspected and checked — being able
+to read it is not permission to use it commercially.
+
+For commercial licensing, contact **Louis Gualtieri** at **lougualtieri@gmail.com**
+(please put "PFS" in the subject line).
