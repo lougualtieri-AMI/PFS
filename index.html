@@ -232,9 +232,9 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
 <body>
 <header>
   <div class="hwrap">
-    <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px">index041 · v012</span></h1>
+    <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px">index042 · v013</span></h1>
     <div class="subtitle">Now and in the Future · <a href="https://github.com/lougualtieri-AMI/PFS/blob/main/README.md" target="_blank" rel="noopener">User Guide &#8599;</a></div>
-    <div class="buildline">pfs_index041 · engine v012 (level-from streams · amount-as-of · receiveAsset/inheritance · buyAsset · Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · index041 display-only: PolyForm NC 1.0.0 license header · index040 display-only: ask-an-AI panel (#030) · scenario path (#031) · terms of use (#032) · wide-table horizontal scroll · rate inputs 2dp + 0.25 step · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
+    <div class="buildline">pfs_index042 · engine v013 (takeLoan/borrow · level-from streams · amount-as-of · receiveAsset/inheritance · buyAsset · Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · index041 display-only: PolyForm NC 1.0.0 license header · index040 display-only: ask-an-AI panel (#030) · scenario path (#031) · terms of use (#032) · wide-table horizontal scroll · rate inputs 2dp + 0.25 step · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
   </div>
 </header>
 <div id="delta" aria-live="polite"></div>
@@ -407,7 +407,7 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
   </p>
 </footer>
 <script>
-/* PFS-ENGINE-FREEZE-START · v012 · everything between the sentinels is fingerprinted; edit only with a deliberate re-stamp */
+/* PFS-ENGINE-FREEZE-START · v013 · everything between the sentinels is fingerprinted; edit only with a deliberate re-stamp */
 /* =====================================================================
    PFS — Personal Financial Status · Engine v003 · pfs_index007
    Pure functions, no DOM. Real terms internally, nominal at display.
@@ -551,6 +551,35 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
        NOTE: the UI's streamRemainingPV (economic-NW panel) mirrors both
             #028 and #029. If those two ever drift apart, the PV panel
             prices a different stream than the timeline pays.
+     v013 (this build): additive; golden regression vs v012 — no golden
+     persona carries a takeLoan action, so every prior number is
+     bit-identical.
+       #030 TAKE LOAN (borrow · originate / draw a liability): action
+            takeLoan { amount, intoBucket?:"cash"|"taxable",
+            liabilityId? | (interestOnly?, ratePct?, monthlyPI?,
+            maturityYear?) }. The mirror of buyAsset: buyAsset debits a
+            bucket and books an asset; takeLoan credits a bucket with the
+            proceeds and books (or DRAWS on) a liability. Loan proceeds
+            are NOT income — no tax channel is touched in the year of
+            receipt (same as receiveAsset). Every downstream mechanic is
+            already built and is reused untouched: from the first year the
+            balance is positive, debtService charges interest (interestOnly
+            margin) or amortizes (monthlyPI P&I), rate resets (ARM) apply,
+            and net worth nets it out. A ZERO-balance line on the books
+            costs nothing until a draw lifts it — which is precisely the
+            "pay the margin to zero now, re-draw it in 2030 to fund living
+            expenses while an IRA conversion fills the low bracket" case:
+            balance 0 in the bridge years (no service), positive from the
+            draw year on. liabilityId set → augment that existing line
+            (the line keeps its own rate/type/PI; the action only lifts the
+            balance). liabilityId blank → open a NEW line, interest-only by
+            default (margin) or amortizing when interestOnly:false with a
+            monthlyPI. Year-granular like every action: the draw year is
+            charged a full year of debt service (conservative, consistent).
+            INDEPENDENT BY DESIGN: no linked-action coupling. To borrow-to-
+            buy, list the takeLoan ABOVE the buyAsset in the actions array
+            so its cash lands first — the same list-order discipline that
+            already governs sell-then-buy.
    ===================================================================== */
 "use strict";
 
@@ -1102,6 +1131,45 @@ function runTimeline(data, opts){
           warnings.push({ year, action: act.label || "Pay down debt",
             reason: !l ? ("skipped: liability '" + (act.liabilityId||"(none chosen)") + "' not found")
                        : ("skipped: no " + srcType + "-type bucket with a balance to pay from") });
+        }
+      }
+      if (act.type === "takeLoan"){
+        /* v013 #030 — BORROW: originate or draw a liability. Mirror of buyAsset
+           with the sign flipped — credit a bucket with the proceeds, book (or
+           lift) the debt. Proceeds are NOT income: no tax channel is touched.
+           Everything after origination (interest, amortization, ARM resets, the
+           net-worth subtraction, all three payoff paths) already exists and runs
+           unchanged from the first year the balance is positive. */
+        const aName = act.label || "Borrow";
+        const amount = Math.max(0, act.amount || 0);
+        const intoType = (act.intoBucket === "taxable") ? "taxable" : "cash";
+        if (!(amount > 0)){
+          warnings.push({ year, action: aName, reason: "skipped: no borrow amount set" });
+        } else {
+          let l = act.liabilityId ? liabs.find(x => x.id === act.liabilityId) : null;
+          if (act.liabilityId && !l){
+            warnings.push({ year, action: aName,
+              reason: "skipped: liability '" + act.liabilityId + "' not found — leave the liability blank to open a new line instead" });
+          } else {
+            if (!l){                                  // open a fresh line
+              const io = act.interestOnly !== false;  // default interest-only (margin); false = amortizing (mortgage)
+              l = { id: "loan_" + year + "_" + Math.round(amount),
+                    label: act.label || (io ? "New loan (margin)" : "New mortgage"),
+                    balance: 0,
+                    ratePct: act.ratePct || 0,
+                    interestOnly: io,
+                    monthlyPI: io ? 0 : Math.max(0, act.monthlyPI || 0) };
+              if (act.maturityYear) l.maturityYear = act.maturityYear;
+              liabs.push(l);
+            }
+            l.balance += amount;                      // originate / draw
+            const dst = buckets.find(x => x.taxType === intoType);
+            if (dst){ dst.value += amount; dst.basis += amount; }   // loan cash: basis = face, never taxed
+            else buckets.push({ id: "loan_cash_" + year + "_" + Math.round(amount),
+              label: "Cash (loan proceeds)", taxType: intoType,
+              value: amount, basis: amount, expectedRealReturn: 0, owner: "joint" });
+            actionMarkers.push({ year, label: act.label || ("Borrow $" + Math.round(amount).toLocaleString()) });
+          }
         }
       }
       if (act.type === "taxFreeReimbursement"){
@@ -1692,6 +1760,12 @@ function validateRefs(){
       probs.push(`"${esc(nm)}"${off}: spending change needs a non-negative new annual amount (today's $)`);
     if (a.type === "payDownDebt" && a.liabilityId && !lIds.has(a.liabilityId))
       probs.push(`"${esc(nm)}"${off}: liability id "${esc(a.liabilityId)}" does not exist`);
+    if (a.type === "takeLoan"){
+      if (a.liabilityId && !lIds.has(a.liabilityId))
+        probs.push(`"${esc(nm)}"${off}: liability id "${esc(a.liabilityId)}" does not exist — leave it blank to open a new line`);
+      if (!(a.amount > 0))
+        probs.push(`"${esc(nm)}"${off}: a borrow needs a positive amount`);
+    }
     if (a.payoffLiability && !lIds.has(a.payoffLiability))
       probs.push(`"${esc(nm)}"${off}: payoff liability id "${esc(a.payoffLiability)}" does not exist`);
     if (a.type === "taxFreeReimbursement" && a.sourceBucketId && !bIds.has(a.sourceBucketId))
@@ -1835,6 +1909,22 @@ function setReceiveDest(i, id){
   a.destBucketId = id || undefined;
   if (id){ delete a.assetKind; delete a.owner; delete a.expectedRealReturn; }   // the bucket supplies these
   else if (!a.assetKind) a.assetKind = "taxable";
+  renderForms(); formEdit();
+}
+/* #030: borrow target — open a new line (blank) or draw onto an existing one.
+   Drawing an existing line drops the new-line terms: that line supplies them. */
+function setLoanTarget(i, id){
+  const a = DATA.actions[i];
+  a.liabilityId = id || undefined;
+  if (id){ delete a.interestOnly; delete a.ratePct; delete a.monthlyPI; delete a.maturityYear; }
+  renderForms(); formEdit();
+}
+/* #030: new-line type — interest-only margin (the default) or amortizing
+   mortgage. Amortizing sets interestOnly:false and reveals a monthly P&I. */
+function setLoanKind(i, kind){
+  const a = DATA.actions[i];
+  if (kind === "mortgage") a.interestOnly = false;
+  else { delete a.interestOnly; delete a.monthlyPI; }
   renderForms(); formEdit();
 }
 function setSellAsset(i, assetId){
@@ -2030,8 +2120,8 @@ function renderForms(){
         onchange="DATA.actions[${i}].enabled=this.checked; renderForms(); formEdit()"></td>
       <td style="width:70px">${fin("actions."+i+".year", a.year, "num", 'style="width:70px"')}</td>
       <td style="width:150px"><select onchange="setActionType(${i}, this.value)">` +
-      ["sellAsset","buyAsset","receiveAsset","relocate","death","rothConversion","payDownDebt","taxFreeReimbursement","spendingChange"].map(t =>
-        `<option value="${t}" ${t===a.type?"selected":""}>${{sellAsset:"Sell asset",buyAsset:"Buy asset",receiveAsset:"Receive asset (inheritance / gift)",relocate:"Relocate",death:"Death",rothConversion:"Roth conversion",payDownDebt:"Pay down debt",taxFreeReimbursement:"Tax-free reimbursement",spendingChange:"Spending change"}[t]}</option>`).join("") +
+      ["sellAsset","buyAsset","receiveAsset","relocate","death","rothConversion","takeLoan","payDownDebt","taxFreeReimbursement","spendingChange"].map(t =>
+        `<option value="${t}" ${t===a.type?"selected":""}>${{sellAsset:"Sell asset",buyAsset:"Buy asset",receiveAsset:"Receive asset (inheritance / gift)",relocate:"Relocate",death:"Death",rothConversion:"Roth conversion",takeLoan:"Borrow (take / draw a loan)",payDownDebt:"Pay down debt",taxFreeReimbursement:"Tax-free reimbursement",spendingChange:"Spending change"}[t]}</option>`).join("") +
       `</select></td><td>`;
     if (a.type === "sellAsset"){
       const sellable = (DATA.balanceSheet||[]).filter(b => ["residence","illiquid","taxable"].includes(b.taxType));
@@ -2157,6 +2247,36 @@ function renderForms(){
         ["cash","taxable","deferred","roth"].map(t =>
           `<option value="${t}" ${t===(a.fromBucket||"cash")?"selected":""}>${t}</option>`).join("") +
         `</select> <span class="note">(deferred = ordinary income that year · taxable realizes gains)</span>`;
+    }
+    if (a.type === "takeLoan"){
+      /* #030: originate or draw a liability. Blank liability = open a new line;
+         picking an existing line draws more onto it (the margin re-draw case). */
+      const intoType   = a.intoBucket === "taxable" ? "taxable" : "cash";
+      const newLine    = !a.liabilityId;
+      const amortizing = a.interestOnly === false;
+      h += `borrow ${fin("actions."+i+".amount", a.amount, "num", 'style="width:120px"')}` +
+        ` · into <select title="Where the borrowed cash lands. It is not taxed — a loan isn't income — so from here your normal spending draw simply uses it." onchange="fset('actions.${i}.intoBucket', this.value)">` +
+          `<option value="cash" ${intoType==="cash"?"selected":""}>cash</option>` +
+          `<option value="taxable" ${intoType==="taxable"?"selected":""}>taxable</option>` +
+        `</select>` +
+        ` · against <select title="Open a NEW loan, or draw more onto an existing line — e.g. re-draw a margin line you'd paid to zero. Drawing an existing line keeps that line's own rate and type." onchange="setLoanTarget(${i}, this.value)">` +
+          `<option value="" ${newLine?"selected":""}>— open a new line —</option>` +
+          (DATA.liabilities||[]).map(l => `<option value="${l.id}" ${l.id===a.liabilityId?"selected":""}>${esc(l.label)}</option>`).join("") +
+        `</select>`;
+      if (newLine){
+        h += ` · type <select title="Interest-only (margin): the balance stays put and you pay interest each year as debt service. Amortizing (mortgage): you enter a monthly principal+interest payment and the balance pays down over time." onchange="setLoanKind(${i}, this.value)">` +
+            `<option value="margin" ${!amortizing?"selected":""}>interest-only (margin)</option>` +
+            `<option value="mortgage" ${amortizing?"selected":""}>amortizing (mortgage)</option>` +
+          `</select>` +
+          ` · rate ${fin("actions."+i+".ratePct", a.ratePct, "num", 'step="0.25" style="width:70px"')}<span class="note">%/yr</span>`;
+        if (amortizing)
+          h += ` · monthly P&amp;I ${fin("actions."+i+".monthlyPI", a.monthlyPI, "num", 'style="width:90px"')}`;
+      } else {
+        h += ` <span class="note">(draws onto the existing line — it keeps its own rate and type)</span>`;
+      }
+      h += ` <span class="note hoverhint" title="Loan proceeds are NOT income — nothing is taxed the year you borrow. From the first year the balance is positive the engine charges interest (margin) or amortizes it (mortgage), applies any ARM resets, and nets it out of net worth. A line sitting at zero costs nothing until a draw lifts it — pay a margin line to zero now, re-draw it in a low-bracket year to live on while an IRA conversion fills the bracket.">(not taxed — hover for what the engine does with it)</span>`;
+      if ((DATA.actions||[]).some((x,j) => j!==i && x.year===a.year && x.type==="buyAsset"))
+        h += ` <span class="note" style="color:#B6543F">⚠ a purchase shares this year — list this Borrow ABOVE the Buy so its cash lands first</span>`;
     }
     if (a.type === "spendingChange"){
       const cur = ((DATA.spending||{}).currentAnnual) || 0;
@@ -3656,6 +3776,7 @@ function ladderLegendAndFlags(cols){
     if (a.type === "taxFreeReimbursement") return `⚑ ${a.year} ${nm || "tax-free draw (HSA)"}${amt(a)} — tax-free, <em>not on this scale</em>`;
     if (a.type === "sellAsset") return `⚑ ${a.year} ${nm || "asset sale"} — gains are LTCG, <em>not on this scale</em>`;
     if (a.type === "receiveAsset") return `⚑ ${a.year} ${nm || "inheritance"}${amt(a)} — not income on receipt, <em>not on this scale</em>`;
+    if (a.type === "takeLoan") return `⚑ ${a.year} ${nm || "borrow"}${amt(a)} — loan proceeds, not income, <em>not on this scale</em>`;
     if (a.type === "death") return `⚑ ${a.year} ${nm || "death"} — filing flips; brackets and this ladder reshape from here`;
     if (a.type === "relocate") return `⚑ ${a.year} ${nm || "relocation"} — state module changes (not on this federal ladder)`;
     return `⚑ ${a.year} ${nm || esc(a.type)}`;
