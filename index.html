@@ -249,7 +249,7 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
   <div class="hwrap">
     <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px">index043 · v013</span></h1>
     <div class="subtitle">Now and in the Future · <a href="https://github.com/lougualtieri-AMI/PFS/blob/main/README.md" target="_blank" rel="noopener">User Guide &#8599;</a></div>
-    <div class="buildline">pfs_index044 · engine v013 (takeLoan/borrow · level-from streams · amount-as-of · receiveAsset/inheritance · buyAsset · Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · index044 display-only: bracket ladder redrawn as a FILL GAUGE (unavoidable / to fund spending / Roth conversion / forced by RMD stacked to the actual landing; room measured ABOVE the landing, not above the floor) · single dollar basis for both widths with a today's-$ ↔ that-year's-$ toggle · per-year readout table incl. entered spending in both bases · scale windowed to the landing + 2 brackets · index043 display-only: Start here panel defaults closed · index041 display-only: PolyForm NC 1.0.0 license header · index040 display-only: ask-an-AI panel (#030) · scenario path (#031) · terms of use (#032) · wide-table horizontal scroll · rate inputs 2dp + 0.25 step · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
+    <div class="buildline">pfs_index045 · engine v013 (takeLoan/borrow · level-from streams · amount-as-of · receiveAsset/inheritance · buyAsset · Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · index045 display-only: fill stack reordered MECHANICALLY (unavoidable → RMD forced, with overshoot hatched → top-up draw → conversion) so a large RMD never prints as a dash · cash-bridge tooltips reconcile spending to taxable income · Social Security shown gross and taxable · legend lists only what is drawn (ceiling entry follows the line, room chips use real rates) · axis stamped as taxable income after the deduction · "total cash need" no longer mislabeled "entered" · index044: bracket ladder redrawn as a FILL GAUGE (unavoidable / to fund spending / Roth conversion / forced by RMD stacked to the actual landing; room measured ABOVE the landing, not above the floor) · single dollar basis for both widths with a today's-$ ↔ that-year's-$ toggle · per-year readout table incl. entered spending in both bases · scale windowed to the landing + 2 brackets · index043 display-only: Start here panel defaults closed · index041 display-only: PolyForm NC 1.0.0 license header · index040 display-only: ask-an-AI panel (#030) · scenario path (#031) · terms of use (#032) · wide-table horizontal scroll · rate inputs 2dp + 0.25 step · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
   </div>
 </header>
 <div id="delta" aria-live="polite"></div>
@@ -3108,7 +3108,7 @@ function renderDrawOrder(){
           <option value="static" ${tb==null?"selected":""}>Static order (buckets in sequence)</option>
           <option value="bracket" ${tb!=null?"selected":""}>Deferred (IRA-equivalent) first, up to a tax ceiling</option>
         </select></label>
-      ${tb!=null ? `<label class="note">Target bracket:${helpChip("With bracket-fill, this is the ceiling: each year the model pulls from tax-deferred until taxable income reaches the top of this bracket, then stops. A higher ceiling draws/converts more now at that rate; lower keeps income down. Watch lifetime taxes respond.")}
+      ${tb!=null ? `<label class="note">Draw from tax-deferred up to the top of:${helpChip("With bracket-fill, this is the ceiling: each year the model pulls from tax-deferred until taxable income reaches the top of this bracket, then stops. A higher ceiling draws/converts more now at that rate; lower keeps income down. Watch lifetime taxes respond.")}
         <select onchange="DATA.assumptions.maxTargetBracket=parseFloat(this.value); setJSON(DATA); renderDrawOrder(); renderCoreNoSliders();">` +
         rates.map(r => `<option value="${r}" ${Math.abs(r-(tb>1?tb/100:tb))<1e-9?"selected":""}>${(r*100).toFixed(0)}%</option>`).join("") +
         `</select></label>` : ""}
@@ -3121,11 +3121,15 @@ function renderDrawOrder(){
       </span>`).join("") +
     `</div>
     <p class="note" style="margin-top:6px">${tb!=null
-      ? `Bracket-fill: each year the shortfall is funded from <strong>Tax-deferred first, up to the top of the
-         ${((tb>1?tb/100:tb)*100).toFixed(0)}% federal bracket</strong> (after RMDs, conversions, and Social Security
-         phase-in), then spills through the order above with deferred removed. If only deferred remains, the
-         ceiling is exceeded rather than leaving spending unfunded (noted in the year table). The headroom strip
-         below shows the terrain this strategy works.${equivNote}`
+      ? `<strong>Bracket-fill:</strong> each year, whatever your spending still needs after Social Security, pension,
+         RMDs and other income is <strong>drawn from tax-deferred first — but only up to the top of the
+         ${((tb>1?tb/100:tb)*100).toFixed(0)}% federal bracket</strong> (measured after RMDs, conversions and the
+         Social Security phase-in). Anything still needed then spills through the order above, with tax-deferred
+         removed. <strong>It never draws more than you need</strong>, so in a light-spending year your income can
+         land well below the ceiling — this is a cap, not a target. To deliberately create income up to the ceiling,
+         use a Roth conversion action instead. If only deferred remains, the ceiling is exceeded rather than leaving
+         spending unfunded (noted in the year table). The headroom strip below shows the terrain this strategy
+         works.${equivNote}`
       : `Buckets fund spending in the order above.`}
     RMDs are always forced from tax-deferred regardless of strategy.
     <span class="hoverhint" title="Two different clocks: capacity is a real, today's-dollar annual level; lifetime taxes are nominal dollars summed across every year of the plan. Each is comparable across strategies — but don't net one against the other. A strategy can cut lifetime tax by $330K while moving capacity only −$1,863/yr, and both are true.">At
@@ -3533,50 +3537,75 @@ function ladderColumnModel(run, year){
   const spendLanding = sn ? sn.spendLanding : landing;
   const rmdForcedOrd = sn ? sn.forcedOrd : 0;
 
-  /* ---- index044: the fill stack -------------------------------------------
-     Four slabs that sum exactly to the landing, each measured by its own
-     simulation so the SS phase-in re-solves rather than being apportioned:
-       1 can't avoid   — ordinary taxable with the RMD OFF and no voluntary
-                         draw or conversion. NOTE this is NOT the old floorOrd,
-                         which folded the forced RMD in; that made the
-                         RMD-forced excess straddle the gray block and put the
-                         teal "spending needs" line *inside* a region captioned
-                         non-negotiable.
-       2 to fund spending — the IRA draw this year's spending required (RMD off,
-                         conversion off).
-       3 Roth conversion — what the conversion itself adds on top.
-       4 forced by RMD  — the actual landing minus the RMD-off counterfactual.
-     Order is the order the deltas were measured in, which also happens to be
-     the planning-relevant one: the RMD is the thing on top pushing you up. */
+  /* ---- index045: the fill stack, reordered ---------------------------------
+     index044 stacked this marginally: everything spending needed, then the
+     RMD-forced excess on top. That is defensible arithmetic and a bad picture —
+     when a large spending draw already exceeded the RMD, the RMD slab computed
+     to zero and the chart printed "forced by RMD —" at someone with a six-figure
+     RMD. The dollars were real, just hidden inside the blue.
+
+     index045 stacks it MECHANICALLY, in the order money actually leaves the
+     account. Four slabs summing exactly to the landing, each measured by its own
+     simulation so the Social Security phase-in re-solves rather than being
+     apportioned:
+       1 unavoidable taxable income — taxable with the IRA untouched: no RMD, no
+                         voluntary draw, no conversion. Note this is NOT
+                         "your income" — Social Security can deliver a lot of
+                         cash while adding little or nothing here.
+       2 RMD            — forced out whether or not you need it. Always present
+                         once RMDs begin. The part of it your spending did NOT
+                         need is hatched inside this slab: the overshoot.
+       3 top-up draw    — the extra you had to pull because the RMD alone did
+                         not cover spending. Zero when the RMD overshoots.
+       4 Roth conversion — ordinary income you chose to create, on top.
+     Exactly one of slabs 2-overshoot and 3 is non-zero, which is the point:
+     either the RMD fell short and you topped up, or it overshot and the excess
+     is visible as hatching. */
   const baseFed = federalTax(Object.assign({}, fixed, { deferredDraws: 0, conversions: 0 }));
   const baseOrd = baseFed.ordTaxable;
   const snNC = ladderSpendingNeeds(run, year, { noConversions: true });
   const convAmt = (r.detail.fed.conversions) || 0, rmdAmt = inc.rmd || 0;
-  let s1 = Math.max(0, Math.min(baseOrd, landing));
-  let s2 = snNC ? Math.max(s1, Math.min(snNC.spendLanding, landing)) : landing;
-  let s3 = sn   ? Math.max(s2, Math.min(spendLanding,      landing)) : s2;
-  if (convAmt <= 0.5) s3 = s2;                       // no conversion → no conversion slab
-  if (rmdAmt  <= 0.5){                               // no RMD → nothing was forced
-    if (convAmt > 0.5) s3 = landing; else { s2 = landing; s3 = landing; }
-  }
+  const payoffD = sn ? (sn.payoffDeferred || 0) : 0;
+  /* taxable income with the RMD and the spending draw in, but the conversion
+     out — the boundary between slab 3 and slab 4 */
+  const spendOrd = sn
+    ? federalTax(Object.assign({}, fixed, {
+        deferredDraws: (r.detail.fed.deferredDraws || 0) + rmdAmt + payoffD, conversions: 0 })).ordTaxable
+    : landing;
+  let s1 = Math.max(0, Math.min(baseOrd,  landing));        // top of unavoidable
+  let s2 = Math.max(s1, Math.min(floorOrd, landing));       // top of the RMD slab
+  let s3 = Math.max(s2, Math.min(spendOrd, landing));       // top of the top-up draw
+  if (rmdAmt  <= 0.5) s2 = s1;                              // no RMD → no RMD slab
+  if (convAmt <= 0.5) s3 = landing;                         // no conversion → top-up runs to the landing
+  s3 = Math.max(s3, s2);
+  /* how much of the RMD your spending did not need, in taxable-income terms:
+     the floor (RMD in, nothing voluntary) minus where spending alone would have
+     landed with the RMD off. Positive only when the RMD overshot. */
+  const overshoot = (rmdAmt > 0.5 && snNC) ? Math.max(0, Math.min(s2 - s1, s2 - snNC.spendLanding)) : 0;
   const baseBits = [["wages",inc.wages],["pension",inc.pension],["interest",inc.interest],
     ["rental",inc.rental],["taxable Social Security",baseFed.ssTaxable]].filter(x => x[1] > 0.5);
   const segs = [
     { key:"base",  lo:0,  hi:s1, color:"#9AA3AF", op:1, hatch:null,
-      name:"can't avoid", why:"wages · pension · interest · rental · taxable Social Security, with the RMD off — this much is ordinary taxable income whatever you do",
+      name:"unavoidable taxable income",
+      why:"what is taxable before you touch the IRA at all — wages, pension, interest, rental and the taxable part of Social Security, with the RMD held off. Cash you receive tax-free does not appear here",
       bits: baseBits },
-    { key:"spend", lo:s1, hi:s2, color:"#4E7FA6", op:1, hatch:null,
-      name:"to fund spending", why:"the tax-deferred draw your entered spending required this year (RMD held off, conversion held off)", bits:null },
-    { key:"conv",  lo:s2, hi:s3, color:"#7E4A73", op:1, hatch:"B",
-      name:"Roth conversion", why:"ordinary income you chose to create — the conversion's own contribution", bits:null },
-    { key:"rmd",   lo:s3, hi:landing, color:"#C98A4B", op:1, hatch:"A",
-      name:"forced by RMD", why:"income above what spending alone needed, pushed up by the required minimum distribution", bits:null }
+    { key:"rmd",   lo:s1, hi:s2, color:"#C98A4B", op:1, hatch:null, hatchTop: overshoot,
+      name:"RMD (forced)",
+      why:"the required minimum distribution, which comes out whether or not you need it", bits:null },
+    { key:"spend", lo:s2, hi:s3, color:"#4E7FA6", op:1, hatch:null,
+      name:"top-up draw for spending",
+      why:"the extra pulled from tax-deferred because the RMD and your other income did not cover spending", bits:null },
+    { key:"conv",  lo:s3, hi:landing, color:"#7E4A73", op:1, hatch:"B",
+      name:"Roth conversion", why:"ordinary income you chose to create — the conversion's own contribution", bits:null }
   ].filter(s => s.hi - s.lo > 0.5);
 
   return { year, r, inc, filing: r.filing, ages: r.ages, nomF: r.nomF,
     floorFed, floorOrd, landing, spendLanding, rmdForcedOrd, spendNeeds: sn,
-    baseOrd, baseBits, segs, regions, convAmt, rmdAmt,
+    baseOrd, baseBits, segs, regions, convAmt, rmdAmt, overshoot, spendOrd,
+    ssGross: inc.ss || 0, ssTaxable: r.detail.fed.ssTaxable || 0,
+    baseSsTaxable: baseFed.ssTaxable || 0,
     spendReal: r.spend, spendNom: r.spend * r.nomF,
+    draws: r.detail.draws || null, taxTotal: r.taxes ? r.taxes.total : 0,
     bands, topRate, topEdge, edges, rateAt,
     colScaleMax, ceilBind, floorBits };
 }
@@ -3632,6 +3661,7 @@ function renderLadder(){
   const A = DATA.assumptions || {};
   const tbRaw = A.maxTargetBracket;
   const fillRate = tbRaw == null ? null : (tbRaw > 1 ? tbRaw/100 : tbRaw);
+  let ceilingDrawn = false;      // index045: the legend must follow the drawing, not the setting
 
   /* geometry */
   const H = 386, W = 1000, padT = 48, padB = 26, axisW = 54;
@@ -3666,8 +3696,10 @@ function renderLadder(){
       lastLabelY = y;
     }
   });
-  svg += cased(2, padT - 34, "bracket edges", 10, "start", "#5A6470", 700)
-       + cased(2, padT - 22, "today's $", 9.5, "start", "#8A93A0", 400);
+  svg += cased(2, padT - 40, "ordinary TAXABLE", 9.5, "start", "#5A6470", 700)
+       + cased(2, padT - 29, "income — after", 9.5, "start", "#5A6470", 700)
+       + cased(2, padT - 18, "the deduction", 9.5, "start", "#5A6470", 700)
+       + cased(2, padT - 7, "today's $", 9, "start", "#8A93A0", 400);
 
   cols.forEach((c,i) => {
     const x = colXof(i), xr = x + colW, fillX = x + spineW, fillW = colW - spineW;
@@ -3696,13 +3728,32 @@ function renderLadder(){
       const amt = s.hi - s.lo;
       let tip = c.year + " · " + s.name + " — " + M(c, amt) + " of ordinary taxable income. " + s.why;
       if (s.bits && s.bits.length) tip += ": " + s.bits.map(b => b[0] + " " + M(c, b[1])).join(" · ");
-      if (s.key === "spend") tip += ". Your entered spending is " + fmtK(c.spendReal) + " in today's dollars, which is "
-        + fmtK(c.spendNom) + " of actual dollars in " + c.year + ".";
-      if (s.key === "rmd" && c.spendNeeds && c.spendNeeds.surplusAfterTax > 0)
-        tip += ". After-tax surplus you could redeploy ≈ " + M(c, c.spendNeeds.surplusAfterTax) + ".";
+      /* index045 — the cash bridge. A taxable-income slab and a spending figure
+         are different units, and printing them side by side without the bridge
+         was the single most confusing thing on this chart: Social Security
+         delivers cash while adding little or nothing to this axis. */
+      if (s.key === "spend" || s.key === "rmd") tip += " " + cashBridge(c, M);
+      if (s.key === "base" && c.ssGross > 0.5)
+        tip += " Social Security received " + M(c, c.ssGross) + ", of which "
+          + M(c, c.baseSsTaxable) + " is taxable at this level — the rest is cash that never appears on this axis.";
+      if (s.key === "rmd" && c.overshoot > 0.5)
+        tip += " The hatched top " + M(c, c.overshoot) + " is OVERSHOOT: taxable income the RMD forced beyond what your spending needed"
+          + (c.spendNeeds && c.spendNeeds.surplusAfterTax > 0
+             ? ", leaving roughly " + M(c, c.spendNeeds.surplusAfterTax) + " after tax to redeploy." : ".");
+      /* the slab measures TAXABLE INCOME the RMD caused, which exceeds the RMD
+         itself whenever the distribution also drags Social Security into tax. */
+      if (s.key === "rmd" && amt - c.rmdAmt > Math.max(500, c.rmdAmt*0.02))
+        tip += " The RMD itself was " + M(c, c.rmdAmt) + "; this slab is taller because the distribution also pulled "
+          + M(c, amt - c.rmdAmt) + " more of your Social Security into taxable income.";
+      if (s.key === "rmd" && c.overshoot <= 0.5 && c.rmdAmt > 0.5)
+        tip += " Your spending absorbed the whole RMD — nothing was forced beyond what you were drawing anyway.";
       svg += `<rect x="${fillX}" y="${y1}" width="${fillW}" height="${h}" fill="${s.color}" fill-opacity="${s.op}" stroke="#FFFFFF" stroke-width="0.8"${ladTipAttrs(tip)}></rect>`;
       if (s.hatch)
         svg += `<rect x="${fillX}" y="${y1}" width="${fillW}" height="${h}" fill="url(#ladh${s.hatch})" pointer-events="none"></rect>`;
+      if (s.hatchTop > 0.5){          // index045: overshoot sits at the top of the RMD slab
+        const oy = yv(s.hi), oy0 = yv(Math.max(s.lo, s.hi - s.hatchTop));
+        svg += `<rect x="${fillX}" y="${oy}" width="${fillW}" height="${Math.max(oy0-oy,1)}" fill="url(#ladhA)" pointer-events="none"></rect>`;
+      }
       if (h > (single ? 5 : 15)){
         if (single)                        // label sits in the right rail, on page background
           railPut((y0+y1)/2 + 3.5, s.name + " · " + M(c, amt), 11, "#3A4756", 600);
@@ -3763,6 +3814,7 @@ function renderLadder(){
         const ctip = c.year + " · your fill ceiling — the draw strategy pulls from tax-deferred until ordinary taxable income reaches "
           + M(c, ceilOrd) + ", the top of the " + (fillRate*100).toFixed(0) + "% bracket, then stops"
           + (c.ceilBind ? ". This year the model landed exactly on it." : ".");
+        ceilingDrawn = true;
         svg += `<line x1="${x-4}" y1="${cy}" x2="${xr+4}" y2="${cy}" stroke="#C9A227" stroke-width="2" stroke-dasharray="7,3"${ladTipAttrs(ctip)}></line>`;
         if (single) railPut(cy + 4, "your fill ceiling · top of " + (fillRate*100).toFixed(0) + "%", 10.5, "#8A6A12", 700);
       }
@@ -3792,7 +3844,44 @@ function renderLadder(){
 
   const colGeo = cols.map((c,i) => ({ year: c.year, leftPct: colXof(i)/W*100, widthPct: colW/W*100 }));
   const hd = ladderHeaderAndDrawers(cols, colGeo, single, thin);
-  box.innerHTML = ladderShell(cols, single, svg, modeNote, hd.header, hd.drawers, basis, M);
+  box.innerHTML = ladderShell(cols, single, svg, modeNote, hd.header, hd.drawers, basis, M, ceilingDrawn, fillRate);
+}
+
+/* index045 — when a target bracket is set but no ceiling line appears, say so.
+   At 37% there is no upper edge at all; at 35% the ceiling usually sits above
+   the top of the visible scale. Silence read as a missing feature. */
+function ceilingNote(cols, fillRate, drawn){
+  if (fillRate == null || drawn) return "";
+  const c = cols[0], ceil = bracketCeiling(fillRate, c.filing);
+  const pct = (fillRate*100).toFixed(0);
+  return `<p class="note" style="margin:2px 0 0"><strong>No fill-ceiling line is drawn</strong> because ` +
+    (isFinite(ceil)
+      ? `the top of the ${pct}% bracket (${fmtK(ceil)} of taxable income, today's $) sits above the top of this view — the ceiling exists but never comes into range here.`
+      : `${pct}% is the top bracket and has no upper edge. With no ceiling to stop it, the strategy is simply "tax-deferred first, always."`) +
+    `</p>`;
+}
+
+/* index045 — the cash bridge, in words. Spending is cash out the door; every
+   slab on the chart is taxable income. They do not tie, and until index045
+   nothing on screen said why. This reconciles the two explicitly. */
+function cashBridge(c, M){
+  const d = c.draws || {};
+  const parts = [];
+  if (c.ssGross > 0.5)  parts.push("Social Security " + M(c, c.ssGross));
+  if (c.inc.pension > 0.5) parts.push("pension " + M(c, c.inc.pension));
+  if (c.inc.wages > 0.5)   parts.push("wages " + M(c, c.inc.wages));
+  if (c.inc.rental > 0.5)  parts.push("rental " + M(c, c.inc.rental));
+  if (c.inc.interest > 0.5)parts.push("interest " + M(c, c.inc.interest));
+  if (c.rmdAmt > 0.5)      parts.push("RMD " + M(c, c.rmdAmt));
+  if ((d.deferred||0) > 0.5) parts.push("further IRA draw " + M(c, d.deferred));
+  if ((d.cash||0) > 0.5)     parts.push("cash " + M(c, d.cash));
+  if ((d.taxable||0) > 0.5)  parts.push("brokerage " + M(c, d.taxable));
+  if ((d.roth||0) > 0.5)     parts.push("Roth " + M(c, d.roth));
+  return "WHERE THE SPENDING CAME FROM: total cash need " + M(c, c.spendReal)
+    + " (spending plus debt service), funded by " + (parts.length ? parts.join(" · ") : "existing cash")
+    + ", less taxes of " + M(c, c.taxTotal)
+    + ". Only part of that is taxable income, which is why this bar is shorter than your spending"
+    + " — Social Security and returned basis deliver cash without adding to this axis.";
 }
 
 /* index044 — the chrome around the gauge. The two long explanatory paragraphs
@@ -3800,7 +3889,7 @@ function renderLadder(){
    the fill gauge does, so they are gone. What replaces them is a per-year
    readout that states the numbers outright, including your entered spending in
    BOTH dollar bases so the inflation question never has to be inferred. */
-function ladderShell(cols, single, svg, modeNote, headerBar, drawers, basis, M){
+function ladderShell(cols, single, svg, modeNote, headerBar, drawers, basis, M, ceilingDrawn, fillRate){
   const start = cols[0].year, end = cols[cols.length-1].year, n = cols.length;
   const w = ladderWidthGet();
   const _run = window._headroomRun;
@@ -3836,7 +3925,8 @@ function ladderShell(cols, single, svg, modeNote, headerBar, drawers, basis, M){
     numbers rather than approximated. ${basisLine} Hover or tap any piece for its exact dollars.</p>
     ${headerBar || ""}
     ${svg}
-    ${ladderKey(cols)}
+    ${ladderKey(cols, ceilingDrawn)}
+    ${ceilingNote(cols, fillRate, ceilingDrawn)}
     ${ladderReadout(cols, basis, M)}
     ${ladderFlags(cols)}
     ${drawers || ""}
@@ -3847,20 +3937,31 @@ function ladderShell(cols, single, svg, modeNote, headerBar, drawers, basis, M){
     LTCG stacking (the drawer’s gains strip shows where they land) · state tax not shown.</p>`;
 }
 
-/* the swatch key — replaces the old "Reading it:" paragraph */
-function ladderKey(cols){
+/* index045 — the key lists only what is actually on screen. index044 printed a
+   fill-ceiling entry whenever a target bracket was set, even at 37% where the
+   ceiling is infinite and no line is drawn, and showed a single hardcoded green
+   chip for "room" even when every visible band was red. Both sent people
+   hunting for things that were not there. */
+function ladderKey(cols, ceilingDrawn){
   const any = k => cols.some(c => c.segs.some(s => s.key === k));
   const sw = (col, extra) => `<span class="ladsw" style="background:${col};${extra||""}"></span>`;
   let h = "";
-  if (any("base"))  h += `<span class="it">${sw("#9AA3AF")}can’t avoid</span>`;
-  if (any("spend")) h += `<span class="it">${sw("#4E7FA6")}to fund spending</span>`;
-  if (any("conv")) h += `<span class="it">${sw("#7E4A73")}Roth conversion</span>`;
-  if (any("rmd"))  h += `<span class="it">${sw("#C98A4B")}forced by RMD</span>`;
-  h += `<span class="it"><span class="ladsw" style="background:#FFFFFF; border-top:2px solid #1B2A3A; border-radius:0"></span>where your income lands</span>`
-     + `<span class="it">${sw("#8FB03E")}room still open (colored by its rate)</span>`;
-  if ((DATA.assumptions||{}).maxTargetBracket != null)
+  if (any("base"))  h += `<span class="it">${sw("#9AA3AF")}unavoidable taxable income</span>`;
+  if (any("rmd")){
+    h += `<span class="it">${sw("#C98A4B")}RMD (forced)</span>`;
+    if (cols.some(c => c.overshoot > 0.5))
+      h += `<span class="it"><span class="ladsw" style="background:#C98A4B; background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.75) 0 2px,transparent 2px 5px)"></span>— of which overshoot</span>`;
+  }
+  if (any("spend")) h += `<span class="it">${sw("#4E7FA6")}top-up draw for spending</span>`;
+  if (any("conv"))  h += `<span class="it">${sw("#7E4A73")}Roth conversion</span>`;
+  h += `<span class="it"><span class="ladsw" style="background:#FFFFFF; border-top:2px solid #1B2A3A; border-radius:0"></span>where your taxable income lands</span>`;
+  /* room chips in the rates actually visible on this chart, not a fixed green */
+  const rates = [...new Set(cols.flatMap(c => c.bands.map(b => b.rate)))].sort((a,b)=>a-b).slice(0,4);
+  if (rates.length)
+    h += `<span class="it">${rates.map(r=>sw(_ladShade(r))).join("")}room still open, colored by its rate</span>`;
+  if (ceilingDrawn)
     h += `<span class="it"><span class="ladsw" style="background:#FFFFFF; border-top:2px dashed #C9A227; border-radius:0"></span>your fill ceiling</span>`;
-  return `<p class="note ladkey">${h}</p>`;
+  return h ? `<p class="note ladkey">${h}</p>` : "";
 }
 
 /* per-year readout — the numbers stated outright, so nothing depends on
@@ -3872,15 +3973,23 @@ function ladderReadout(cols, basis, M){
   const rows = cols.map(c => {
     const room = c.bands.length ? c.bands[0] : null;
     const age = c.ages && c.ages.length ? ` <span class="mut">${c.ages.join("/")}</span>` : "";
+    /* index045: an RMD that forced nothing is NOT the same as having no RMD.
+       index044 printed a bare dash for both, at people with six-figure RMDs. */
+    const rmdCell = c.rmdAmt <= 0.5
+      ? `<span class="mut">no RMD yet</span>`
+      : M(c, segOf(c,"rmd")) + (c.overshoot > 0.5
+          ? ` <span class="mut">${M(c, c.overshoot)} overshoot</span>`
+          : ` <span class="mut">fully used</span>`);
     return `<tr>
       <td class="k">${c.year}${age}</td>
       <td>${fmtK(c.spendReal)}</td>
       <td>${fmtK(c.spendNom)}</td>
+      <td>${c.ssGross > 0.5 ? fmtK(c.ssGross) + ` <span class="mut">${fmtK(c.ssTaxable)} taxable</span>` : `<span class="mut">—</span>`}</td>
       <td class="k">${M(c, c.landing)} <span class="mut">${(c.rateAt(c.landing)*100).toFixed(0)}%</span></td>
       <td>${cell(c, segOf(c,"base"))}</td>
+      <td>${rmdCell}</td>
       <td>${cell(c, segOf(c,"spend"))}</td>
       <td>${cell(c, segOf(c,"conv"))}</td>
-      <td>${cell(c, segOf(c,"rmd"))}</td>
       <td>${room ? M(c, room.gross) + ` <span class="mut">at ${(room.rate*100).toFixed(0)}%</span>` : `<span class="mut">top bracket</span>`}</td>
     </tr>`;
   }).join("");
@@ -3888,22 +3997,24 @@ function ladderReadout(cols, basis, M){
   return `<div class="ladread"><table>
     <thead><tr>
       <th>Year</th>
-      <th>Your spending<br><span class="mut">today's $ (entered)</span></th>
-      <th>Your spending<br><span class="mut">that year's $</span></th>
+      <th>Total cash need<br><span class="mut">today's $ · spending + debt service</span></th>
+      <th>Total cash need<br><span class="mut">that year's $</span></th>
+      <th>Social Security<br><span class="mut">received · taxable</span></th>
       <th>Taxable income<br><span class="mut">lands at · ${b}</span></th>
-      <th>can't avoid<br><span class="mut">${b}</span></th>
-      <th>to fund spending<br><span class="mut">${b}</span></th>
+      <th>unavoidable<br><span class="mut">${b}</span></th>
+      <th>RMD (forced)<br><span class="mut">${b}</span></th>
+      <th>top-up draw<br><span class="mut">${b}</span></th>
       <th>Roth conversion<br><span class="mut">${b}</span></th>
-      <th>forced by RMD<br><span class="mut">${b}</span></th>
       <th>Room still open<br><span class="mut">at your current rate</span></th>
     </tr></thead>
     <tbody>${rows}</tbody></table></div>
-    <p class="note" style="margin:2px 0 0">You entered spending in today's dollars and the model holds it at constant
-    purchasing power, so the middle column is that same standard of living expressed in the actual dollars of each
-    year. The four income columns add up to where your taxable income lands.</p>`;
+    <p class="note" style="margin:2px 0 0"><strong>Cash need is not taxable income.</strong> The four income columns
+    add to where your taxable income lands; your cash need is funded by those draws <em>plus</em> Social Security and
+    any return of basis, which deliver cash without adding to the taxable-income scale. That gap is normal and is why
+    the bars are shorter than your spending. "Total cash need" is your entered spending plus debt service and any
+    one-off actions that year — not the spending figure alone.</p>`;
 }
 
-/* ---- Feature 2 + 1 (index020): clickable per-column headers + tax-table drawers ---- */
 function ladderDrawer(year){
   const S = (window._ladderDrawers = window._ladderDrawers || new Set());
   if (S.has(year)) S.delete(year); else S.add(year);
@@ -3992,6 +4103,7 @@ function ladderGainsStrip(c){
 }
 
 /* ---- F3 (index021): reading legend + per-year action flags ---- */
+
 function ladderFlags(cols){
   const yrs = new Set(cols.map(c => c.year));
   const acts = (DATA.actions || []).filter(a => a.enabled !== false && yrs.has(a.year));
