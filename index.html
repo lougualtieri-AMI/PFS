@@ -150,6 +150,21 @@ select,input[type=number]{
   border:1px solid var(--line); border-radius:4px; background:#fff; color:var(--ink);
 }
 .note{font-size:12px; color:var(--muted);} /* #42-B4: strategy/headroom/ladder notes bumped for MacBook+Pixel */ #draworder .note, #headroom .note, #ladder .note{font-size:13.5px; line-height:1.55;} .ladder-win{font-size:11px; font-weight:600; color:var(--muted); margin-left:12px; text-transform:none; letter-spacing:0;} .ladder-win b{color:var(--ink); margin:0 1px;} .ladder-win button.mini{padding:1px 7px; margin:0 2px;} .ladhead{position:relative; margin:8px 0 0;} .ladcol-btn{position:absolute; top:0; box-sizing:border-box; font-family:inherit; font-size:11px; font-weight:600; color:var(--ink); background:rgba(0,0,0,0.02); border:1px solid var(--line); border-radius:4px; padding:2px 3px; cursor:pointer; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; line-height:1.5; transition:border-color .12s, background .12s;} .ladcol-btn:hover{border-color:var(--ink); background:rgba(0,0,0,0.05);} .ladcol-btn.open{background:rgba(62,107,143,0.12); border-color:#3E6B8F;} .ladcol-btn .chev{color:#3E6B8F; margin-right:2px; font-weight:700;} .ladcol-btn .cue{color:var(--muted); font-weight:400;} .laddrawers{display:flex; flex-wrap:wrap; gap:12px; margin-top:10px;} .laddrawer{flex:1 1 240px; min-width:230px; max-width:340px; border:1px solid var(--line); border-radius:6px; padding:8px 11px 10px; background:rgba(0,0,0,0.015);} .laddrawer h4{margin:0 0 5px; font-size:12.5px; color:var(--ink); font-weight:700;} .laddrawer .dbasis{font-size:11px; color:var(--muted); margin:0 0 7px; line-height:1.45;} .laddrawer table.ladtax{border-collapse:collapse; width:100%; margin:0 0 7px; font-size:12px;} .laddrawer table.ladtax th{text-align:left; font-weight:600; color:var(--muted); border-bottom:1px solid var(--line); padding:2px 6px;} .laddrawer table.ladtax td{padding:1.5px 6px; border-bottom:1px solid rgba(0,0,0,0.05); color:var(--ink);} .laddrawer table.ladtax td.r{font-weight:700; width:44px; white-space:nowrap;} .laddrawer .gl{font-size:12px; color:var(--ink); margin:5px 0 3px; line-height:1.5;} .laddrawer .niit{font-size:10.5px; color:var(--muted); margin:0; font-style:italic;} .fpd-headline{font-size:20px; font-weight:800; color:var(--ink); margin:2px 0 10px; line-height:1.15;} .fpd-headline .sub{font-size:12px; font-weight:400; color:var(--muted); margin-left:8px;}
+/* index044 — bracket-ladder fill gauge: per-year readout, swatch legend, basis toggle */
+.ladread{margin:8px 0 4px; overflow-x:auto; -webkit-overflow-scrolling:touch;}
+.ladread table{border-collapse:collapse; font-size:12px; min-width:640px;}
+.ladread th{text-align:right; font-weight:600; color:var(--muted); border-bottom:1px solid var(--line); padding:3px 8px; white-space:nowrap; font-size:11px; line-height:1.25;}
+.ladread th:first-child, .ladread td:first-child{text-align:left;}
+.ladread td{text-align:right; padding:3px 8px; border-bottom:1px solid rgba(0,0,0,0.05); color:var(--ink); white-space:nowrap;}
+.ladread td.k{font-weight:700;}
+.ladread .mut{color:var(--muted); font-weight:400;}
+.ladread tr.sp td{background:rgba(62,107,143,0.05);}
+.ladsw{display:inline-block; width:11px; height:11px; border-radius:2px; vertical-align:-1px; margin-right:4px; border:1px solid rgba(0,0,0,0.18);}
+.ladkey{margin:6px 0 0; line-height:1.9;}
+.ladkey span.it{display:inline-block; margin-right:14px; white-space:nowrap;}
+.ladbasis{font-size:11px; font-weight:600; color:var(--muted); margin-left:12px; text-transform:none; letter-spacing:0;}
+.ladbasis button.mini{padding:1px 7px; margin:0 1px; font-weight:600;}
+.ladbasis button.mini.on{background:rgba(62,107,143,0.14); border-color:#3E6B8F; color:var(--ink);}
 .privacy{font-size:12px; color:var(--accent); font-weight:600;} .ladtip{position:fixed; z-index:60; max-width:300px; background:#1B2A3A; color:#fff; font-size:12px; line-height:1.45; padding:7px 10px; border-radius:6px; pointer-events:none; box-shadow:0 3px 12px rgba(20,30,45,.35); display:none;} .ladtip.pin{pointer-events:auto; outline:2px solid #C9A227;} .ladlegend{margin:4px 0 0;} .ladflags{margin:2px 0 0;} .ladflag{display:inline-block; margin:2px 10px 2px 0; padding:2px 8px; border:1px solid var(--line); border-radius:10px; background:#FBF7EE; font-size:12px;} .gstrip{margin:6px 0 2px;} .gstrip svg{display:block;} .help{display:inline-block;width:15px;height:15px;line-height:15px;text-align:center;font-size:11px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:50%;cursor:pointer;margin-left:5px;vertical-align:middle;user-select:none} .tapcue{display:block;margin:8px 0;padding:8px 12px;background:#EAF3F7;border:1px solid #2E6E8E;border-radius:8px;font-size:13px;font-weight:600;color:#1B4B60}
 /* where you are */
 .bigbar{display:flex; height:44px; border-radius:4px; overflow:hidden; margin:8px 0 6px;}
@@ -234,7 +249,7 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
   <div class="hwrap">
     <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px">index043 · v013</span></h1>
     <div class="subtitle">Now and in the Future · <a href="https://github.com/lougualtieri-AMI/PFS/blob/main/README.md" target="_blank" rel="noopener">User Guide &#8599;</a></div>
-    <div class="buildline">pfs_index043 · engine v013 (takeLoan/borrow · level-from streams · amount-as-of · receiveAsset/inheritance · buyAsset · Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · index043 display-only: Start here panel defaults closed · index041 display-only: PolyForm NC 1.0.0 license header · index040 display-only: ask-an-AI panel (#030) · scenario path (#031) · terms of use (#032) · wide-table horizontal scroll · rate inputs 2dp + 0.25 step · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
+    <div class="buildline">pfs_index044 · engine v013 (takeLoan/borrow · level-from streams · amount-as-of · receiveAsset/inheritance · buyAsset · Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · index044 display-only: bracket ladder redrawn as a FILL GAUGE (unavoidable / to fund spending / Roth conversion / forced by RMD stacked to the actual landing; room measured ABOVE the landing, not above the floor) · single dollar basis for both widths with a today's-$ ↔ that-year's-$ toggle · per-year readout table incl. entered spending in both bases · scale windowed to the landing + 2 brackets · index043 display-only: Start here panel defaults closed · index041 display-only: PolyForm NC 1.0.0 license header · index040 display-only: ask-an-AI panel (#030) · scenario path (#031) · terms of use (#032) · wide-table horizontal scroll · rate inputs 2dp + 0.25 step · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
   </div>
 </header>
 <div id="delta" aria-live="polite"></div>
@@ -3320,6 +3335,20 @@ function ladderWidth(delta){
   setJSON(DATA);
   renderLadder();
 }
+/* index044 — ONE dollar basis for the ladder at every width. Vertical POSITIONS
+   are always real (today's $) so a bracket edge sits at the same height in every
+   column; this toggle controls only the NUMBERS shown (chart labels, tooltips,
+   readout). Before index044 the basis flipped silently with the width stepper —
+   width 1 was nominal, width ≥ 2 was real — which is a rather good way to make a
+   chart unreadable without anyone noticing. */
+function ladderBasisGet(){
+  return ((DATA.display||{}).ladderBasis === "nominal") ? "nominal" : "real";
+}
+function ladderBasisSet(v){
+  (DATA.display = DATA.display || {}).ladderBasis = (v === "nominal" ? "nominal" : "real");
+  setJSON(DATA);
+  renderLadder();
+}
 
 /* #022 — "spending needs" marker: where this year's ordinary taxable income
    would land if the IRA were drawn only for what spending needs, i.e. WITHOUT
@@ -3337,7 +3366,12 @@ function ladderWidth(delta){
    landing line, never above it, and coincides with it whenever the RMD forced
    nothing extra (normal and pre-RMD years). Reconstructed federalTax inputs
    reproduce the recorded landing to the cent (gated in test_spend_marker). */
-function ladderSpendingNeeds(run, year){
+/* index044 — opts.noConversions additionally suppresses the year's Roth
+   conversion, so the caller can measure the conversion's own contribution to
+   ordinary income as (spendLanding with conversions) − (spendLanding without).
+   That separation is what lets the fill gauge show a conversion as its own slab
+   instead of burying it inside "what spending needed". */
+function ladderSpendingNeeds(run, year, opts){
   const rows = run.rows, idx = rows.findIndex(x => x.year === year), r = rows[idx];
   if (!r) return null;
   const inc = r.income, fed = r.detail && r.detail.fed;
@@ -3355,12 +3389,22 @@ function ladderSpendingNeeds(run, year){
     open = { cash: b.cash||0, taxable: b.taxable||0, deferred: b.deferred||0, roth: b.roth||0 }; }
   else { open = { cash:0, taxable:0, deferred:0, roth:0 };
     (DATA.balanceSheet||[]).forEach(x => { if (open[x.taxType] != null) open[x.taxType] += x.value; }); }
-  const conversions = fed.conversions || 0;
+  const conversionsActual = fed.conversions || 0;
+  const conversions = (opts && opts.noConversions) ? 0 : conversionsActual;
   /* deliberate ordinary actions (a deferred-sourced debt paydown) stay in the
      landing — only the FORCED RMD is suppressed. Back the payoff amount out of
-     otherOrd (engine folds it into the tax call but records only voluntary + rmd). */
+     otherOrd (engine folds it into the tax call but records only voluntary + rmd).
+     index044 BUGFIX: this residual must be taken against the ACTUAL conversions,
+     not the possibly-suppressed local. fed.otherOrd already contains the year's
+     Roth conversion, so with `conversions` zeroed the whole conversion fell
+     through into payoffDeferred and mkY then counted it twice — once as a
+     conversion and again as a deferred draw. Through index043 the
+     `Math.min(rawCF, fed.ordTaxable)` clamp hid that, at the cost of pinning
+     spendLanding to the landing and silently erasing the RMD-forced excess in
+     any year where a conversion and an RMD coincided — precisely the years
+     worth looking at. reconLanding was wrong in those years too. */
   const payoffDeferred = Math.max(0, fed.otherOrd - inc.wages - inc.pension - inc.interest
-    - inc.rental - conversions - fed.deferredDraws - rmd);
+    - inc.rental - conversionsActual - fed.deferredDraws - rmd);
   /* recover the year's realized LTCG from MAGI (magi = otherOrd + ssTaxable + qualDiv + ltcg). */
   const ltcgRealized = Math.max(0, fed.magi - fed.otherOrd - fed.ssTaxable - inc.qualDiv);
   const nomF = r.nomF, spendNeed = r.spend;
@@ -3403,7 +3447,8 @@ function ladderSpendingNeeds(run, year){
   const cashSurplus = Math.max(0, rmd - D);               /* RMD cash beyond what spending would have drawn from the IRA, real $ */
   const margRate = (() => { const br = TAX.ordinary[r.filing]; let rt = br[0][1]; br.forEach(b => { if (fed.ordTaxable >= b[0]) rt = b[1]; }); return rt; })();
   const surplusAfterTax = cashSurplus * (1 - margRate); /* ≈ redeployable after federal marginal tax, real $ */
-  return { spendLanding, forcedOrd, cashSurplus, surplusAfterTax, margRate, rmd, deferredCF: D, reconLanding, landingActual: fed.ordTaxable };
+  return { spendLanding, forcedOrd, cashSurplus, surplusAfterTax, margRate, rmd, deferredCF: D, reconLanding, landingActual: fed.ordTaxable,
+           conversionsUsed: conversions, payoffDeferred, ltcgRealized };
 }
 
 /* Pure per-year column model — no DOM. Shared by the single- and multi-column
@@ -3434,10 +3479,20 @@ function ladderColumnModel(run, year){
     for (let i = 0; i < 42; i++){ const m = (lo+hi)/2; if (at(m).ordTaxable < E) lo = m; else hi = m; }
     return (lo+hi)/2;
   };
+  /* index044 — ROOM IS MEASURED FROM THE LANDING, NOT FROM THE FLOOR.
+     Through index043 the bands started at floorOrd, which excluded the model's
+     own voluntary draws and conversions. Whenever the landing sat above the
+     floor, the colored area between them was drawn as available room while
+     being already spent — the same color meaning two different things in one
+     column, distinguishable only by a dashed line you could not read. Now the
+     conversions channel is first bisected to the landing itself, and every band
+     above it is genuinely addable. Same simulate-don't-decompose method. */
+  const dLand = deltaTo(landing);
+  const landFed = at(dLand);
   const bands = [];
-  let prevDelta = 0, prevTax = floorFed.tax, prevOrd = floorOrd;
+  let prevDelta = dLand, prevTax = landFed.tax, prevOrd = landing;
   edges.forEach(E => {
-    if (E <= floorOrd + 0.5) return;                          // floor already past this edge
+    if (E <= landing + 0.5) return;                           // already past this edge
     const d = deltaTo(E), f = at(d);
     bands.push({ lo: prevOrd, hi: E, rate: rateAt(Math.max(prevOrd, E-1)),
       gross: d - prevDelta, cost: f.tax - prevTax });
@@ -3445,7 +3500,22 @@ function ladderColumnModel(run, year){
   });
   const topRate = br[br.length-1][1];
   const topEdge = edges.length ? edges[edges.length-1] : Math.max(floorOrd, landing) * 1.15;
-  const colScaleMax = Math.max(topEdge * 1.06, floorOrd * 1.15, landing * 1.1, 1);
+  /* the bracket regions themselves, as positions on the ordinary-taxable axis —
+     the "ladder" the fill climbs. No simulation needed: the vertical axis IS
+     ordinary taxable income, so a bracket occupies exactly [edge, next edge]. */
+  const regions = br.map((b,i) => ({ lo: b[0], hi: i+1 < br.length ? br[i+1][0] : Infinity, rate: b[1] }));
+  /* index044 — window the scale to the landing plus a bracket or two instead of
+     always running to the top edge (~$640K MFJ). At a $120K landing the old
+     scale put everything worth reading in the bottom fifth of the column.
+     Rule: always show at least one full bracket above the landing, at most two,
+     and never let the fill shrink below roughly a third of the column. */
+  const ei = edges.findIndex(e => e > landing);
+  const nextE = ei < 0 ? null : edges[ei];
+  const twoUp = ei < 0 ? null : edges[Math.min(ei + 1, edges.length - 1)];
+  const oneUpCap = nextE == null ? Math.max(landing, topEdge) * 1.15 : nextE * 1.12;
+  const twoUpCap = twoUp == null ? oneUpCap : twoUp * 1.08;
+  const colScaleMax = Math.max(Math.min(twoUpCap, Math.max(oneUpCap, landing * 3.2)),
+                               landing * 1.15, floorOrd * 1.2, 1);
   /* #5: does the model's landing sit exactly on the active bracket-fill ceiling? */
   let ceilBind = null;
   const tb = A.maxTargetBracket;
@@ -3462,8 +3532,51 @@ function ladderColumnModel(run, year){
   const sn = ladderSpendingNeeds(run, year);
   const spendLanding = sn ? sn.spendLanding : landing;
   const rmdForcedOrd = sn ? sn.forcedOrd : 0;
+
+  /* ---- index044: the fill stack -------------------------------------------
+     Four slabs that sum exactly to the landing, each measured by its own
+     simulation so the SS phase-in re-solves rather than being apportioned:
+       1 can't avoid   — ordinary taxable with the RMD OFF and no voluntary
+                         draw or conversion. NOTE this is NOT the old floorOrd,
+                         which folded the forced RMD in; that made the
+                         RMD-forced excess straddle the gray block and put the
+                         teal "spending needs" line *inside* a region captioned
+                         non-negotiable.
+       2 to fund spending — the IRA draw this year's spending required (RMD off,
+                         conversion off).
+       3 Roth conversion — what the conversion itself adds on top.
+       4 forced by RMD  — the actual landing minus the RMD-off counterfactual.
+     Order is the order the deltas were measured in, which also happens to be
+     the planning-relevant one: the RMD is the thing on top pushing you up. */
+  const baseFed = federalTax(Object.assign({}, fixed, { deferredDraws: 0, conversions: 0 }));
+  const baseOrd = baseFed.ordTaxable;
+  const snNC = ladderSpendingNeeds(run, year, { noConversions: true });
+  const convAmt = (r.detail.fed.conversions) || 0, rmdAmt = inc.rmd || 0;
+  let s1 = Math.max(0, Math.min(baseOrd, landing));
+  let s2 = snNC ? Math.max(s1, Math.min(snNC.spendLanding, landing)) : landing;
+  let s3 = sn   ? Math.max(s2, Math.min(spendLanding,      landing)) : s2;
+  if (convAmt <= 0.5) s3 = s2;                       // no conversion → no conversion slab
+  if (rmdAmt  <= 0.5){                               // no RMD → nothing was forced
+    if (convAmt > 0.5) s3 = landing; else { s2 = landing; s3 = landing; }
+  }
+  const baseBits = [["wages",inc.wages],["pension",inc.pension],["interest",inc.interest],
+    ["rental",inc.rental],["taxable Social Security",baseFed.ssTaxable]].filter(x => x[1] > 0.5);
+  const segs = [
+    { key:"base",  lo:0,  hi:s1, color:"#9AA3AF", op:1, hatch:null,
+      name:"can't avoid", why:"wages · pension · interest · rental · taxable Social Security, with the RMD off — this much is ordinary taxable income whatever you do",
+      bits: baseBits },
+    { key:"spend", lo:s1, hi:s2, color:"#4E7FA6", op:1, hatch:null,
+      name:"to fund spending", why:"the tax-deferred draw your entered spending required this year (RMD held off, conversion held off)", bits:null },
+    { key:"conv",  lo:s2, hi:s3, color:"#7E4A73", op:1, hatch:"B",
+      name:"Roth conversion", why:"ordinary income you chose to create — the conversion's own contribution", bits:null },
+    { key:"rmd",   lo:s3, hi:landing, color:"#C98A4B", op:1, hatch:"A",
+      name:"forced by RMD", why:"income above what spending alone needed, pushed up by the required minimum distribution", bits:null }
+  ].filter(s => s.hi - s.lo > 0.5);
+
   return { year, r, inc, filing: r.filing, ages: r.ages, nomF: r.nomF,
     floorFed, floorOrd, landing, spendLanding, rmdForcedOrd, spendNeeds: sn,
+    baseOrd, baseBits, segs, regions, convAmt, rmdAmt,
+    spendReal: r.spend, spendNom: r.spend * r.nomF,
     bands, topRate, topEdge, edges, rateAt,
     colScaleMax, ceilBind, floorBits };
 }
@@ -3474,14 +3587,33 @@ const _ladCased = (tx, ty, txt, size, anchor, col, weight) =>
   `<text x="${tx}" y="${ty}" font-size="${size}" fill="${col||"#3A4756"}" text-anchor="${anchor||"start"}"
     ${weight?`font-weight="${weight}"`:""} stroke="#FFFFFF" stroke-width="2.6" paint-order="stroke">${txt}</text>`;
 
+/* ---------------- index044: the ladder as a FILL GAUGE ------------------
+   One drawing path for every width. Vertical positions are always real
+   (today's $) so a bracket edge sits at the same height in every column; the
+   basis toggle changes only the numbers printed.
+
+   The column reads bottom to top: a filled stack of what your ordinary taxable
+   income actually IS (can't avoid → to fund spending → Roth conversion →
+   forced by RMD), then the colored bracket bands above it, which are the room
+   still open. A narrow spine of bracket color runs the full height on the left
+   so you can see which bracket the fill has climbed into. Through index043 the
+   actual income was a dashed line floating over bands that started at the
+   floor, so the colored area below the line was drawn as room while already
+   being spent. */
+/* index044 — the fill slabs are solid mid-tone colors, so their labels need a
+   dark halo and white ink rather than the light halo used everywhere else. */
+const _ladCasedDark = (tx, ty, txt, size, anchor, weight) =>
+  `<text x="${tx}" y="${ty}" font-size="${size}" fill="#FFFFFF" text-anchor="${anchor||"start"}"
+    ${weight?`font-weight="${weight}"`:""} stroke="#233040" stroke-width="2.4" stroke-opacity="0.55" paint-order="stroke">${txt}</text>`;
+
 function renderLadder(){
   const box = $("ladder"); if (!box) return;
   const run = window._headroomRun;
   if (run && window._ladderYear === undefined && run.rows.length)
-    window._ladderYear = run.rows[0].year;     // default-open at the first year (Roth-conversion planner); an explicit close sets null and sticks within the session
+    window._ladderYear = run.rows[0].year;     // default-open at the first year; an explicit close sets null and sticks within the session
   const start = window._ladderYear;
   if (!run){ box.innerHTML = ""; return; }
-  if (!start){ box.innerHTML = `<div class="tapcue">👆 The Roth-conversion ladder is closed. Tap any year in the bracket-headroom strip above to open it for that year.</div>`; return; }
+  if (!start){ box.innerHTML = `<div class="tapcue">👆 The bracket ladder is closed. Tap any year in the bracket-headroom strip above to open it for that year.</div>`; return; }
   if (!run.rows.some(x => x.year === start)){ box.innerHTML = ""; window._ladderYear = null; return; }
 
   const width = ladderWidthGet();
@@ -3490,144 +3622,191 @@ function renderLadder(){
   const cols = years.map(y => ladderColumnModel(run, y)).filter(Boolean);
   if (!cols.length){ box.innerHTML = ""; return; }
   window._ladderDrawers = window._ladderDrawers || new Set();
-  window._ladderDrawers = new Set([...window._ladderDrawers].filter(y => years.includes(y)));  // drawers only for years still in the window (ephemeral, not persisted)
+  window._ladderDrawers = new Set([...window._ladderDrawers].filter(y => years.includes(y)));  // drawers only for years still in the window
   const single = cols.length === 1;
-  const scaleMax = Math.max(1, ...cols.map(c => c.colScaleMax));       // #42 shared vertical scale
+  const scaleMax = Math.max(1, ...cols.map(c => c.colScaleMax));
   const modeNote = window._headroomMode === "spending" ? "your entered spending" : "capacity spending";
-  const shadeL = _ladShade, cased = _ladCased;
+  const shadeL = _ladShade, cased = _ladCased, casedDark = _ladCasedDark;
+  const basis = ladderBasisGet(), nomB = basis === "nominal";
+  const M = (c, v) => nomB ? fmtK(v * c.nomF) : fmtK(v);      // numbers follow the toggle; positions never do
+  const A = DATA.assumptions || {};
+  const tbRaw = A.maxTargetBracket;
+  const fillRate = tbRaw == null ? null : (tbRaw > 1 ? tbRaw/100 : tbRaw);
 
-  if (single){
-    /* ---- width 1: the original single-year ladder, nominal $ (five fixes applied) ---- */
-    const c = cols[0];
-    const H = 320, W = 1000, colX = 60, colW = 150, padT = 26, padB = 20;
-    const yv = v => padT + (H - padT - padB) * (1 - Math.min(v, scaleMax)/scaleMax);
-    const N = v => fmtK(v * c.nomF);
-    const yearLbl = c.year + (c.ages.length ? " (age " + c.ages.join("/") + ")" : "");
-    let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Bracket ladder for ${c.year}">`;
-    /* #1: gray non-negotiable floor — hover itemizes its components */
-    const floorTitle = "Non-negotiable floor: " + N(c.floorOrd) + " taxable ordinary — "
-      + (c.floorBits.map(x => x[0] + " " + N(x[1])).join(" · ") || "none");
-    if (c.floorOrd > 0)
-      svg += `<rect x="${colX}" y="${yv(c.floorOrd)}" width="${colW}" height="${yv(0)-yv(c.floorOrd)}" fill="#8A93A0" fill-opacity="0.55"><title>${floorTitle}</title></rect>`;
-    svg += cased(colX + colW + 10, Math.min(yv(c.floorOrd/2)+3, H-padB-4), "non-negotiable floor · " + N(c.floorOrd) + " taxable", 10.5, "start", "#5A6470", 600);
-    /* bands — #2: fill-opacity 0.8 to match the headroom strip */
-    c.bands.forEach(b => {
-      const y1 = yv(b.hi), y0 = yv(b.lo);
-      svg += `<rect x="${colX}" y="${y1}" width="${colW}" height="${Math.max(y0-y1,1)}" fill="${shadeL(b.rate)}" fill-opacity="0.8" stroke="#FFFFFF" stroke-width="1"><title>${(b.rate*100).toFixed(0)}% band: ${N(b.gross)} of gross room · filling it costs ${N(b.cost)} federal tax</title></rect>`;
-      if (y0 - y1 > 13)
-        svg += cased(colX + colW + 10, (y0+y1)/2 + 3.5,
-          (b.rate*100).toFixed(0) + "% · room " + N(b.gross) + " gross · costs " + N(b.cost), 10.5, "start", "#3A4756");
-    });
-    /* #3: top rate as a proper translucent band from the last edge to the chart top (no white gap) */
-    const topY0 = c.bands.length ? yv(c.bands[c.bands.length-1].hi) : yv(c.floorOrd);
-    svg += `<rect x="${colX}" y="${padT}" width="${colW}" height="${Math.max(topY0-padT,1)}" fill="${shadeL(c.topRate)}" fill-opacity="0.8" stroke="#FFFFFF" stroke-width="1"><title>${(c.topRate*100).toFixed(0)}% and above — unbounded ordinary room</title></rect>`
-      + cased(colX + colW + 10, padT + 9, (c.topRate*100).toFixed(0) + "% above — unbounded", 10, "start", "#6B2D5B", 600);
-    /* landing line — #5: name the coincidence when the model lands on the bracket-fill ceiling */
-    const ly = yv(Math.min(c.landing, scaleMax));
-    const landLbl = c.ceilBind
-      ? "model landed exactly at your " + (c.ceilBind.targetRate*100).toFixed(0) + "% ceiling (bracket-fill target) · " + N(c.landing) + " taxable"
-      : "model landed here · " + N(c.landing) + " taxable (" + (c.rateAt(c.landing)*100).toFixed(0) + "%)";
-    svg += `<line x1="${colX-14}" y1="${ly}" x2="${colX+colW+14}" y2="${ly}" stroke="#1B2A3A" stroke-width="2" stroke-dasharray="6,3"></line>`
-      + cased(colX + colW + 10, ly - 6, landLbl, 10.5, "start", "#1B2A3A", 700);
-    /* #022: spending-needs marker — where ordinary income lands with the RMD suppressed */
-    if (c.rmdForcedOrd > 500 && c.spendNeeds){
-      const sy = yv(Math.min(c.spendLanding, scaleMax)), sn = c.spendNeeds;
-      const stip = c.year + " · spending needs ≈ " + N(c.spendLanding) + " taxable — where ordinary income "
-        + "lands funding this year's spending with the forced RMD off. RMD pushed ordinary income +"
-        + N(c.rmdForcedOrd) + " above what spending needed" + (sn.surplusAfterTax > 0
-          ? "; after-tax surplus ≈ " + N(sn.surplusAfterTax) + " to redeploy" : "") + ".";
-      svg += `<line x1="${colX-14}" y1="${sy}" x2="${colX+colW+14}" y2="${sy}" stroke="#2E6E8E" stroke-width="1.6" stroke-dasharray="5,3" stroke-opacity="0.9"><title>${esc(stip)}</title></line>`
-        + cased(colX + colW + 10, sy + 11, "spending needs · " + N(c.spendLanding), 10, "start", "#2E6E8E", 600);
-    }
-    svg += `</svg>`;
-    const floorNote = "Gross floor components: " + (c.floorBits.map(x => x[0] + " " + N(x[1])).join(" · ") || "none") + ". ";
-    const colGeo = [{ year: c.year, leftPct: 6, widthPct: 15 }];         // single column: colX 60 / colW 150 of W 1000
-    const hd = ladderHeaderAndDrawers(cols, colGeo, true, false);
-    box.innerHTML = ladderShell(cols, yearLbl, true, svg, floorNote, modeNote, hd.header, hd.drawers);
-    return;
-  }
-
-  /* ---- width ≥ 2: side-by-side columns on one shared real-$ scale ---- */
-  const H = 372, W = 1000, padT = 46, padB = 28, axisW = 52, rightPad = 12;
+  /* geometry */
+  const H = 386, W = 1000, padT = 48, padB = 26, axisW = 54;
+  const rightPad = single ? 342 : 12;                         // width 1 reserves a right rail for full-text labels
   const plotL = axisW, plotR = W - rightPad, plotW = plotR - plotL, n = cols.length;
-  const yv = v => padT + (H - padT - padB) * (1 - Math.min(v, scaleMax)/scaleMax);
-  const gap = n <= 3 ? 26 : n <= 5 ? 18 : 12;
-  const colW = Math.max(26, (plotW - gap*(n-1)) / n);
+  const yv = v => padT + (H - padT - padB) * (1 - Math.min(Math.max(v, 0), scaleMax)/scaleMax);
+  const gap = single ? 0 : (n <= 3 ? 26 : n <= 5 ? 18 : 12);
+  const colW = single ? Math.min(232, plotW) : Math.max(26, (plotW - gap*(n-1)) / n);
   const colXof = i => plotL + i*(colW + gap);
   const thin = n >= 4;                                        // thin per-column labels; hover carries detail
-  const N = v => fmtK(v);                                     // shared scale is today's (real) $
+  const spineW = Math.max(7, Math.min(14, colW * 0.16));
 
-  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Windowed bracket ladder ${cols[0].year}–${cols[n-1].year}, shared today's-dollar scale">`;
-  /* shared-scale gridlines at the union of bracket edges (real $) — the horizontal lines columns align to */
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Bracket ladder fill gauge, ${cols[0].year}–${cols[n-1].year}, shared today's-dollar scale">`;
+  svg += `<defs>`
+    + `<pattern id="ladhA" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="#FFFFFF" stroke-width="2.6" stroke-opacity="0.62"></line></pattern>`
+    + `<pattern id="ladhB" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><line x1="0" y1="0" x2="0" y2="7" stroke="#FFFFFF" stroke-width="2.6" stroke-opacity="0.62"></line></pattern>`
+    + `</defs>`;
+
+  /* shared-scale gridlines at the union of bracket edges (real $) */
   const edgeMap = new Map();
   cols.forEach(c => c.edges.forEach(e => { if (e < scaleMax) edgeMap.set(Math.round(e), e); }));
   let lastLabelY = -1e9;
   [...edgeMap.values()].sort((a,b)=>a-b).forEach(e => {
     const y = yv(e);
-    svg += `<line x1="${plotL}" y1="${y}" x2="${plotR}" y2="${y}" stroke="#C7CDD6" stroke-width="1" stroke-dasharray="2,4"></line>`;
-    if (y - lastLabelY > 13){                                 // avoid crowding the gutter
+    svg += `<line x1="${plotL}" y1="${y}" x2="${single ? plotL+colW+8 : plotR}" y2="${y}" stroke="#C7CDD6" stroke-width="1" stroke-dasharray="2,4"></line>`;
+    /* index044 BUGFIX: y DECREASES as the edge value rises, so the old signed
+       test (y - lastLabelY > 13) was false for every edge after the first —
+       the gutter has been showing exactly one label since the windowed ladder
+       shipped. Absolute distance is what was meant. */
+    if (Math.abs(y - lastLabelY) > 13){
       svg += `<text x="${plotL-6}" y="${y+3}" font-size="9" fill="#8A93A0" text-anchor="end">${fmtK(e)}</text>`;
       lastLabelY = y;
     }
   });
-  svg += cased(2, padT - 33, "today's $", 10.5, "start", "#5A6470", 700);
-  /* columns */
+  svg += cased(2, padT - 34, "bracket edges", 10, "start", "#5A6470", 700)
+       + cased(2, padT - 22, "today's $", 9.5, "start", "#8A93A0", 400);
+
   cols.forEach((c,i) => {
-    const x = colXof(i);
-    if (c.floorOrd > 0){
-      const fTitle = c.year + " floor: " + N(c.floorOrd) + " taxable — "
-        + (c.floorBits.map(b => b[0] + " " + N(b[1])).join(" · ") || "none");
-      svg += `<rect x="${x}" y="${yv(c.floorOrd)}" width="${colW}" height="${yv(0)-yv(c.floorOrd)}" fill="#8A93A0" fill-opacity="0.55"${ladTipAttrs(fTitle)}></rect>`;
-      svg += cased(x + colW/2, Math.min(yv(c.floorOrd/2)+3, yv(0)-4), N(c.floorOrd), thin?8:8.5, "middle", "#4A535F", 600);
-    }
-    c.bands.forEach(b => {
-      const y1 = yv(b.hi), y0 = yv(b.lo);
-      svg += `<rect x="${x}" y="${y1}" width="${colW}" height="${Math.max(y0-y1,1)}" fill="${shadeL(b.rate)}" fill-opacity="0.8" stroke="#FFFFFF" stroke-width="1"${ladTipAttrs(c.year+" · "+(b.rate*100).toFixed(0)+"% band: "+N(b.gross)+" of gross room · filling it costs "+N(b.cost)+" federal tax (incl. NIIT exposure)")}></rect>`;
-      if (y0 - y1 > 15)
-        svg += cased(x + colW/2, (y0+y1)/2 + 3.5,
-          thin ? (b.rate*100).toFixed(0)+"%" : (b.rate*100).toFixed(0)+"% · "+N(b.gross), thin?9:9.5, "middle", "#3A4756");
+    const x = colXof(i), xr = x + colW, fillX = x + spineW, fillW = colW - spineW;
+    const lblX = single ? xr + 14 : x + colW/2;
+    /* index044 — at width 1 every label lives in the right rail, where a thin
+       band and the cap line can want the same height. Collect them, de-collide
+       on a single pass, then emit; nothing gets silently overprinted. */
+    const rail = [];
+    const railPut = (y, txt, size, col, weight) => rail.push({ y, txt, size, col, weight });
+
+    /* 1 — the ladder itself: every bracket region drawn full-column-width from
+       0 up to the top of the scale. The fill (step 2) then covers the lower
+       part, leaving the spine on the left showing through. */
+    c.regions.forEach(g => {
+      const lo = Math.max(0, g.lo), hi = Math.min(g.hi, scaleMax);
+      if (hi <= lo + 0.5) return;
+      const y1 = yv(hi), y0 = yv(lo);
+      const tip = c.year + " · " + (g.rate*100).toFixed(0) + "% bracket — "
+        + M(c, lo) + " to " + (isFinite(g.hi) ? M(c, g.hi) : "no upper edge") + " of ordinary taxable income";
+      svg += `<rect x="${x}" y="${y1}" width="${colW}" height="${Math.max(y0-y1,1)}" fill="${shadeL(g.rate)}" fill-opacity="0.82" stroke="#FFFFFF" stroke-width="1"${ladTipAttrs(tip)}></rect>`;
     });
-    /* #3: top-rate band to chart top */
-    const topY0 = c.bands.length ? yv(c.bands[c.bands.length-1].hi) : yv(c.floorOrd);
-    svg += `<rect x="${x}" y="${padT}" width="${colW}" height="${Math.max(topY0-padT,1)}" fill="${shadeL(c.topRate)}" fill-opacity="0.8" stroke="#FFFFFF" stroke-width="1"${ladTipAttrs(c.year+" · "+(c.topRate*100).toFixed(0)+"% and above — unbounded ordinary room")}></rect>`;
-    /* landing line (per column) — #5 aware via hover + marker */
-    const ly = yv(Math.min(c.landing, scaleMax));
-    const nextE = c.edges.find(e => e > c.landing);
-    const landTitle = c.year + " · model landed at " + N(c.landing) + " taxable (" + (c.rateAt(c.landing)*100).toFixed(0) + "%)"
-      + (c.ceilBind ? " — exactly at your " + (c.ceilBind.targetRate*100).toFixed(0) + "% ceiling (bracket-fill target)" : "")
-      + (nextE != null
-          ? " · room to the next edge " + N(nextE - c.landing) + " today's (" + fmtK((nextE - c.landing) * c.nomF) + " nominal) — the strip's number"
-          : " · top bracket, no headroom");
-    svg += `<line x1="${x-3}" y1="${ly}" x2="${x+colW+3}" y2="${ly}" stroke="#1B2A3A" stroke-width="2" stroke-dasharray="6,3"${ladTipAttrs(landTitle)}></line>`;
-    if (c.ceilBind) svg += `<circle cx="${x+colW-4}" cy="${ly}" r="2.8" fill="#1B2A3A"${ladTipAttrs(landTitle)}></circle>`;
-    /* #022: spending-needs marker (per column) — where ordinary income lands with the RMD off */
-    if (c.rmdForcedOrd > 500 && c.spendNeeds){
-      const sy = yv(Math.min(c.spendLanding, scaleMax)), sn = c.spendNeeds;
-      const stip = c.year + " · spending needs ≈ " + N(c.spendLanding) + " taxable (today's) — where ordinary "
-        + "income lands funding spending with the forced RMD off. The RMD pushed ordinary income +"
-        + N(c.rmdForcedOrd) + " above what spending needed" + (sn.surplusAfterTax > 0
-          ? "; after-tax surplus ≈ " + N(sn.surplusAfterTax) + " today's (" + fmtK(sn.surplusAfterTax * c.nomF) + " nominal) to redeploy" : "") + ".";
-      svg += `<line x1="${x-3}" y1="${sy}" x2="${x+colW+3}" y2="${sy}" stroke="#2E6E8E" stroke-width="1.6" stroke-dasharray="5,3" stroke-opacity="0.9"${ladTipAttrs(stip)}></line>`;
-      if (!thin) svg += cased(x + colW/2, sy + 10, "spending", 8.5, "middle", "#2E6E8E", 600);
+
+    /* 2 — the fill: what this year's ordinary taxable income actually is */
+    c.segs.forEach(s => {
+      const y1 = yv(s.hi), y0 = yv(s.lo), h = Math.max(y0 - y1, 1);
+      const amt = s.hi - s.lo;
+      let tip = c.year + " · " + s.name + " — " + M(c, amt) + " of ordinary taxable income. " + s.why;
+      if (s.bits && s.bits.length) tip += ": " + s.bits.map(b => b[0] + " " + M(c, b[1])).join(" · ");
+      if (s.key === "spend") tip += ". Your entered spending is " + fmtK(c.spendReal) + " in today's dollars, which is "
+        + fmtK(c.spendNom) + " of actual dollars in " + c.year + ".";
+      if (s.key === "rmd" && c.spendNeeds && c.spendNeeds.surplusAfterTax > 0)
+        tip += ". After-tax surplus you could redeploy ≈ " + M(c, c.spendNeeds.surplusAfterTax) + ".";
+      svg += `<rect x="${fillX}" y="${y1}" width="${fillW}" height="${h}" fill="${s.color}" fill-opacity="${s.op}" stroke="#FFFFFF" stroke-width="0.8"${ladTipAttrs(tip)}></rect>`;
+      if (s.hatch)
+        svg += `<rect x="${fillX}" y="${y1}" width="${fillW}" height="${h}" fill="url(#ladh${s.hatch})" pointer-events="none"></rect>`;
+      if (h > (single ? 5 : 15)){
+        if (single)                        // label sits in the right rail, on page background
+          railPut((y0+y1)/2 + 3.5, s.name + " · " + M(c, amt), 11, "#3A4756", 600);
+        else                               // label sits inside the solid slab
+          svg += casedDark(lblX, (y0+y1)/2 + 3.5, M(c, amt), thin ? 8.5 : 9.5, "middle", 600);
+      }
+    });
+
+    /* the bracket edges the fill has already climbed past, redrawn ON TOP of the
+       opaque fill. The slabs need solid colors to be identifiable, but you still
+       want to see where the fill crossed into each bracket — these lines carry
+       that, and the spine on the left carries the colors. */
+    c.edges.forEach(e => {
+      if (e <= 0.5 || e >= c.landing - 0.5) return;
+      const ey = yv(e);
+      svg += `<line x1="${fillX}" y1="${ey}" x2="${xr}" y2="${ey}" stroke="#FFFFFF" stroke-width="1" stroke-opacity="0.5" stroke-dasharray="3,3" pointer-events="none"></line>`;
+    });
+
+    /* 3 — the cap: one solid line, one meaning. This is where you are. */
+    const ly = yv(c.landing);
+    svg += `<line x1="${x-2}" y1="${ly}" x2="${xr+2}" y2="${ly}" stroke="#1B2A3A" stroke-width="2" pointer-events="none"></line>`;
+    if (single)
+      railPut(ly - 5, "your taxable income lands here · " + M(c, c.landing)
+        + " (" + (c.rateAt(c.landing)*100).toFixed(0) + "%)", 11.5, "#1B2A3A", 700);
+
+    /* 4 — the room above, as click/hover targets with the gross-and-cost numbers */
+    c.bands.forEach(b => {
+      const y1 = yv(b.hi), y0 = yv(Math.min(b.lo, scaleMax)), h = Math.max(y0-y1, 1);
+      const tip = c.year + " · room at " + (b.rate*100).toFixed(0) + "% — " + M(c, b.gross)
+        + " of ordinary income you could still add (a Roth conversion or an extra deferred draw) before crossing into the next bracket; filling it costs " + M(c, b.cost) + " in federal tax.";
+      svg += `<rect x="${x}" y="${y1}" width="${colW}" height="${h}" fill="transparent" style="cursor:pointer"${ladTipAttrs(tip)}></rect>`;
+      if (h > (single ? 6 : 15)){
+        if (single)
+          railPut((y0+y1)/2 + 3.5, "room " + M(c, b.gross) + " at " + (b.rate*100).toFixed(0)
+            + "% · costs " + M(c, b.cost), 11, "#3A4756", 600);
+        else
+          svg += cased(lblX, (y0+y1)/2 + 3.5,
+            thin ? (b.rate*100).toFixed(0)+"%" : (b.rate*100).toFixed(0)+"% · "+M(c, b.gross),
+            thin ? 9 : 9.5, "middle", "#3A4756", 400);
+      }
+    });
+    /* the open-ended top — only when the last finite edge is inside the view,
+       otherwise the band labels above already name the visible rates */
+    if (c.bands.length && c.bands[c.bands.length-1].hi < scaleMax){
+      const topY = yv(c.bands[c.bands.length-1].hi);
+      if (topY - padT > (single ? 13 : 14)){
+        if (single) railPut(padT + 11, (c.topRate*100).toFixed(0) + "% above — no upper edge", 10.5, "#6B2D5B", 600);
+        else svg += cased(lblX, padT + 11, (c.topRate*100).toFixed(0) + "% above", 9, "middle", "#6B2D5B", 600);
+      }
     }
+
+    /* 5 — the fill ceiling, when the bracket-fill draw strategy is active. The
+       only other line on the chart, and it means one thing: the target you set. */
+    if (fillRate != null){
+      const ceilOrd = bracketCeiling(fillRate, c.filing);
+      if (isFinite(ceilOrd) && ceilOrd < scaleMax){
+        const cy = yv(ceilOrd);
+        const ctip = c.year + " · your fill ceiling — the draw strategy pulls from tax-deferred until ordinary taxable income reaches "
+          + M(c, ceilOrd) + ", the top of the " + (fillRate*100).toFixed(0) + "% bracket, then stops"
+          + (c.ceilBind ? ". This year the model landed exactly on it." : ".");
+        svg += `<line x1="${x-4}" y1="${cy}" x2="${xr+4}" y2="${cy}" stroke="#C9A227" stroke-width="2" stroke-dasharray="7,3"${ladTipAttrs(ctip)}></line>`;
+        if (single) railPut(cy + 4, "your fill ceiling · top of " + (fillRate*100).toFixed(0) + "%", 10.5, "#8A6A12", 700);
+      }
+    }
+
     /* header: year · ages · filing (thinned at width ≥ 4; flag a filing flip) */
     const flip = i > 0 && cols[i-1].filing !== c.filing;
     const hdr = thin ? String(c.year) : c.year + (c.ages.length ? " · " + c.ages.join("/") : "");
-    svg += cased(x + colW/2, padT - 24, hdr, thin?10.5:11, "middle", "#1B2A3A", 700);
-    svg += cased(x + colW/2, padT - 12, (flip?"→ ":"") + c.filing, thin?8.5:9, "middle", flip?"#6B2D5B":"#6B7482", flip?700:400);
+    svg += cased(x + colW/2, padT - 26, hdr, thin?10.5:11, "middle", "#1B2A3A", 700);
+    svg += cased(x + colW/2, padT - 14, (flip?"→ ":"") + c.filing, thin?8.5:9, "middle", flip?"#6B2D5B":"#6B7482", flip?700:400);
+
+    /* flush the rail: sort by height, then push any label that would overprint
+       its neighbour down by the minimum readable gap. */
+    if (rail.length){
+      rail.sort((a,b) => a.y - b.y);
+      const GAP = 15, top = padT + 4, bot = H - padB;
+      rail.forEach((r,k) => {
+        r.y = Math.max(r.y, top);
+        if (k > 0) r.y = Math.max(r.y, rail[k-1].y + GAP);
+      });
+      const over = rail[rail.length-1].y - bot;         // ran off the bottom? lift the whole set
+      if (over > 0) rail.forEach(r => r.y = Math.max(top, r.y - over));
+      rail.forEach(r => { svg += cased(xr + 14, r.y, r.txt, r.size, "start", r.col, r.weight); });
+    }
   });
   svg += `</svg>`;
+
   const colGeo = cols.map((c,i) => ({ year: c.year, leftPct: colXof(i)/W*100, widthPct: colW/W*100 }));
-  const hd = ladderHeaderAndDrawers(cols, colGeo, false, thin);
-  box.innerHTML = ladderShell(cols, null, false, svg, "", modeNote, hd.header, hd.drawers);
+  const hd = ladderHeaderAndDrawers(cols, colGeo, single, thin);
+  box.innerHTML = ladderShell(cols, single, svg, modeNote, hd.header, hd.drawers, basis, M);
 }
 
-function ladderShell(cols, yearLbl, single, svg, floorNote, modeNote, headerBar, drawers){
+/* index044 — the chrome around the gauge. The two long explanatory paragraphs
+   that used to live here existed because the picture did not explain itself;
+   the fill gauge does, so they are gone. What replaces them is a per-year
+   readout that states the numbers outright, including your entered spending in
+   BOTH dollar bases so the inflation question never has to be inferred. */
+function ladderShell(cols, single, svg, modeNote, headerBar, drawers, basis, M){
   const start = cols[0].year, end = cols[cols.length-1].year, n = cols.length;
   const w = ladderWidthGet();
   const _run = window._headroomRun;
   const _first = _run && _run.rows.length ? _run.rows[0].year : start;
   const _last  = _run && _run.rows.length ? _run.rows[_run.rows.length-1].year : end;
+  const nomB = basis === "nominal";
   const startStepper = `<span class="ladder-win">start
     <button class="mini" ${start<=_first?"disabled":""} onclick="ladderShiftStart(-1)" title="earlier start year">‹</button>
     <b>${start}</b>
@@ -3636,42 +3815,92 @@ function ladderShell(cols, yearLbl, single, svg, floorNote, modeNote, headerBar,
     <button class="mini" ${w<=1?"disabled":""} onclick="ladderWidth(-1)" title="narrower window">−</button>
     <b>${n} yr</b>
     <button class="mini" ${w>=6?"disabled":""} onclick="ladderWidth(1)" title="wider window">+</button></span>`;
-  const head = single
-    ? `Bracket ladder · Roth-conversion planner — ${yearLbl} · nominal dollars`
-    : `Bracket ladder · Roth-conversion planner — ${start}–${end} · ${n} yrs · shared scale · today's dollars`;
-  const introSingle = `${floorNote}Bands are <em>gross</em> ordinary dollars addable (a Roth conversion, an extra
-    deferred draw) before crossing each edge, with the federal cost of filling each — simulated through the full
-    tax calc, so the SS phase-in and deduction are in the numbers, not approximated. Hover the gray floor for its
-    components. The dark dashed line is the model's <strong>actual</strong> ordinary taxable income this year —
-    funded at ${modeNote} and <em>including any forced RMD</em>, so once RMDs begin it can sit above what spending
-    alone requires. When it does, a lighter teal <strong>“spending needs”</strong> line marks where ordinary income
-    would land drawing the IRA only for spending (RMD off, SS re-solved); the gap between the two is the RMD-forced
-    excess — hover it for the redeployable after-tax surplus.`;
-  const introMulti = `Each column is one year on a <strong>shared vertical scale in today's dollars</strong>, so a
-    given bracket edge sits at the same height in every column (the dashed gridlines). Watch the gray floor step up
-    as RMDs begin, or the priced room collapse if filing turns Single — that shift is the shape to read. Bands are
-    <em>gross</em> ordinary dollars addable before crossing each edge; hover any band, floor, or landing line for
-    the exact figures and the federal cost of filling it. The dark dashed line per column is the model's
-    <strong>actual</strong> ordinary taxable income — funded at ${modeNote} and <em>including forced RMD</em>, so it
-    can rise above what spending alone needs once RMDs begin; a lighter teal <strong>“spending needs”</strong> line
-    then marks where ordinary income would land drawing the IRA only for spending, and the gap is the RMD-forced
-    excess (hover it). Simulated through the full tax calc — SS phase-in
-    and the deduction are in the numbers, not approximated. Width 1 returns the single-year ladder in nominal $.`;
+  const basisToggle = `<span class="ladbasis">$ shown
+    <button class="mini${nomB?"":" on"}" onclick="ladderBasisSet('real')" title="Every dollar figure in today's purchasing power">today's</button>
+    <button class="mini${nomB?" on":""}" onclick="ladderBasisSet('nominal')" title="Every dollar figure inflated to the actual dollars of that year">that year's</button></span>`;
+  const head = `Bracket ladder — ${single ? start : start+"–"+end+" · "+n+" yrs"}`;
+  const basisLine = nomB
+    ? `Figures below are <strong>that year's actual dollars</strong> — inflated. Heights are still on one today's-dollar scale, so a bracket edge sits at the same height in every column.`
+    : `Figures below are <strong>today's dollars</strong> — constant purchasing power, on one shared scale, so a bracket edge sits at the same height in every column.`;
+
   return `
     <div class="wtitle" style="margin-top:14px">${head}
       ${startStepper}
       ${stepper}
+      ${basisToggle}
       <button class="mini" style="margin-left:10px" onclick="ladderPick(${start})">close</button></div>
-    <p class="note" style="margin:4px 0 2px"><strong>Find cheap bracket room to fill</strong> — with Roth conversions or extra deferred draws, before RMDs and IRMAA arrive. ${single ? introSingle : introMulti}</p>
+    <p class="note" style="margin:4px 0 2px">Each column is one year. The <strong>filled</strong> part is the ordinary
+    taxable income you actually have; the <strong>colored space above it</strong> is the room still open, bracket by
+    bracket, and the thin colored spine on the left shows the ladder running the full height. Everything is simulated
+    through the full tax calculation at ${modeNote}, so the Social Security phase-in and the deduction are in the
+    numbers rather than approximated. ${basisLine} Hover or tap any piece for its exact dollars.</p>
     ${headerBar || ""}
     ${svg}
-    ${ladderLegendAndFlags(cols)}
+    ${ladderKey(cols)}
+    ${ladderReadout(cols, basis, M)}
+    ${ladderFlags(cols)}
     ${drawers || ""}
-    <p class="note" style="margin-top:2px"><strong>Estimated terrain, clearly labeled:</strong> 2026 federal tables
-    treated as inflation-indexed (the tax-drift slider stress-tests that assumption) · the taxable-SS floor itself
-    moves with other income, so the floor is an estimate, not an invoice · realized capital gains are excluded from
-    the floor (they claim no ordinary-bracket room but do interact through SS phase-in and LTCG stacking) · state
-    tax (e.g. the NJ exclusion cliff) not shown.</p>`;
+    <p class="note" style="margin-top:2px"><strong>Estimated terrain:</strong> 2026 federal tables treated as
+    inflation-indexed (the tax-drift slider stress-tests that) · the taxable-Social-Security amount itself moves with
+    other income, so “can’t avoid” is an estimate, not an invoice · realized capital gains and tax-free (HSA) draws
+    are not on this scale — they claim no ordinary-bracket room, though gains do interact through the SS phase-in and
+    LTCG stacking (the drawer’s gains strip shows where they land) · state tax not shown.</p>`;
+}
+
+/* the swatch key — replaces the old "Reading it:" paragraph */
+function ladderKey(cols){
+  const any = k => cols.some(c => c.segs.some(s => s.key === k));
+  const sw = (col, extra) => `<span class="ladsw" style="background:${col};${extra||""}"></span>`;
+  let h = "";
+  if (any("base"))  h += `<span class="it">${sw("#9AA3AF")}can’t avoid</span>`;
+  if (any("spend")) h += `<span class="it">${sw("#4E7FA6")}to fund spending</span>`;
+  if (any("conv")) h += `<span class="it">${sw("#7E4A73")}Roth conversion</span>`;
+  if (any("rmd"))  h += `<span class="it">${sw("#C98A4B")}forced by RMD</span>`;
+  h += `<span class="it"><span class="ladsw" style="background:#FFFFFF; border-top:2px solid #1B2A3A; border-radius:0"></span>where your income lands</span>`
+     + `<span class="it">${sw("#8FB03E")}room still open (colored by its rate)</span>`;
+  if ((DATA.assumptions||{}).maxTargetBracket != null)
+    h += `<span class="it"><span class="ladsw" style="background:#FFFFFF; border-top:2px dashed #C9A227; border-radius:0"></span>your fill ceiling</span>`;
+  return `<p class="note ladkey">${h}</p>`;
+}
+
+/* per-year readout — the numbers stated outright, so nothing depends on
+   reading a hover. Spending appears in BOTH bases every time. */
+function ladderReadout(cols, basis, M){
+  const nomB = basis === "nominal";
+  const segOf = (c,k) => { const s = c.segs.find(z => z.key === k); return s ? s.hi - s.lo : 0; };
+  const cell = (c,v) => v > 0.5 ? M(c, v) : `<span class="mut">—</span>`;
+  const rows = cols.map(c => {
+    const room = c.bands.length ? c.bands[0] : null;
+    const age = c.ages && c.ages.length ? ` <span class="mut">${c.ages.join("/")}</span>` : "";
+    return `<tr>
+      <td class="k">${c.year}${age}</td>
+      <td>${fmtK(c.spendReal)}</td>
+      <td>${fmtK(c.spendNom)}</td>
+      <td class="k">${M(c, c.landing)} <span class="mut">${(c.rateAt(c.landing)*100).toFixed(0)}%</span></td>
+      <td>${cell(c, segOf(c,"base"))}</td>
+      <td>${cell(c, segOf(c,"spend"))}</td>
+      <td>${cell(c, segOf(c,"conv"))}</td>
+      <td>${cell(c, segOf(c,"rmd"))}</td>
+      <td>${room ? M(c, room.gross) + ` <span class="mut">at ${(room.rate*100).toFixed(0)}%</span>` : `<span class="mut">top bracket</span>`}</td>
+    </tr>`;
+  }).join("");
+  const b = nomB ? "that year's $" : "today's $";
+  return `<div class="ladread"><table>
+    <thead><tr>
+      <th>Year</th>
+      <th>Your spending<br><span class="mut">today's $ (entered)</span></th>
+      <th>Your spending<br><span class="mut">that year's $</span></th>
+      <th>Taxable income<br><span class="mut">lands at · ${b}</span></th>
+      <th>can't avoid<br><span class="mut">${b}</span></th>
+      <th>to fund spending<br><span class="mut">${b}</span></th>
+      <th>Roth conversion<br><span class="mut">${b}</span></th>
+      <th>forced by RMD<br><span class="mut">${b}</span></th>
+      <th>Room still open<br><span class="mut">at your current rate</span></th>
+    </tr></thead>
+    <tbody>${rows}</tbody></table></div>
+    <p class="note" style="margin:2px 0 0">You entered spending in today's dollars and the model holds it at constant
+    purchasing power, so the middle column is that same standard of living expressed in the actual dollars of each
+    year. The four income columns add up to where your taxable income lands.</p>`;
 }
 
 /* ---- Feature 2 + 1 (index020): clickable per-column headers + tax-table drawers ---- */
@@ -3763,7 +3992,7 @@ function ladderGainsStrip(c){
 }
 
 /* ---- F3 (index021): reading legend + per-year action flags ---- */
-function ladderLegendAndFlags(cols){
+function ladderFlags(cols){
   const yrs = new Set(cols.map(c => c.year));
   const acts = (DATA.actions || []).filter(a => a.enabled !== false && yrs.has(a.year));
   const amt = a => a.amount != null ? " " + fmt$(a.amount) : "";
@@ -3782,14 +4011,7 @@ function ladderLegendAndFlags(cols){
     return `⚑ ${a.year} ${nm || esc(a.type)}`;
   };
   const flags = acts.map(a => `<span class="ladflag">${flag(a)}</span>`).join("");
-  return `<p class="note ladlegend"><strong>Reading it:</strong> gray <strong>floor</strong> = non-negotiable ordinary
-    income (wages · pension · interest · rental · taxable SS · forced RMD) · dark dashed <strong>landing</strong> = the
-    model's actual ordinary taxable income, <em>including</em> forced RMD and ordinary-income actions (Roth conversions,
-    deferred-sourced draws / paydowns) · lighter teal <strong>“spending needs”</strong> (RMD years only) = where
-    ordinary income would land drawing the IRA only for spending — the gap up to the landing is the RMD-forced excess,
-    hover it for the after-tax surplus to redeploy · <strong>not shown here:</strong>
-    HSA / tax-free draws and realized gains — they claim no ordinary-bracket room (the drawer's gains strip shows where gains land).</p>`
-    + (flags ? `<p class="note ladflags">${flags}</p>` : "");
+  return flags ? `<p class="note ladflags">${flags}</p>` : "";
 }
 
 /* ---- F4 (index021): custom pinnable tooltip — native SVG <title> is slow,
@@ -3827,9 +4049,9 @@ function ladTipHide(force){
 const ladTipAttrs = txt => ` data-tip="${esc(txt)}" onmousemove="ladTipShow(event,this)" onmouseleave="ladTipHide()" onclick="ladTipPin(event,this)"`;
 
 function ladderDrawerHTML(c, single){
-  const basis = single
-    ? "This year's <strong>nominal</strong> tables — same basis as the chart above (the single-year ladder is nominal)."
-    : "Chart above is today's $ (edges align across years); these tables are this column's <strong>nominal</strong> dollars, so the edges drift up with inflation column-to-column.";
+  const basis = "Chart heights above are today's $ at every width (edges align across years); these tables are this "
+    + "column's <strong>actual " + c.year + " dollars</strong>, so the edges drift up with inflation column-to-column. "
+    + "The chart's <em>numbers</em> follow the $ toggle in the ladder title.";
   const ordT = ladderRateTable(ladderNominalRows(TAX.ordinary[c.filing], c.nomF), "rate", `ordinary income · nominal ${c.year}`);
   const ltT  = ladderRateTable(ladderNominalRows(TAX.ltcg[c.filing], c.nomF), "LTCG / QD", `taxable income · nominal ${c.year}`);
   const age = c.ages && c.ages.length ? " · age " + c.ages.join("/") : "";
