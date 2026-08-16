@@ -247,9 +247,9 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
 <body>
 <header>
   <div class="hwrap">
-    <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px">index045 · v013</span></h1>
+    <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px" id="buildBadge">index046 · v013</span></h1>
     <div class="subtitle">Now and in the Future · <a href="https://github.com/lougualtieri-AMI/PFS/blob/main/README.md" target="_blank" rel="noopener">User Guide &#8599;</a></div>
-    <div class="buildline">pfs_index045 · engine v013 (takeLoan/borrow · level-from streams · amount-as-of · receiveAsset/inheritance · buyAsset · Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · index045 display-only: fill stack reordered MECHANICALLY (unavoidable → RMD forced, with overshoot hatched → top-up draw → conversion) so a large RMD never prints as a dash · cash-bridge tooltips reconcile spending to taxable income · Social Security shown gross and taxable · legend lists only what is drawn (ceiling entry follows the line, room chips use real rates) · axis stamped as taxable income after the deduction · "total cash need" no longer mislabeled "entered" · index044: bracket ladder redrawn as a FILL GAUGE (unavoidable / to fund spending / Roth conversion / forced by RMD stacked to the actual landing; room measured ABOVE the landing, not above the floor) · single dollar basis for both widths with a today's-$ ↔ that-year's-$ toggle · per-year readout table incl. entered spending in both bases · scale windowed to the landing + 2 brackets · index043 display-only: Start here panel defaults closed · index041 display-only: PolyForm NC 1.0.0 license header · index040 display-only: ask-an-AI panel (#030) · scenario path (#031) · terms of use (#032) · wide-table horizontal scroll · rate inputs 2dp + 0.25 step · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
+    <div class="buildline"><span id="buildStamp">pfs_index046 · engine v013</span> (takeLoan/borrow · level-from streams · amount-as-of · receiveAsset/inheritance · buyAsset · Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · index046 display-only: blank bucket returns SURFACED (engine still reads a blank as 0%/yr — it is now listed in the problems box, flagged red in the balance sheet, and fillable in one click) · the destructive "set ALL returns" slider replaced by a read-only blended-return readout (liquid vs all-in) plus a non-destructive ±pp SHIFT that preserves the spreads between buckets and restores exactly at 0 · version string now rendered from one constant · index045 display-only: fill stack reordered MECHANICALLY (unavoidable → RMD forced, with overshoot hatched → top-up draw → conversion) so a large RMD never prints as a dash · cash-bridge tooltips reconcile spending to taxable income · Social Security shown gross and taxable · legend lists only what is drawn (ceiling entry follows the line, room chips use real rates) · axis stamped as taxable income after the deduction · "total cash need" no longer mislabeled "entered" · index044: bracket ladder redrawn as a FILL GAUGE (unavoidable / to fund spending / Roth conversion / forced by RMD stacked to the actual landing; room measured ABOVE the landing, not above the floor) · single dollar basis for both widths with a today's-$ ↔ that-year's-$ toggle · per-year readout table incl. entered spending in both bases · scale windowed to the landing + 2 brackets · index043 display-only: Start here panel defaults closed · index041 display-only: PolyForm NC 1.0.0 license header · index040 display-only: ask-an-AI panel (#030) · scenario path (#031) · terms of use (#032) · wide-table horizontal scroll · rate inputs 2dp + 0.25 step · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
   </div>
 </header>
 <div id="delta" aria-live="polite"></div>
@@ -1675,8 +1675,16 @@ function realToNom(realPct){ return ((1 + realPct/100) * (1 + inflPct()/100) - 1
 function toEngine(data){
   const d = JSON.parse(JSON.stringify(data));
   d.actions = (d.actions || []).filter(a => a.enabled !== false);
+  /* index046 — the returns SHIFT is applied here, at the engine boundary, and
+     nowhere else. DATA keeps the numbers the user typed; nothing overwrites the
+     balance sheet, so sliding back to 0 restores the sheet exactly. A blank is
+     still read as 0% — the engine is unchanged — but it is now surfaced loudly
+     by returnBlanks() instead of disappearing into capacity. */
+  const shiftPP = (d.assumptions && d.assumptions.returnShiftPP) || 0;
   (d.balanceSheet||[]).forEach(b => {
-    const nom = b.expectedReturnPct != null ? b.expectedReturnPct : 0;
+    const base = b.expectedReturnPct != null ? b.expectedReturnPct : 0;
+    const nom = base + shiftPP;
+    b.expectedReturnPct = nom;              // engine copy only (d is a deep clone)
     b.expectedRealReturn = ((1 + nom/100) / (1 + (d.assumptions&&d.assumptions.inflationPct!=null?d.assumptions.inflationPct:2.5)/100) - 1) * 100;
   });
   (d.incomeStreams||[]).forEach(st => {
@@ -1737,6 +1745,16 @@ function migrateHorizon(d){
   if (hh.endYear == null && hh.planToAge != null) hh.endYear = planEndYear(hh);
   delete hh.planToAge;
   return d;
+}
+
+/* index046 — ONE source for the build stamp. Before this the <h1> badge and the
+   .buildline carried independent hardcoded strings, and the badge sat two builds
+   stale (B-F). Both are now painted from these two constants at boot. */
+const BUILD_ID = "index046", ENGINE_ID = "v013";
+function paintBuildStamp(){
+  const a = $("buildBadge"), b = $("buildStamp");
+  if (a) a.textContent = BUILD_ID + " \u00b7 " + ENGINE_ID;
+  if (b) b.textContent = "pfs_" + BUILD_ID + " \u00b7 engine " + ENGINE_ID;
 }
 
 const $ = id => document.getElementById(id);
@@ -1809,14 +1827,31 @@ function validateRefs(){
         probs.push(`"${esc(nm)}"${off}: no eligible Roth destination bucket exists — the conversion will be skipped. A $0 placeholder Roth on the balance sheet is the legitimate way to stage it`);
     }
   });
+  /* index046 — a blank bucket return is an omission, not a modeling choice.
+     The engine reads it as 0%/yr and quietly drags capacity down. Deliberately
+     NOT auto-defaulted to the blended figure: guessing 7% is exactly as
+     arbitrary as guessing 0, and on a large sheet the gap between them is worth
+     six figures of capacity. So: keep the engine's 0, and make the 0 impossible
+     to miss — here, in red on the balance-sheet row, and in the readout under
+     the sliders, with a one-click fill for the liquid buckets. */
+  returnBlanks().forEach(x => {
+    const b = x.b, nm = esc(b.label || b.id || ("bucket " + (x.i+1)));
+    const liquid = LIQUID_TYPES_UI.indexOf(b.taxType) >= 0;
+    probs.push(`Balance sheet — "${nm}" (${esc(b.taxType||"?")}, ${fmt$(b.value||0)}) has no expected return: it is being modeled at <strong>0%/yr nominal</strong>`
+      + ((b.value||0) > 0 ? "" : " — and it stays 0% for anything converted or moved into it later")
+      + (liquid ? "" : " (a home or illiquid holding at 0% nominal loses ground in real terms every year — set it explicitly if that is not what you mean)"));
+  });
   el.innerHTML = probs.length
-    ? `<div class="modebar" style="margin-top:6px">⚠ <strong>Check the file:</strong> ${probs.length} action reference issue${probs.length>1?"s":""} —
+    ? `<div class="modebar" style="margin-top:6px">⚠ <strong>Check the file:</strong> ${probs.length} issue${probs.length>1?"s":""} —
        <ul style="margin:4px 0 0 18px">${probs.map(p=>`<li>${p}</li>`).join("")}</ul></div>`
     : "";
 }
 
 /* after any form edit: JSON mirror + recompute (forms stay as-is) */
-function formEdit(){ setJSON(DATA); render(); }
+/* index046 — validateRefs() also runs on every form edit, not just at load.
+   Clearing a return field in the form is precisely how a blank gets created,
+   and the box that would have caught it only ran on JSON apply. */
+function formEdit(){ setJSON(DATA); validateRefs(); render(); }
 
 /* set a value by path, coercing numbers; empty -> null */
 function fset(path, value, kind){
@@ -2053,7 +2088,7 @@ function renderForms(){
 
   /* Buckets */
   h += `<fieldset><legend>Balance sheet — buckets</legend><div class="tscroll"><table class="form wide"><thead>
-    <tr><th>Label</th><th>Type${helpChip("The tax treatment of this account: cash · taxable (brokerage) · deferred (traditional IRA/401k, taxed on withdrawal) · roth (tax-free) · residence (a home) · illiquid. It drives how growth and withdrawals are taxed.")}</th><th>Value $${helpChip("Current market value today, in today's dollars.")}</th><th>Cost basis $${helpChip("What you originally paid (your basis). Used to figure capital-gains tax when a taxable account or home is sold. Not needed for IRA/Roth.")}</th><th>Owner${helpChip("Whose account this is. Affects RMDs and what happens at a death.")}</th><th>Return %/yr<br><span class="note">nominal</span>${helpChip("Expected average annual growth, nominal (before inflation). Set them all at once with the slider below, or fine-tune each here.")}</th><th>Yield %${helpChip("The share of the return paid out each year as taxable dividends or interest (vs. price growth). Higher yield = more tax each year in a taxable account.")}</th><th></th></tr></thead><tbody>`;
+    <tr><th>Label</th><th>Type${helpChip("The tax treatment of this account: cash · taxable (brokerage) · deferred (traditional IRA/401k, taxed on withdrawal) · roth (tax-free) · residence (a home) · illiquid. It drives how growth and withdrawals are taxed.")}</th><th>Value $${helpChip("Current market value today, in today's dollars.")}</th><th>Cost basis $${helpChip("What you originally paid (your basis). Used to figure capital-gains tax when a taxable account or home is sold. Not needed for IRA/Roth.")}</th><th>Owner${helpChip("Whose account this is. Affects RMDs and what happens at a death.")}</th><th>Return %/yr<br><span class="note">nominal</span>${helpChip("Expected average annual growth, nominal (before inflation). Enter one per bucket. The slider below no longer overwrites these — it SHIFTS them all by a fixed number of percentage points, keeping the spreads, and 0 restores exactly what is typed here. A blank is not a zero-return assumption: it is read as 0%/yr and flagged in red.")}</th><th>Yield %${helpChip("The share of the return paid out each year as taxable dividends or interest (vs. price growth). Higher yield = more tax each year in a taxable account.")}</th><th></th></tr></thead><tbody>`;
   (DATA.balanceSheet||[]).forEach((b,i) => {
     h += `<tr>
       <td>${fin("balanceSheet."+i+".label", b.label)}</td>
@@ -2065,7 +2100,12 @@ function renderForms(){
       <td>${fin("balanceSheet."+i+".value", b.value, "num", 'style="width:110px"')}</td>
       <td>${fin("balanceSheet."+i+".costBasis", b.costBasis, "num", 'style="width:110px"')}</td>
       <td>${fsel("balanceSheet."+i+".owner", b.owner||"joint", owners)}</td>
-      <td>${fin("balanceSheet."+i+".expectedReturnPct", rateDisp(b.expectedReturnPct), "num", 'style="width:64px" min="0" step="0.25"')}</td>
+      <td>${fin("balanceSheet."+i+".expectedReturnPct", rateDisp(b.expectedReturnPct), "num", 'style="width:64px' + (hasReturn(b) ? '' : ';border:1px solid #B4472A;background:#FDF1EE') + '" min="0" step="0.25"')}${
+        !hasReturn(b)
+          ? `<div class="note" style="color:#B4472A;white-space:nowrap" title="No return entered. The engine reads a blank as 0%/yr nominal — which in real terms is a loss every year. Enter a figure, or use the one-click fill under the sliders.">blank → 0%</div>`
+          : (returnShiftPP()
+             ? `<div class="note" style="white-space:nowrap;color:#2E6E8E" title="Your entered figure with the current shift applied. The shift is not written into the balance sheet — this cell still holds what you typed.">→ ${(+b.expectedReturnPct + returnShiftPP()).toFixed(2)}% eff</div>`
+             : "")}</td>
       <td>${fin("balanceSheet."+i+".yieldPct", rateDisp(b.yieldPct), "num", 'style="width:64px" min="0" step="0.25"')}</td>
       <td><button class="mini" onclick="DATA.balanceSheet.splice(${i},1); renderForms(); formEdit()">×</button></td></tr>`;
   });
@@ -3051,10 +3091,18 @@ function detailHTML(r){
 }
 
 /* ---------------- Section 3: sliders --------------------------------- */
-function slider(id, label, min, max, step, val, suffix){
-  return `<div class="slider"><label for="${id}">${label}<span class="v" id="${id}v">${val}${suffix}</span></label>
+/* index046 — `plus` prints an explicit + on positive values, which a shift needs
+   and a level does not. The paint moved into a named function so both the first
+   render and every drag go through the same line. */
+function sliderPaint(id, suffix, plus){
+  const el = $(id), lab = $(id+"v"); if (!el || !lab) return;
+  lab.textContent = (plus && parseFloat(el.value) > 0 ? "+" : "") + el.value + suffix;
+}
+function slider(id, label, min, max, step, val, suffix, plus){
+  const shown = (plus && +val > 0 ? "+" : "") + val + suffix;
+  return `<div class="slider"><label for="${id}">${label}<span class="v" id="${id}v">${shown}</span></label>
     <input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${val}"
-      oninput="$('${id}v').textContent=this.value+'${suffix}'; sliderChange('${id}', parseFloat(this.value))"></div>`;
+      oninput="sliderPaint('${id}','${suffix}',${plus?1:0}); sliderChange('${id}', parseFloat(this.value))"></div>`;
 }
 
 function currentDrawOrder(){
@@ -3146,13 +3194,81 @@ function renderSliders(){
     slider("sInfl", "Inflation" + helpChip("The yearly rise in prices you assume. Views in today's dollars are adjusted by this; future-dollar views grow by it. ~2.5% is a common long-run figure."), 0, 6, 0.25, A.inflationPct != null ? A.inflationPct : 2.5, "%") +
     slider("sAge", "Plan through (end year)" + helpChip("How far the projection runs. Set it past the younger spouse's life expectancy to see the full survivor horizon."), endYearSliderMin(), endYearSliderMax(), 1, planEndYear(DATA.household), "") +
     slider("sDrift", "Tax drift (all rates, from 2030)" + helpChip("A what-if: move ALL tax rates up or down by this many percentage points starting 2030 — e.g. if the current cuts expire. +pp raises taxes, −pp lowers them."), -5, 10, 0.5, drift, "pp") +
-    slider("sRet", "Set ALL bucket returns (nominal)" + helpChip("Sets every bucket's expected annual return at once (nominal, before inflation). You can still fine-tune each bucket in the Balance sheet above."), 0, 12, 0.25, blendedReturn(), "%");
+    slider("sRetShift", "Shift ALL returns (nominal)" + helpChip("Moves every bucket's expected return up or down by this many percentage points, KEEPING THE SPREADS between them. It does not overwrite the balance sheet — the shift is applied at the engine boundary, so sliding back to 0 restores your entered numbers exactly."), -3, 3, 0.25, returnShiftPP(), "pp", true) +
+    `<div id="retReadout"></div>`;
+  paintReturnReadout();
 }
 
-function blendedReturn(){
-  const bs = DATA.balanceSheet||[]; const tot = bs.reduce((s,b)=>s+b.value,0);
-  if (!tot) return 7;
-  return +(bs.reduce((s,b)=>s+(b.expectedReturnPct||0)*b.value,0)/tot).toFixed(2);
+/* ---------------- index046: returns — readout, shift, blanks -------------
+   Three things used to be tangled together here. (1) The blended figure was
+   value-weighted across EVERY bucket including the residence, so a paid-off
+   house at a blank return dragged the headline number below anything actually
+   held in the market. It is now reported both ways, liquid first. (2) The
+   number was the value of a SLIDER that wrote itself onto every bucket, so the
+   readout looked like a summary and behaved like a bulldozer — one drag and the
+   per-bucket spreads were gone, with no undo and nothing on screen saying so.
+   The readout is now read-only and the control is a SHIFT. (3) A blank return
+   was read as 0% in silence; it is now counted and named. */
+const LIQUID_TYPES_UI = ["cash","taxable","deferred","roth"];
+function returnShiftPP(){ const A = DATA && DATA.assumptions || {}; return A.returnShiftPP || 0; }
+function hasReturn(b){ return b && b.expectedReturnPct != null && b.expectedReturnPct !== "" && isFinite(+b.expectedReturnPct); }
+function returnBlanks(){
+  return (DATA && DATA.balanceSheet || []).map((b,i)=>({i,b})).filter(x => !hasReturn(x.b));
+}
+/* value-weighted; opts.liquidOnly excludes residence+illiquid, opts.eff adds the
+   live shift. Blanks count as 0 here because that is exactly what the engine
+   does with them — the readout must not flatter the file. */
+function blendedReturn(opts){
+  const o = opts || {};
+  let bs = (DATA && DATA.balanceSheet || []);
+  if (o.liquidOnly) bs = bs.filter(b => LIQUID_TYPES_UI.indexOf(b.taxType) >= 0);
+  const tot = bs.reduce((s,b)=>s+(b.value||0),0);
+  if (!tot) return null;
+  const sh = o.eff ? returnShiftPP() : 0;
+  return +(bs.reduce((s,b)=>s+((hasReturn(b) ? +b.expectedReturnPct : 0)+sh)*(b.value||0),0)/tot).toFixed(2);
+}
+/* what a one-click fill would use: the value-weighted return of the LIQUID
+   buckets that already have one. Deliberately excludes the residence — a house
+   is not an index fund, and filling it with the equity blend would be a worse
+   error than the blank it replaced. */
+function fillBlankValue(){
+  const set = (DATA.balanceSheet||[]).filter(b => hasReturn(b) && LIQUID_TYPES_UI.indexOf(b.taxType) >= 0);
+  if (!set.length) return 7;
+  const tot = set.reduce((s,b)=>s+(b.value||0),0);
+  if (!tot) return +(set.reduce((s,b)=>s+ +b.expectedReturnPct,0)/set.length).toFixed(2);
+  return +(set.reduce((s,b)=>s+ +b.expectedReturnPct*(b.value||0),0)/tot).toFixed(2);
+}
+function fillBlankReturns(){
+  const v = fillBlankValue();
+  let n = 0;
+  (DATA.balanceSheet||[]).forEach(b => {
+    if (hasReturn(b)) return;
+    if (LIQUID_TYPES_UI.indexOf(b.taxType) < 0) return;   // residence / illiquid left alone on purpose
+    b.expectedReturnPct = v; n++;
+  });
+  renderForms(); formEdit();
+}
+function paintReturnReadout(){
+  const el = $("retReadout"); if (!el) return;
+  const sh = returnShiftPP();
+  const pc = v => v == null ? "—" : v.toFixed(2) + "%";
+  const liq = blendedReturn({liquidOnly:true}), all = blendedReturn({});
+  const liqE = blendedReturn({liquidOnly:true, eff:true}), allE = blendedReturn({eff:true});
+  const blanks = returnBlanks();
+  const bl = blanks.filter(x => LIQUID_TYPES_UI.indexOf(x.b.taxType) >= 0);
+  const neg = (DATA.balanceSheet||[]).filter(b => hasReturn(b) && (+b.expectedReturnPct + sh) < 0).length;
+  el.innerHTML =
+    `<div class="note" style="border-left:3px solid #2E6E8E;padding:6px 0 6px 9px;margin-top:4px">
+      <strong>Blended return</strong> (value-weighted, nominal — a readout, not a control):
+      liquid buckets <span class="num">${pc(sh ? liqE : liq)}</span> ·
+      including the home and illiquid <span class="num">${pc(sh ? allE : all)}</span>
+      ${sh ? `<br><span style="color:#2E6E8E">Shift of ${sh>0?"+":""}${sh}pp is live</span> — entered blend was
+         ${pc(liq)} liquid / ${pc(all)} all-in. The balance sheet still holds your numbers; sliding back to 0 restores them.` : ""}
+      ${neg ? `<br><span style="color:#B4472A">${neg} bucket${neg>1?"s":""} sit${neg>1?"":"s"} below 0%/yr at this shift.</span> Not clamped — a negative nominal return is a legitimate what-if, but it is rarely what you meant.` : ""}
+      ${blanks.length ? `<br><span style="color:#B4472A">${blanks.length} bucket${blanks.length>1?"s have":" has"} no return entered</span> — modeled at 0%/yr.
+         ${bl.length ? `<button class="mini" onclick="fillBlankReturns()">fill ${bl.length} blank${bl.length>1?"s":""} with ${fillBlankValue().toFixed(2)}%</button>` : ""}` : ""}
+      <br>Edit any single bucket in the balance sheet above; the shift applies on top of whatever is there.
+    </div>`;
 }
 
 function sliderChange(id, v){
@@ -3160,8 +3276,13 @@ function sliderChange(id, v){
   if (id === "sInfl") A.inflationPct = v;
   if (id === "sAge") DATA.household.endYear = v;
   if (id === "sDrift") A.taxDrift = { fromYear: 2030, deltaPP: v };
-  if (id === "sRet"){
-    (DATA.balanceSheet||[]).forEach(b => b.expectedReturnPct = v);
+  /* index046 — non-destructive. The old sRet branch wrote one value onto every
+     bucket (cash and the residence included) with no undo; the shift is stored
+     once in assumptions and applied in toEngine(). 0 is stored as absence so a
+     saved file carries no dead what-if. */
+  if (id === "sRetShift"){
+    if (v === 0) delete A.returnShiftPP; else A.returnShiftPP = v;
+    paintReturnReadout();
     renderForms();
   }
   setJSON(DATA);
@@ -4438,6 +4559,7 @@ function initRichTips(){
 /* boot with Sample B */
 setJSON(PERSONAS.B); applyJSON();
 setSource("Sample B — made-up example (not real data)");
+paintBuildStamp();
 initRichTips();
 
 </script>
