@@ -3235,6 +3235,37 @@ function moveDraw(i, dir){
   renderCoreNoSliders();
 }
 
+/* index046 — where a surplus year's money lands. Offered only for cash and
+   taxable destinations: routing after-tax surplus into a Roth or an IRA would
+   imply contribution room the model has no way to check. "discard" reproduces
+   index045 and is kept because reproducing an old result is sometimes the whole
+   point. The control hides itself entirely when no year actually has a surplus,
+   so a pure decumulator never sees a setting that would do nothing. */
+function surplusControlHTML(){
+  const A = DATA.assumptions || (DATA.assumptions = {});
+  const cur = A.surplusTo == null ? "auto" : A.surplusTo;
+  let anySurplus = false, total = 0, years = 0;
+  try {
+    const d = toEngine(DATA); (d.assumptions = d.assumptions || {}).surplusTo = "auto";
+    const r = runTimeline(d, {});
+    r.rows.forEach(x => { const v = (x.detail && x.detail.surplus) || 0;
+      if (v > 0.5){ anySurplus = true; years++; total += v * x.nomF; } });
+  } catch(e){ return ""; }
+  if (!anySurplus && cur === "auto") return "";
+  const dests = (DATA.balanceSheet||[]).filter(b => b.taxType === "cash" || b.taxType === "taxable");
+  return `<div class="row" style="margin:6px 0 8px">
+    <label class="note">Surplus years go to:${helpChip("Some years your income covers spending and taxes with money left over — most often a working year, or an RMD larger than the year needed. That money is after-tax, so nothing more is owed on it; it is credited to a bucket at cost, which raises basis dollar-for-dollar, before that year's growth. Before index046 it was credited to no bucket at all and simply left the model. Choose 'nowhere' only to reproduce a pre-index046 result.")}
+      <select onchange="if(this.value==='auto'){delete DATA.assumptions.surplusTo}else{DATA.assumptions.surplusTo=this.value} setJSON(DATA); renderDrawOrder(); renderCoreNoSliders();">
+        <option value="auto" ${cur==="auto"?"selected":""}>first cash bucket, else brokerage (default)</option>
+        ${dests.map(b => `<option value="${esc(b.id)}" ${cur===b.id?"selected":""}>${esc(b.label||b.id)} (${esc(b.taxType)})</option>`).join("")}
+        <option value="discard" ${cur==="discard"?"selected":""}>nowhere — discard it (pre-index046 behavior)</option>
+      </select></label>
+    <span class="note">${anySurplus
+      ? `${years} year${years>1?"s":""} in this plan produce${years>1?"":"s"} one, ${fmtK(total)} in total (nominal, summed).`
+      : `<span style="color:#B4472A">No year in this plan produces a surplus — this setting is currently doing nothing.</span>`}</span>
+  </div>`;
+}
+
 function renderDrawOrder(){
   const o = currentDrawOrder();
   const A = DATA.assumptions || (DATA.assumptions = {});
@@ -3276,6 +3307,7 @@ function renderDrawOrder(){
         rates.map(r => `<option value="${r}" ${Math.abs(r-(tb>1?tb/100:tb))<1e-9?"selected":""}>${(r*100).toFixed(0)}%</option>`).join("") +
         `</select></label>` : ""}
     </div>
+    ${surplusControlHTML()}
     <div class="dorder">` +
     o.map((t,i) => `<span class="dchip">
         <button class="mini" ${i===0?"disabled":""} onclick="moveDraw(${i},-1)" aria-label="move ${BUCKET_META[t].label} earlier">◀</button>
