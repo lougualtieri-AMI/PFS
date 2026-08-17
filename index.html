@@ -247,9 +247,9 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
 <body>
 <header>
   <div class="hwrap">
-    <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px" id="buildBadge">index046 · v013</span></h1>
+    <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px" id="buildBadge">index046 · v014</span></h1>
     <div class="subtitle">Now and in the Future · <a href="https://github.com/lougualtieri-AMI/PFS/blob/main/README.md" target="_blank" rel="noopener">User Guide &#8599;</a></div>
-    <div class="buildline"><span id="buildStamp">pfs_index046 · engine v013</span> (takeLoan/borrow · level-from streams · amount-as-of · receiveAsset/inheritance · buyAsset · Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · index046 display-only: blank bucket returns SURFACED (engine still reads a blank as 0%/yr — it is now listed in the problems box, flagged red in the balance sheet, and fillable in one click) · the destructive "set ALL returns" slider replaced by a read-only blended-return readout (liquid vs all-in) plus a non-destructive ±pp SHIFT that preserves the spreads between buckets and restores exactly at 0 · version string now rendered from one constant · index045 display-only: fill stack reordered MECHANICALLY (unavoidable → RMD forced, with overshoot hatched → top-up draw → conversion) so a large RMD never prints as a dash · cash-bridge tooltips reconcile spending to taxable income · Social Security shown gross and taxable · legend lists only what is drawn (ceiling entry follows the line, room chips use real rates) · axis stamped as taxable income after the deduction · "total cash need" no longer mislabeled "entered" · index044: bracket ladder redrawn as a FILL GAUGE (unavoidable / to fund spending / Roth conversion / forced by RMD stacked to the actual landing; room measured ABOVE the landing, not above the floor) · single dollar basis for both widths with a today's-$ ↔ that-year's-$ toggle · per-year readout table incl. entered spending in both bases · scale windowed to the landing + 2 brackets · index043 display-only: Start here panel defaults closed · index041 display-only: PolyForm NC 1.0.0 license header · index040 display-only: ask-an-AI panel (#030) · scenario path (#031) · terms of use (#032) · wide-table horizontal scroll · rate inputs 2dp + 0.25 step · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
+    <div class="buildline"><span id="buildStamp">pfs_index046 · engine v014</span> (takeLoan/borrow · level-from streams · amount-as-of · receiveAsset/inheritance · buyAsset · Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · index046 ENGINE: surplus routing — income above spending plus taxes is credited to a bucket at cost (cash first, then taxable, else created) instead of being discarded; assumptions.surplusTo="discard" reproduces index045 exactly · index046 display: capacity of $0 now EXPLAINED (an unreachable ending target is named as such, with the largest reachable figure, instead of printing $0/yr) · every bucket row prints its REAL return · return-field help rewritten (compound rate, not an average of yearly returns) · plausibility flags on out-of-band returns and on a percentage legacy floor that the solver silently ignores · "how far can returns fall?" cushion · blank bucket returns SURFACED (engine still reads a blank as 0%/yr — it is now listed in the problems box, flagged red in the balance sheet, and fillable in one click) · the destructive "set ALL returns" slider replaced by a read-only blended-return readout (liquid vs all-in) plus a non-destructive ±pp SHIFT that preserves the spreads between buckets and restores exactly at 0 · version string now rendered from one constant · index045 display-only: fill stack reordered MECHANICALLY (unavoidable → RMD forced, with overshoot hatched → top-up draw → conversion) so a large RMD never prints as a dash · cash-bridge tooltips reconcile spending to taxable income · Social Security shown gross and taxable · legend lists only what is drawn (ceiling entry follows the line, room chips use real rates) · axis stamped as taxable income after the deduction · "total cash need" no longer mislabeled "entered" · index044: bracket ladder redrawn as a FILL GAUGE (unavoidable / to fund spending / Roth conversion / forced by RMD stacked to the actual landing; room measured ABOVE the landing, not above the floor) · single dollar basis for both widths with a today's-$ ↔ that-year's-$ toggle · per-year readout table incl. entered spending in both bases · scale windowed to the landing + 2 brackets · index043 display-only: Start here panel defaults closed · index041 display-only: PolyForm NC 1.0.0 license header · index040 display-only: ask-an-AI panel (#030) · scenario path (#031) · terms of use (#032) · wide-table horizontal scroll · rate inputs 2dp + 0.25 step · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
   </div>
 </header>
 <div id="delta" aria-live="polite"></div>
@@ -1383,6 +1383,10 @@ function runTimeline(data, opts){
     let prevSpillLtcg = 0;   // gains realized by draws in the previous pass
 
     const snap = buckets.map(b => ({ value: b.value, basis: b.basis }));
+    /* index046 — SURPLUS. Hoisted outside the fixed-point loop because each pass
+       restores the buckets from `snap` and recomputes `need` against the latest
+       tax estimate; only the final pass's residual is the real one. */
+    let surplus = 0;
     for (let pass = 0; pass < 3; pass++){
       buckets.forEach((b,i) => { b.value = snap[i].value; b.basis = snap[i].basis; });
       deferredDraws = 0; ltcgRealized = pendingGain;
@@ -1448,6 +1452,14 @@ function runTimeline(data, opts){
         }
       }
       if (need > 1) { failed = true; }
+      /* A negative residual is money the year produced and nothing consumed.
+         Before index046 the draw block was gated on `need > 0`, so this case
+         fell through and the cash was credited to no bucket at all — it simply
+         left the model. RMD dollars were the worst of it: the distribution had
+         already been subtracted from the deferred bucket up in step 4, so in any
+         year the RMD exceeded what spending and taxes needed, the excess was
+         removed from the balance sheet and discarded. */
+      surplus = need < 0 ? -need : 0;
       const yTax = { filing, ages, wages, pension,
         deferredDraws: deferredDraws + rmd + payoffDeferred, conversions,
         interest, rental, ss, qualDiv, ltcgRealized,
@@ -1459,6 +1471,35 @@ function runTimeline(data, opts){
       st.notes.forEach(n => { if (!notes.includes(n)) notes.push(n); });
       taxTotal = fed.tax + stateTax;
       prevSpillLtcg = ltcgRealized - pendingGain;
+    }
+
+    /* 5b — ROUTE THE SURPLUS (index046)
+       Placed before growth on purpose: draws come out at the start of the year
+       and yield is computed on start-of-year balances, so money going the other
+       way is credited on the same convention. Slightly generous, and consistent,
+       which matters more than the fraction of a year it costs.
+       It is already after-tax, so nothing is owed on the way in — but basis
+       rises dollar-for-dollar or the model would manufacture a gain on it later.
+       Gate: assumptions.surplusTo — "discard" reproduces index045 exactly. */
+    let surplusTo = null;
+    if (surplus > 0.5){
+      const route = (A.surplusTo == null ? "auto" : A.surplusTo);
+      if (route !== "discard"){
+        let dest = null;
+        if (route !== "auto") dest = buckets.find(b => b.id === route) || null;
+        if (!dest) dest = buckets.find(b => b.taxType === "cash")
+                       || buckets.find(b => b.taxType === "taxable") || null;
+        if (!dest){                                  // nowhere to put it: make somewhere
+          dest = { id: "cash_surplus", label: "Cash (surplus)", taxType: "cash",
+                   value: 0, basis: 0, owner: "joint", expectedRealReturn: 0, yieldPct: 0 };
+          buckets.push(dest);
+        }
+        dest.value += surplus;
+        dest.basis = (dest.basis || 0) + surplus;    // after-tax money in at cost
+        surplusTo = dest.label || dest.id;
+      } else {
+        surplusTo = null;
+      }
     }
 
     /* 6 — GROWTH & DEBT (growth net of distributed yield) */
@@ -1498,6 +1539,8 @@ function runTimeline(data, opts){
           conversions, rmd, deferredDraws },
         state: stDetail,
         draws: draws,
+        surplus: surplus > 0.5 ? surplus : 0,
+        surplusTo: surplusTo,
         bucketList: buckets.filter(b => b.value > 0.5)
           .map(b => ({ label: b.label, taxType: b.taxType, value: b.value })),
         liabList: liabs.filter(l => l.balance > 0.5)
@@ -1665,6 +1708,27 @@ function capacityFor(engineData){
 }
 function solveCapacity(){ return capacityFor(toEngine(DATA)); }
 
+/* index046 — WHY capacity is zero.
+   capacityFor() returns 0 for two completely different states: (a) no spending
+   level survives the horizon at all, and (b) a legacy floor is set that cannot
+   be met even spending nothing. Both printed "$0 / yr", which reads as "you are
+   broke" when it often means "your bequest target is out of reach at these
+   returns." This does not change the solver — it only asks the zero-spend run
+   what actually went wrong, so the headline can say which.
+   The useful number falls straight out: at zero spending, the smallest liquid
+   balance across the horizon IS the largest floor that could ever be met. */
+function floorFeasibility(){
+  const floor = legacyFloor();
+  if (!floor) return null;
+  let r;
+  try { r = runTimeline(toEngine(DATA), { spendOverride: 0 }); } catch(e){ return null; }
+  if (r.failed || !r.rows.length) return { floor, depleted:true };
+  let minLiq = Infinity, minYear = null;
+  r.rows.forEach(x => { if (x.liquid < minLiq){ minLiq = x.liquid; minYear = x.year; } });
+  return { floor, maxFloor: Math.floor(minLiq), short: Math.max(0, floor - minLiq),
+           year: minYear, feasible: minLiq >= floor - 0.5 };
+}
+
 function inflPct(){ const A = DATA.assumptions||{}; return A.inflationPct != null ? A.inflationPct : 2.5; }
 function nomToReal(nomPct){ return ((1 + nomPct/100) / (1 + inflPct()/100) - 1) * 100; }
 function realToNom(realPct){ return ((1 + realPct/100) * (1 + inflPct()/100) - 1) * 100; }
@@ -1750,7 +1814,7 @@ function migrateHorizon(d){
 /* index046 — ONE source for the build stamp. Before this the <h1> badge and the
    .buildline carried independent hardcoded strings, and the badge sat two builds
    stale (B-F). Both are now painted from these two constants at boot. */
-const BUILD_ID = "index046", ENGINE_ID = "v013";
+const BUILD_ID = "index046", ENGINE_ID = "v014";
 function paintBuildStamp(){
   const a = $("buildBadge"), b = $("buildStamp");
   if (a) a.textContent = BUILD_ID + " \u00b7 " + ENGINE_ID;
@@ -1841,6 +1905,29 @@ function validateRefs(){
       + ((b.value||0) > 0 ? "" : " — and it stays 0% for anything converted or moved into it later")
       + (liquid ? "" : " (a home or illiquid holding at 0% nominal loses ground in real terms every year — set it explicitly if that is not what you mean)"));
   });
+  /* index046 — plausibility, not correctness. These never block; they exist so a
+     figure that is off by a decimal point, or an asset class assumption pasted
+     into the wrong row, gets one chance to be noticed. Bands are deliberately
+     wide — the point is to catch typos, not to argue about capital markets. */
+  const RET_BANDS = { cash:[0,6,"cash"], taxable:[0,13,"a brokerage bucket"],
+                      deferred:[0,13,"a tax-deferred bucket"], roth:[0,13,"a Roth bucket"],
+                      residence:[0,9,"a home"], illiquid:[0,15,"an illiquid holding"] };
+  (DATA.balanceSheet||[]).forEach((b,i) => {
+    if (!hasReturn(b)) return;
+    const band = RET_BANDS[b.taxType]; if (!band) return;
+    const v = +b.expectedReturnPct;
+    if (v < band[0] || v > band[1])
+      probs.push(`Balance sheet — "${esc(b.label||b.id||("bucket "+(i+1)))}" is set to ${v}%/yr nominal, `
+        + `which is outside the usual range for ${band[2]} (${band[0]}–${band[1]}%). Worth a second look — `
+        + `and remember this field wants a COMPOUND rate, not an average of yearly returns.`);
+  });
+  /* A percentage-based legacy floor is accepted by the form and then silently
+     ignored by legacyFloor(), which returns 0 whenever legacyFloorPct is set.
+     Say so rather than let the plan quietly solve with no floor at all. */
+  if ((DATA.assumptions||{}).legacyFloorPct != null)
+    probs.push(`Assumptions — a percentage legacy floor (<span class="num">${DATA.assumptions.legacyFloorPct}%</span>) is set, `
+      + `but the capacity solver only honors the dollar floor. The percentage is currently having <strong>no effect</strong>; `
+      + `enter the amount you want to leave as a dollar figure instead.`);
   el.innerHTML = probs.length
     ? `<div class="modebar" style="margin-top:6px">⚠ <strong>Check the file:</strong> ${probs.length} issue${probs.length>1?"s":""} —
        <ul style="margin:4px 0 0 18px">${probs.map(p=>`<li>${p}</li>`).join("")}</ul></div>`
@@ -2088,7 +2175,7 @@ function renderForms(){
 
   /* Buckets */
   h += `<fieldset><legend>Balance sheet — buckets</legend><div class="tscroll"><table class="form wide"><thead>
-    <tr><th>Label</th><th>Type${helpChip("The tax treatment of this account: cash · taxable (brokerage) · deferred (traditional IRA/401k, taxed on withdrawal) · roth (tax-free) · residence (a home) · illiquid. It drives how growth and withdrawals are taxed.")}</th><th>Value $${helpChip("Current market value today, in today's dollars.")}</th><th>Cost basis $${helpChip("What you originally paid (your basis). Used to figure capital-gains tax when a taxable account or home is sold. Not needed for IRA/Roth.")}</th><th>Owner${helpChip("Whose account this is. Affects RMDs and what happens at a death.")}</th><th>Return %/yr<br><span class="note">nominal</span>${helpChip("Expected average annual growth, nominal (before inflation). Enter one per bucket. The slider below no longer overwrites these — it SHIFTS them all by a fixed number of percentage points, keeping the spreads, and 0 restores exactly what is typed here. A blank is not a zero-return assumption: it is read as 0%/yr and flagged in red.")}</th><th>Yield %${helpChip("The share of the return paid out each year as taxable dividends or interest (vs. price growth). Higher yield = more tax each year in a taxable account.")}</th><th></th></tr></thead><tbody>`;
+    <tr><th>Label</th><th>Type${helpChip("The tax treatment of this account: cash · taxable (brokerage) · deferred (traditional IRA/401k, taxed on withdrawal) · roth (tax-free) · residence (a home) · illiquid. It drives how growth and withdrawals are taxed.")}</th><th>Value $${helpChip("Current market value today, in today's dollars.")}</th><th>Cost basis $${helpChip("What you originally paid (your basis). Used to figure capital-gains tax when a taxable account or home is sold. Not needed for IRA/Roth.")}</th><th>Owner${helpChip("Whose account this is. Affects RMDs and what happens at a death.")}</th><th>Return %/yr<br><span class="note">nominal</span>${helpChip("What this number IS: a COMPOUND rate, nominal — the rate the bucket actually grows at, inflation included. It is applied identically every single year, with no variation modeled, so results say what a straight line produces and nothing about any particular decade. What it is NOT: the simple average of a series of yearly returns. Averaging annual returns gives a rate nobody earns — for a volatile bucket the compound figure runs roughly 1 to 1.5 points lower, so if a figure came from 'stocks have averaged X%', enter less than X. The real return is printed under each entry. The slider below does not overwrite these: it SHIFTS them all by a fixed number of percentage points, keeping the spreads, and 0 restores exactly what is typed here. A blank is not a zero-return assumption — it is read as 0%/yr and flagged in red.")}</th><th>Yield %${helpChip("The share of the return paid out each year as taxable dividends or interest (vs. price growth). Higher yield = more tax each year in a taxable account.")}</th><th></th></tr></thead><tbody>`;
   (DATA.balanceSheet||[]).forEach((b,i) => {
     h += `<tr>
       <td>${fin("balanceSheet."+i+".label", b.label)}</td>
@@ -2103,9 +2190,12 @@ function renderForms(){
       <td>${fin("balanceSheet."+i+".expectedReturnPct", rateDisp(b.expectedReturnPct), "num", 'style="width:64px' + (hasReturn(b) ? '' : ';border:1px solid #B4472A;background:#FDF1EE') + '" min="0" step="0.25"')}${
         !hasReturn(b)
           ? `<div class="note" style="color:#B4472A;white-space:nowrap" title="No return entered. The engine reads a blank as 0%/yr nominal — which in real terms is a loss every year. Enter a figure, or use the one-click fill under the sliders.">blank → 0%</div>`
+          /* index046 — the real return was computed in toEngine() and never shown.
+             "7% including inflation" and "7% on top of it" are different plans and
+             nothing on screen told them apart. Now every row says which. */
           : (returnShiftPP()
-             ? `<div class="note" style="white-space:nowrap;color:#2E6E8E" title="Your entered figure with the current shift applied. The shift is not written into the balance sheet — this cell still holds what you typed.">→ ${(+b.expectedReturnPct + returnShiftPP()).toFixed(2)}% eff</div>`
-             : "")}</td>
+             ? `<div class="note" style="white-space:nowrap;color:#2E6E8E" title="Your entered figure with the current shift applied, then net of inflation. The shift is not written into the balance sheet — this cell still holds what you typed.">→ ${(+b.expectedReturnPct + returnShiftPP()).toFixed(2)}% eff · ${nomToReal(+b.expectedReturnPct + returnShiftPP()).toFixed(2)}% real</div>`
+             : `<div class="note" style="white-space:nowrap" title="The same figure net of your ${inflPct()}% inflation assumption. This is what the bucket actually buys — the engine runs on this number, not the nominal one.">${nomToReal(+b.expectedReturnPct).toFixed(2)}% real</div>`)}</td>
       <td>${fin("balanceSheet."+i+".yieldPct", rateDisp(b.yieldPct), "num", 'style="width:64px" min="0" step="0.25"')}</td>
       <td><button class="mini" onclick="DATA.balanceSheet.splice(${i},1); renderForms(); formEdit()">×</button></td></tr>`;
   });
@@ -2636,10 +2726,26 @@ function renderHeadline(capacity, run){
   const hh = DATA.household;
   const horizonYear = planEndYear(hh);
   const floor = legacyFloor();
+  /* index046 — a zero capacity is explained, not just printed. */
+  const ff = capacity === 0 ? floorFeasibility() : null;
+  const floorBlocked = ff && !ff.depleted && !ff.feasible;
+  const headBig = floorBlocked
+    ? `<div class="big num" style="font-size:24px;line-height:1.25">No spending level meets your
+         <span class="num">${fmt$(floor)}</span> ending target</div>
+       <div class="sub" style="color:#B4472A">This is not "you run out of money." Even spending
+         <strong>nothing at all</strong>, the least you would hold in liquid assets between now and
+         ${horizonYear} is <span class="num">${fmt$(ff.maxFloor)}</span> (today's $, in ${ff.year}) —
+         <span class="num">${fmt$(ff.short)}</span> short of the target. Lower the amount you want to
+         leave to about ${fmt$(Math.floor(ff.maxFloor/10000)*10000)} or less and a capacity number comes back.</div>`
+    : (capacity === 0
+      ? `<div class="big num" style="font-size:24px;line-height:1.25">No spending level survives to ${horizonYear}</div>
+         <div class="sub" style="color:#B4472A">Even at zero spending the plan runs out before the horizon —
+           taxes, debt service or a scheduled outflow is draining faster than the assets can carry.</div>`
+      : `<div class="big num">${fmt$(capacity)}<span class="per"> / yr starting now, growing with inflation</span></div>
+         <div class="sub">Supported through <strong>${horizonYear} (${endYearAges(hh)})</strong>${floor ? `, leaving at least <span class="num">${fmt$(floor)}</span> (today's $) in liquid assets` : ""}.
+         Taxes computed year by year (federal engine + ${hh.stateModule} module).</div>`);
   $("headline").innerHTML = `
-    <div class="big num">${fmt$(capacity)}<span class="per"> / yr starting now, growing with inflation</span></div>
-    <div class="sub">Supported through <strong>${horizonYear} (${endYearAges(hh)})</strong>${floor ? `, leaving at least <span class="num">${fmt$(floor)}</span> (today's $) in liquid assets` : ""}.
-    Taxes computed year by year (federal engine + ${hh.stateModule} module).</div>
+    ${headBig}
     <details style="margin-top:6px"><summary style="cursor:pointer; font-size:12px; font-weight:600">How this number is found</summary>
       <p class="note" style="max-width:640px; margin-top:4px">The app tries a spending level and simulates every
       year: collect income → pay taxes → fund spending, drawing from buckets in your draw order → grow what remains.
@@ -2651,6 +2757,7 @@ function renderHeadline(capacity, run){
       <label class="note">Leave at the end (liquid, today's $):${helpChip("A legacy / cushion floor: the model won't draw your liquid buckets below this amount (today's dollars), and capacity is solved so this much still remains at the horizon. Set 0 to spend down fully.")}
       <input type="number" step="10000" style="width:120px" value="${floor||0}"
         onchange="(DATA.assumptions=DATA.assumptions||{}).legacyFloor=parseFloat(this.value)||0; setJSON(DATA); renderCoreNoSliders();"></label>
+      ${floorBlocked ? `<span class="note" style="color:#B4472A">&nbsp;most that is reachable: ${fmt$(ff.maxFloor)}</span>` : ""}
     </div>
     ${viewModeToggleHTML(capacity)}`;
 }
@@ -3009,9 +3116,16 @@ function renderYearTable(disp, capacity){
   `<p class="note" style="margin:8px 0 4px">All figures nominal (future dollars), at
   ${disp.mode==="spending" ? "<strong>your entered spending</strong>" : "capacity spending"}: spending rises with
   inflation, steps down when a loan pays off or a phase applies, and spikes for one-time events.
-  Income shifts as streams start/end and RMDs begin.</p><table class="data"><thead><tr>
+  Income shifts as streams start/end and RMDs begin.</p>`;
+  /* index046 — the surplus column appears only when some year has one, so the
+     capacity view (where surplus is usually nil) is not cluttered by an empty
+     column, and the entered-spending view cannot hide the money. */
+  const anySurplus = run.rows.some(r => (r.detail.surplus||0) > 0.5);
+  h += `<table class="data"><thead><tr>
     <th></th><th>Year</th><th>Age</th><th class="n">Income</th><th class="n">Spend</th>
-    <th class="n">Fed tax</th><th class="n">State</th><th class="n">Liquid</th><th class="n">Net worth</th><th>Notes</th>
+    <th class="n">Fed tax</th><th class="n">State</th>${anySurplus
+      ? `<th class="n">Surplus${helpChip("Income left after spending and taxes in that year, with nothing needed from the buckets. It is after-tax money, so no further tax is due on it; it is credited to a bucket at cost, which raises basis dollar-for-dollar. Before index046 this was credited to no bucket at all and simply left the model.")}</th>` : ""}
+    <th class="n">Liquid</th><th class="n">Net worth</th><th>Notes</th>
     </tr></thead><tbody>`;
   run.rows.forEach((r, ri) => {
     const inc = (r.income.wages + r.income.pension + r.income.ss + r.income.interest +
@@ -3021,9 +3135,10 @@ function renderYearTable(disp, capacity){
       <td class="num">${r.year}</td><td class="num">${r.ages.join("/")}</td>
       <td class="n num">${fmtK(inc)}</td><td class="n num">${fmtK(r.spend*r.nomF)}</td>
       <td class="n num">${fmtK(r.taxes.federal*r.nomF)}</td><td class="n num">${fmtK(r.taxes.state*r.nomF)}</td>
+      ${anySurplus ? `<td class="n num" ${(r.detail.surplus||0)>0.5 ? `style="color:#2E6E8E" title="Credited to ${esc(r.detail.surplusTo||"—")}"` : 'class="n num note"'}>${(r.detail.surplus||0)>0.5 ? fmtK(r.detail.surplus*r.nomF) : "—"}</td>` : ""}
       <td class="n num">${fmtK(r.liquid*r.nomF)}</td><td class="n num">${fmtK(r.netWorth*r.nomF)}</td>
       <td class="note">${r.notes.map(esc).join(" · ")}</td></tr>
-      <tr class="drow" id="det${ri}" style="display:none"><td></td><td colspan="9">${detailHTML(r)}</td></tr>`;
+      <tr class="drow" id="det${ri}" style="display:none"><td></td><td colspan="${anySurplus?10:9}">${detailHTML(r)}</td></tr>`;
   });
   $("yearTable").innerHTML = h + "</tbody></table>";
 }
@@ -3248,6 +3363,50 @@ function fillBlankReturns(){
   });
   renderForms(); formEdit();
 }
+/* index046 — THE RETURN CUSHION.
+   The shift slider answers "what does a lower return cost me." The question
+   actually worth answering is "how much lower can returns run before my ENTERED
+   spending stops being covered." That is the distance between two numbers the
+   app already knows and has never put side by side.
+   Bisected on the shift rather than stepped, because each trial is a full
+   capacity solve (~45 timelines). On demand only — never on render. */
+function returnCushion(){
+  const spend = (DATA.spending||{}).currentAnnual;
+  if (!spend) return { none:"no entered spending" };
+  const saved = (DATA.assumptions||{}).returnShiftPP;
+  const capAt = sh => {
+    if (sh === 0) delete DATA.assumptions.returnShiftPP; else DATA.assumptions.returnShiftPP = sh;
+    return capacityFor(toEngine(DATA));
+  };
+  try {
+    if (capAt(0) < spend) return { covered:false, spend };
+    let lo = 0, hi = -6;                       // lo covered, hi assumed not
+    if (capAt(hi) >= spend) return { covered:true, spend, cushion:6, floored:true };
+    for (let i = 0; i < 9; i++){
+      const mid = (lo + hi)/2;
+      if (capAt(mid) >= spend) lo = mid; else hi = mid;
+    }
+    return { covered:true, spend, cushion: Math.abs(Math.floor(lo*100)/100) };
+  } finally {
+    if (saved == null) delete DATA.assumptions.returnShiftPP; else DATA.assumptions.returnShiftPP = saved;
+  }
+}
+function showReturnCushion(){
+  const el = $("cushionOut"); if (!el) return;
+  el.innerHTML = "working\u2026";
+  setTimeout(() => {
+    const c = returnCushion();
+    el.innerHTML = c.none
+      ? `<span style="color:#B4472A">Enter your annual spending in the data section first — the cushion is measured against it.</span>`
+      : !c.covered
+        ? `<span style="color:#B4472A">Your entered spending of ${fmt$(c.spend)} already exceeds capacity at the returns you have entered.</span>
+           There is no cushion to measure: the gap is in spending, not in the return assumption.`
+        : `Your entered spending of <span class="num">${fmt$(c.spend)}</span> stays covered down to a shift of
+           <strong class="num">\u2212${c.cushion.toFixed(2)}pp</strong>${c.floored?" or more":""} on every bucket.
+           <span class="note">Straight-line arithmetic only — it assumes the lower return arrives evenly, not
+           back-loaded. Treat it as the least bad news the plan absorbs, not the most.</span>`;
+  }, 30);
+}
 function paintReturnReadout(){
   const el = $("retReadout"); if (!el) return;
   const sh = returnShiftPP();
@@ -3268,12 +3427,16 @@ function paintReturnReadout(){
       ${blanks.length ? `<br><span style="color:#B4472A">${blanks.length} bucket${blanks.length>1?"s have":" has"} no return entered</span> — modeled at 0%/yr.
          ${bl.length ? `<button class="mini" onclick="fillBlankReturns()">fill ${bl.length} blank${bl.length>1?"s":""} with ${fillBlankValue().toFixed(2)}%</button>` : ""}` : ""}
       <br>Edit any single bucket in the balance sheet above; the shift applies on top of whatever is there.
+      <br><button class="mini" onclick="showReturnCushion()">how far can returns fall?</button>
+      <span id="cushionOut"></span>
     </div>`;
 }
 
 function sliderChange(id, v){
   const A = DATA.assumptions;
-  if (id === "sInfl") A.inflationPct = v;
+  /* index046 — inflation moves the REAL return printed under every bucket, so
+     the form has to repaint with it or those figures go stale on the screen. */
+  if (id === "sInfl"){ A.inflationPct = v; renderForms(); }
   if (id === "sAge") DATA.household.endYear = v;
   if (id === "sDrift") A.taxDrift = { fromYear: 2030, deltaPP: v };
   /* index046 — non-destructive. The old sRet branch wrote one value onto every
