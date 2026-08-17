@@ -247,9 +247,9 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
 <body>
 <header>
   <div class="hwrap">
-    <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px" id="buildBadge">index046 · v014</span></h1>
+    <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px" id="buildBadge">index049 · v014</span></h1>
     <div class="subtitle">Now and in the Future · <a href="https://github.com/lougualtieri-AMI/PFS/blob/main/README.md" target="_blank" rel="noopener">User Guide &#8599;</a></div>
-    <div class="buildline"><span id="buildStamp">pfs_index046 · engine v014</span> (takeLoan/borrow · level-from streams · amount-as-of · receiveAsset/inheritance · buyAsset · Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · index046 ENGINE: surplus routing — income above spending plus taxes is credited to a bucket at cost (cash first, then taxable, else created) instead of being discarded; assumptions.surplusTo="discard" reproduces index045 exactly · index046 display: capacity of $0 now EXPLAINED (an unreachable ending target is named as such, with the largest reachable figure, instead of printing $0/yr) · every bucket row prints its REAL return · return-field help rewritten (compound rate, not an average of yearly returns) · plausibility flags on out-of-band returns and on a percentage legacy floor that the solver silently ignores · "how far can returns fall?" cushion · blank bucket returns SURFACED (engine still reads a blank as 0%/yr — it is now listed in the problems box, flagged red in the balance sheet, and fillable in one click) · the destructive "set ALL returns" slider replaced by a read-only blended-return readout (liquid vs all-in) plus a non-destructive ±pp SHIFT that preserves the spreads between buckets and restores exactly at 0 · version string now rendered from one constant · index045 display-only: fill stack reordered MECHANICALLY (unavoidable → RMD forced, with overshoot hatched → top-up draw → conversion) so a large RMD never prints as a dash · cash-bridge tooltips reconcile spending to taxable income · Social Security shown gross and taxable · legend lists only what is drawn (ceiling entry follows the line, room chips use real rates) · axis stamped as taxable income after the deduction · "total cash need" no longer mislabeled "entered" · index044: bracket ladder redrawn as a FILL GAUGE (unavoidable / to fund spending / Roth conversion / forced by RMD stacked to the actual landing; room measured ABOVE the landing, not above the floor) · single dollar basis for both widths with a today's-$ ↔ that-year's-$ toggle · per-year readout table incl. entered spending in both bases · scale windowed to the landing + 2 brackets · index043 display-only: Start here panel defaults closed · index041 display-only: PolyForm NC 1.0.0 license header · index040 display-only: ask-an-AI panel (#030) · scenario path (#031) · terms of use (#032) · wide-table horizontal scroll · rate inputs 2dp + 0.25 step · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
+    <div class="buildline"><span id="buildStamp">pfs_index049 · engine v014</span> (takeLoan/borrow · level-from streams · amount-as-of · receiveAsset/inheritance · buyAsset · Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · index049 display-only: surplus control moved OUT of the draw-strategy block into its own "Money left over" section and now reports surplus years at CAPACITY as well as at entered spending — the capacity figure is the one that says whether routing can move the capacity number at all · index048 display-only: the ESTATE LINE now follows the view toggle (it was hardcoded to the capacity run, so with no legacy floor it read ~$0 forever and never responded to anything) · index047 ENGINE: surplus routing — income above spending plus taxes is credited to a bucket at cost (cash first, then taxable, else created) instead of being discarded; assumptions.surplusTo="discard" reproduces index045 exactly · index046 display (shipped in the two builds before this one): capacity of $0 now EXPLAINED (an unreachable ending target is named as such, with the largest reachable figure, instead of printing $0/yr) · every bucket row prints its REAL return · return-field help rewritten (compound rate, not an average of yearly returns) · plausibility flags on out-of-band returns and on a percentage legacy floor that the solver silently ignores · "how far can returns fall?" cushion · blank bucket returns SURFACED (engine still reads a blank as 0%/yr — it is now listed in the problems box, flagged red in the balance sheet, and fillable in one click) · the destructive "set ALL returns" slider replaced by a read-only blended-return readout (liquid vs all-in) plus a non-destructive ±pp SHIFT that preserves the spreads between buckets and restores exactly at 0 · version string now rendered from one constant · index045 display-only: fill stack reordered MECHANICALLY (unavoidable → RMD forced, with overshoot hatched → top-up draw → conversion) so a large RMD never prints as a dash · cash-bridge tooltips reconcile spending to taxable income · Social Security shown gross and taxable · legend lists only what is drawn (ceiling entry follows the line, room chips use real rates) · axis stamped as taxable income after the deduction · "total cash need" no longer mislabeled "entered" · index044: bracket ladder redrawn as a FILL GAUGE (unavoidable / to fund spending / Roth conversion / forced by RMD stacked to the actual landing; room measured ABOVE the landing, not above the floor) · single dollar basis for both widths with a today's-$ ↔ that-year's-$ toggle · per-year readout table incl. entered spending in both bases · scale windowed to the landing + 2 brackets · index043 display-only: Start here panel defaults closed · index041 display-only: PolyForm NC 1.0.0 license header · index040 display-only: ask-an-AI panel (#030) · scenario path (#031) · terms of use (#032) · wide-table horizontal scroll · rate inputs 2dp + 0.25 step · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
   </div>
 </header>
 <div id="delta" aria-live="polite"></div>
@@ -1814,7 +1814,7 @@ function migrateHorizon(d){
 /* index046 — ONE source for the build stamp. Before this the <h1> badge and the
    .buildline carried independent hardcoded strings, and the badge sat two builds
    stale (B-F). Both are now painted from these two constants at boot. */
-const BUILD_ID = "index046", ENGINE_ID = "v014";
+const BUILD_ID = "index049", ENGINE_ID = "v014";
 function paintBuildStamp(){
   const a = $("buildBadge"), b = $("buildStamp");
   if (a) a.textContent = BUILD_ID + " \u00b7 " + ENGINE_ID;
@@ -2487,7 +2487,7 @@ function render(){
   renderScenario();
   renderCompare(capacity);
   renderFixedDraw();
-  renderEstate(capRun);
+  renderEstate(disp);
 }
 
 /* ---------------- Economic net worth (index008) ----------------------- */
@@ -3124,7 +3124,7 @@ function renderYearTable(disp, capacity){
   h += `<table class="data"><thead><tr>
     <th></th><th>Year</th><th>Age</th><th class="n">Income</th><th class="n">Spend</th>
     <th class="n">Fed tax</th><th class="n">State</th>${anySurplus
-      ? `<th class="n">Surplus${helpChip("Income left after spending and taxes in that year, with nothing needed from the buckets. It is after-tax money, so no further tax is due on it; it is credited to a bucket at cost, which raises basis dollar-for-dollar. Before index046 this was credited to no bucket at all and simply left the model.")}</th>` : ""}
+      ? `<th class="n">Surplus${helpChip("Income left after spending and taxes in that year, with nothing needed from the buckets. It is after-tax money, so no further tax is due on it; it is credited to a bucket at cost, which raises basis dollar-for-dollar. Before surplus routing was added this was credited to no bucket at all and simply left the model.")}</th>` : ""}
     <th class="n">Liquid</th><th class="n">Net worth</th><th>Notes</th>
     </tr></thead><tbody>`;
   run.rows.forEach((r, ri) => {
@@ -3244,26 +3244,44 @@ function moveDraw(i, dir){
 function surplusControlHTML(){
   const A = DATA.assumptions || (DATA.assumptions = {});
   const cur = A.surplusTo == null ? "auto" : A.surplusTo;
-  let anySurplus = false, total = 0, years = 0;
+  /* index049 — TWO counts, because they answer different questions and only one
+     of them explains the capacity number. Surplus at ENTERED spending is what
+     lands in the year table and the estate line. Surplus AT CAPACITY is rarer,
+     because raising spending to capacity is exactly what consumes it — and when
+     it is zero, routing cannot move capacity by even a dollar, which is
+     otherwise indistinguishable from the feature being broken. */
+  let anySurplus = false, total = 0, years = 0, capYears = 0, capTotal = 0;
   try {
     const d = toEngine(DATA); (d.assumptions = d.assumptions || {}).surplusTo = "auto";
-    const r = runTimeline(d, {});
-    r.rows.forEach(x => { const v = (x.detail && x.detail.surplus) || 0;
+    runTimeline(d, {}).rows.forEach(x => { const v = (x.detail && x.detail.surplus) || 0;
       if (v > 0.5){ anySurplus = true; years++; total += v * x.nomF; } });
+    const c = capacityFor(d);
+    const d2 = toEngine(DATA); (d2.assumptions = d2.assumptions || {}).surplusTo = "auto";
+    runTimeline(d2, { spendOverride: c }).rows.forEach(x => { const v = (x.detail && x.detail.surplus) || 0;
+      if (v > 0.5){ capYears++; capTotal += v * x.nomF; } });
   } catch(e){ return ""; }
   if (!anySurplus && cur === "auto") return "";
   const dests = (DATA.balanceSheet||[]).filter(b => b.taxType === "cash" || b.taxType === "taxable");
-  return `<div class="row" style="margin:6px 0 8px">
-    <label class="note">Surplus years go to:${helpChip("Some years your income covers spending and taxes with money left over — most often a working year, or an RMD larger than the year needed. That money is after-tax, so nothing more is owed on it; it is credited to a bucket at cost, which raises basis dollar-for-dollar, before that year's growth. Before index046 it was credited to no bucket at all and simply left the model. Choose 'nowhere' only to reproduce a pre-index046 result.")}
+  return `<div style="border-top:1px solid #d9d9d9;margin-top:12px;padding-top:8px">
+    <div class="note" style="font-weight:600;margin-bottom:4px">Money left over</div>
+    <p class="note" style="margin:0 0 6px;max-width:640px">A separate question from the draw order above:
+    that decides where money comes <em>from</em> when a year falls short; this decides where it <em>goes</em>
+    when a year runs long — a working year, or an RMD bigger than the year needed.</p>
+    <div class="row" style="margin:0 0 4px">
+    <label class="note">Surplus years go to:${helpChip("Some years your income covers spending and taxes with money left over — most often a working year, or an RMD larger than the year needed. That money is after-tax, so nothing more is owed on it; it is credited to a bucket at cost, which raises basis dollar-for-dollar, before that year's growth. Before surplus routing was added it was credited to no bucket at all and simply left the model. Choose 'nowhere' only to reproduce a result from before surplus routing existed.")}
       <select onchange="if(this.value==='auto'){delete DATA.assumptions.surplusTo}else{DATA.assumptions.surplusTo=this.value} setJSON(DATA); renderDrawOrder(); renderCoreNoSliders();">
         <option value="auto" ${cur==="auto"?"selected":""}>first cash bucket, else brokerage (default)</option>
         ${dests.map(b => `<option value="${esc(b.id)}" ${cur===b.id?"selected":""}>${esc(b.label||b.id)} (${esc(b.taxType)})</option>`).join("")}
-        <option value="discard" ${cur==="discard"?"selected":""}>nowhere — discard it (pre-index046 behavior)</option>
+        <option value="discard" ${cur==="discard"?"selected":""}>nowhere — discard it (pre-surplus-routing behavior)</option>
       </select></label>
     <span class="note">${anySurplus
-      ? `${years} year${years>1?"s":""} in this plan produce${years>1?"":"s"} one, ${fmtK(total)} in total (nominal, summed).`
+      ? `At <strong>your entered spending</strong>: ${years} year${years>1?"s":""}, ${fmtK(total)} in total (nominal, summed).
+         At <strong>capacity</strong>: ${capYears ? `${capYears} year${capYears>1?"s":""}, ${fmtK(capTotal)}` : "none"}.
+         <br>${capYears
+           ? `Because some surplus survives even at capacity, routing it <strong>raises the capacity number itself</strong>.`
+           : `Because raising spending to capacity consumes all of it, routing <strong>cannot move the capacity number</strong>. The difference shows up in the year table and the estate line at your entered spending. Capacity identical to the dollar is the correct result here, not a sign that nothing happened.`}`
       : `<span style="color:#B4472A">No year in this plan produces a surplus — this setting is currently doing nothing.</span>`}</span>
-  </div>`;
+  </div></div>`;
 }
 
 function renderDrawOrder(){
@@ -3307,7 +3325,6 @@ function renderDrawOrder(){
         rates.map(r => `<option value="${r}" ${Math.abs(r-(tb>1?tb/100:tb))<1e-9?"selected":""}>${(r*100).toFixed(0)}%</option>`).join("") +
         `</select></label>` : ""}
     </div>
-    ${surplusControlHTML()}
     <div class="dorder">` +
     o.map((t,i) => `<span class="dchip">
         <button class="mini" ${i===0?"disabled":""} onclick="moveDraw(${i},-1)" aria-label="move ${BUCKET_META[t].label} earlier">◀</button>
@@ -3331,7 +3348,12 @@ function renderDrawOrder(){
     this strategy: capacity <span class="num">${fmt$(cap)}/yr</span> · lifetime taxes at capacity
     <span class="num">${fmtK(lifeTax)}</span> (nominal, summed)</span>. Switch strategies and compare —
     the difference is stated, not judged.
-    <em>Roadmap: the dual-objective view — current-tax-optimal vs estate-optimal mixes side by side.</em></p>`;
+    <em>Roadmap: the dual-objective view — current-tax-optimal vs estate-optimal mixes side by side.</em></p>`
+    /* index049 — the surplus control used to sit between the strategy selector and
+       the draw order that selector governs: it read as part of the strategy and
+       then handed you back to the strategy mid-thought. It is a separate question
+       — where money GOES, not where it comes FROM — so it closes the panel now. */
+    + surplusControlHTML();
 }
 
 function renderSliders(){
@@ -3490,7 +3512,7 @@ function renderCoreNoSliders(){
   const disp = displayRun(capRun);
   renderNow(capRun); renderHeadline(capacity, capRun); renderRibbon(disp, capacity);
   renderMilestones(capRun); renderYearTable(disp, capacity); renderScenario(); renderCompare(capacity);
-  renderHeadroom(disp, capacity); renderFixedDraw(); renderEstate(capRun);
+  renderHeadroom(disp, capacity); renderFixedDraw(); renderEstate(disp);
 }
 
 /* ---------------- Optional comparison -------------------------------- */
@@ -4617,15 +4639,35 @@ function fpdYear(delta){
 }
 
 /* ---------------- Estate line ----------------------------------------- */
-function renderEstate(run){
-  const e = run.estate;
+/* index048 — B-G: the estate line was drawn from the CAPACITY run unconditionally,
+   while everything beside it honored the view toggle. Two consequences, both bad.
+   With no legacy floor, capacity spends the plan to nil by construction, so the
+   panel read "projected net worth at horizon: $0K" permanently — a real number,
+   answering a question nobody asked (what you would leave if you spent every
+   dollar you safely could). And because it never looked at the entered-spending
+   run, no change confined to that view could move it: switching surplus routing
+   on and off left it identical at $0 while the entered-spending path moved from
+   $10.28M to $12.47M. It now follows the toggle and says which level it is
+   drawn at, so the number can never again be read against the wrong plan. */
+function renderEstate(disp){
+  const run = (disp && disp.run) ? disp.run : disp;      // tolerate a bare run
+  const mode = (disp && disp.mode) || "capacity";
+  const e = run && run.estate;
   if (!e){ $("estBody").textContent = "—"; return; }
   const last = run.rows[run.rows.length-1];
+  const at = mode === "spending"
+    ? `at <strong>your entered spending</strong>`
+    : `at <strong>capacity spending</strong>`;
+  const caution = mode === "capacity"
+    ? `<br><span class="note" style="color:#B4472A">Drawn at capacity — the most you could safely spend — so this is
+       what would be left if you spent every dollar the plan allows${legacyFloor() ? ", down to your ending target" : ", which is close to nothing by design"}.
+       Switch the view above to <em>my entered spending</em> for the estate on the plan you actually intend.</span>`
+    : "";
   $("estBody").innerHTML = `
-    Projected net worth at horizon (nominal): <span class="num"><strong>${fmtK(e.netWorthAtHorizon*last.nomF)}</strong></span>
+    Projected net worth at horizon (nominal), ${at}: <span class="num"><strong>${fmtK(e.netWorthAtHorizon*last.nomF)}</strong></span>
     &nbsp;·&nbsp; Federal exemption (today's law): <span class="num">${fmtK(e.federalExemption)}</span>
     ${e.aboveExemption>0 ? ` &nbsp;·&nbsp; <span class="failflag">Above exemption by ${fmtK(e.aboveExemption)}</span>` : ""}
-    <br><span class="note">${e.stateNote}</span>`;
+    <br><span class="note">${e.stateNote}</span>${caution}`;
 }
 
 /* ---------------- Wiring ---------------------------------------------- */
