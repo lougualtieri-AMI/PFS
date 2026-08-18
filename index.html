@@ -1814,7 +1814,7 @@ function migrateHorizon(d){
 /* index046 — ONE source for the build stamp. Before this the <h1> badge and the
    .buildline carried independent hardcoded strings, and the badge sat two builds
    stale (B-F). Both are now painted from these two constants at boot. */
-const BUILD_ID = "index049", ENGINE_ID = "v014";
+const BUILD_ID = "index050", ENGINE_ID = "v014";
 function paintBuildStamp(){
   const a = $("buildBadge"), b = $("buildStamp");
   if (a) a.textContent = BUILD_ID + " \u00b7 " + ENGINE_ID;
@@ -2476,10 +2476,10 @@ function render(){
   const capacity = solveCapacity();
   const capRun = runTimeline(toEngine(DATA), { spendOverride: capacity });
   const disp = displayRun(capRun);
-  renderNow(capRun);
+  renderNow();
   renderHeadline(capacity, capRun);
   renderRibbon(disp, capacity);
-  renderMilestones(capRun);
+  renderMilestones(disp);
   renderYearTable(disp, capacity);
   renderSliders();
   renderDrawOrder();
@@ -2568,7 +2568,13 @@ function economicNW(){
 }
 
 /* ---------------- Section 1: Where you are + flow statement ---------- */
-function renderNow(run){
+/* index050 (panel-signature audit) — took a `run` it never once read, which is
+   its own kind of trap: the next reader assumes the panel honours whatever is
+   passed. It does not, and should not. The balance sheet is today's position,
+   and the flow statement below is deliberately drawn at ENTERED spending — it
+   states what this year actually looks like, not what a capacity projection
+   would make of it — so the parameter is gone rather than wired to `disp`. */
+function renderNow(){
   const bs = DATA.balanceSheet || [];
   const byType = {}; ORDER.forEach(t => byType[t] = 0);
   bs.forEach(b => byType[b.taxType] = (byType[b.taxType]||0) + b.value);
@@ -2585,7 +2591,8 @@ function renderNow(run){
     bar += `<span><span class="sw" style="background:${BUCKET_META[t].color}"></span>${BUCKET_META[t].label} <span class="num">${fmtK(byType[t])}</span></span>`; });
   bar += '</div>';
 
-  /* Flow statement: current-year trajectory row (today $) */
+  /* Flow statement: current-year trajectory row (today $), at ENTERED spending
+     by design — see the note on this function. */
   const traj = runTimeline(toEngine(DATA), {});
   const r0 = traj.rows[0];
   const incTotal = r0.income.wages + r0.income.pension + r0.income.ss +
@@ -2598,7 +2605,7 @@ function renderNow(run){
     ["Rental", r0.income.rental]
   ].filter(x => x[1] > 0);
   let flow = `<table class="data" style="max-width:560px"><thead>
-    <tr><th colspan="2">Flow statement — current year, today's dollars</th></tr></thead><tbody>`;
+    <tr><th colspan="2">Flow statement — current year, today's dollars, at your entered spending</th></tr></thead><tbody>`;
   flowRows.forEach(([k,v]) => flow += `<tr><td>${k}</td><td class="n num">${fmt$(v)}</td></tr>`);
   flow += `<tr><td><strong>Income</strong></td><td class="n num"><strong>${fmt$(incTotal)}</strong></td></tr>
     <tr><td>Spending (incl. debt service &amp; events)</td><td class="n num">−${fmt$(r0.spend)}</td></tr>
@@ -3051,7 +3058,15 @@ function milestoneAges(){
   return (D.milestoneAges && D.milestoneAges.length) ? D.milestoneAges : defaultMilestoneAges();
 }
 
-function renderMilestones(run){
+/* index050 (panel-signature audit) — this took a bare `run` and was handed the
+   capacity run at both call sites, the renderEstate shape from index048. Unlike
+   renderEstate it labelled itself honestly, so it was not lying; it was simply
+   the one panel that ignored the view toggle every neighbour honours, and at
+   capacity its net-worth and liquid cards trend to nil by construction. Now
+   takes `disp`. */
+function renderMilestones(disp){
+  const run = (disp && disp.run) ? disp.run : disp;      // tolerate a bare run
+  const dmode = (disp && disp.mode) || "capacity";
   const ages = milestoneAges();
   const econ = econPVSeries(run.rows.length);
   const now = new Date(DATA.meta.asOfDate||"2026-01-01").getFullYear();
@@ -3076,11 +3091,15 @@ function renderMilestones(run){
   }).join("");
   $("milestones").innerHTML = `
     <div class="row" style="justify-content:space-between; align-items:baseline; margin-top:16px">
-      <h3 style="font-size:14px">Ages &amp; stages <span class="note" style="font-weight:400">(nominal, at capacity spending)</span></h3>
+      <h3 style="font-size:14px">Ages &amp; stages <span class="note" style="font-weight:400">(nominal, at ${dmode === "spending" ? "your entered spending" : "capacity spending"})</span></h3>
       <label class="note">ages: <input type="text" style="width:150px" value="${milestoneAges().join(", ")}"
         onchange="(DATA.display=DATA.display||{}).milestoneAges=this.value.split(',').map(x=>parseInt(x)).filter(x=>!isNaN(x)); setJSON(DATA); renderCoreNoSliders();"></label>
     </div>
-    <div class="mgrid">${cards}</div>`;
+    <div class="mgrid">${cards}</div>
+    ${dmode === "capacity" ? `<p class="note" style="color:#B4472A; margin-top:6px">Drawn at capacity —
+      the most you could safely spend — so net worth and liquid assets fall toward nil by construction
+      as the ages advance. Switch the view in Section 2 to <em>my entered spending</em> for the balances
+      on the plan you actually intend.</p>` : ""}`;
 }
 
 /* #26: engine runtime warnings — grouped by action+reason, years listed.
@@ -3510,8 +3529,8 @@ function renderCoreNoSliders(){
   const capacity = solveCapacity();
   const capRun = runTimeline(toEngine(DATA), { spendOverride: capacity });
   const disp = displayRun(capRun);
-  renderNow(capRun); renderHeadline(capacity, capRun); renderRibbon(disp, capacity);
-  renderMilestones(capRun); renderYearTable(disp, capacity); renderScenario(); renderCompare(capacity);
+  renderNow(); renderHeadline(capacity, capRun); renderRibbon(disp, capacity);
+  renderMilestones(disp); renderYearTable(disp, capacity); renderScenario(); renderCompare(capacity);
   renderHeadroom(disp, capacity); renderFixedDraw(); renderEstate(disp);
 }
 
