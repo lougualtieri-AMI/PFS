@@ -249,7 +249,7 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
   <div class="hwrap">
     <h1><span class="pfs">PFS</span> — Personal Financial Status <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:#2E6E8E;border-radius:10px;padding:2px 9px;margin-left:10px;vertical-align:middle;letter-spacing:.3px" id="buildBadge">index049 · v014</span></h1>
     <div class="subtitle">Now and in the Future · <a href="https://github.com/lougualtieri-AMI/PFS/blob/main/README.md" target="_blank" rel="noopener">User Guide &#8599;</a></div>
-    <div class="buildline"><span id="buildStamp">pfs_index049 · engine v014</span> (takeLoan/borrow · level-from streams · amount-as-of · receiveAsset/inheritance · buyAsset · Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · index049 display-only: surplus control moved OUT of the draw-strategy block into its own "Money left over" section and now reports surplus years at CAPACITY as well as at entered spending — the capacity figure is the one that says whether routing can move the capacity number at all · index048 display-only: the ESTATE LINE now follows the view toggle (it was hardcoded to the capacity run, so with no legacy floor it read ~$0 forever and never responded to anything) · index047 ENGINE: surplus routing — income above spending plus taxes is credited to a bucket at cost (cash first, then taxable, else created) instead of being discarded; assumptions.surplusTo="discard" reproduces index045 exactly · index046 display (shipped in the two builds before this one): capacity of $0 now EXPLAINED (an unreachable ending target is named as such, with the largest reachable figure, instead of printing $0/yr) · every bucket row prints its REAL return · return-field help rewritten (compound rate, not an average of yearly returns) · plausibility flags on out-of-band returns and on a percentage legacy floor that the solver silently ignores · "how far can returns fall?" cushion · blank bucket returns SURFACED (engine still reads a blank as 0%/yr — it is now listed in the problems box, flagged red in the balance sheet, and fillable in one click) · the destructive "set ALL returns" slider replaced by a read-only blended-return readout (liquid vs all-in) plus a non-destructive ±pp SHIFT that preserves the spreads between buckets and restores exactly at 0 · version string now rendered from one constant · index045 display-only: fill stack reordered MECHANICALLY (unavoidable → RMD forced, with overshoot hatched → top-up draw → conversion) so a large RMD never prints as a dash · cash-bridge tooltips reconcile spending to taxable income · Social Security shown gross and taxable · legend lists only what is drawn (ceiling entry follows the line, room chips use real rates) · axis stamped as taxable income after the deduction · "total cash need" no longer mislabeled "entered" · index044: bracket ladder redrawn as a FILL GAUGE (unavoidable / to fund spending / Roth conversion / forced by RMD stacked to the actual landing; room measured ABOVE the landing, not above the floor) · single dollar basis for both widths with a today's-$ ↔ that-year's-$ toggle · per-year readout table incl. entered spending in both bases · scale windowed to the landing + 2 brackets · index043 display-only: Start here panel defaults closed · index041 display-only: PolyForm NC 1.0.0 license header · index040 display-only: ask-an-AI panel (#030) · scenario path (#031) · terms of use (#032) · wide-table horizontal scroll · rate inputs 2dp + 0.25 step · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
+    <div class="buildline"><span id="buildStamp">pfs_index052 · engine v016</span> (payroll tax · contribute · takeLoan/borrow · level-from streams · amount-as-of · receiveAsset/inheritance · buyAsset · Colorado module · spending-change step · NIIT 3.8% · end-year horizon) · index052 ENGINE: PAYROLL TAX (FICA) on wages — employee Social Security 6.2% to a per-worker wage base, Medicare 1.45% uncapped, and the 0.9% Additional Medicare surtax above a threshold frozen in nominal dollars since 2013 and therefore deflated each year like NIIT. The engine had no payroll tax of any kind: harmless while only retirees were in scope, but once the contribute action admitted workers it became the largest error in the model, overstating a working household’s capacity by 7.2% ($14,257/yr on Sample F). Charged on GROSS wages, so a 401(k) deferral escapes income tax but not this. Wages are now split by owner because the wage base is a per-worker cap — an aggregate cap would have understated a two-earner couple by $4,681 in year one. A household with no wages is BIT-IDENTICAL to index051, and the payroll column hides itself. Not modeled: self-employment tax (roughly double, half deductible) or the employer half · index051 ENGINE: a CONTRIBUTE action — directed saving into a named bucket over a year range, with a tax-treatment flag (pre-tax reduces the year's ordinary income for federal AND state; Roth and taxable do not), escalation on the income-stream convention, and warn-only 2026 contribution limits; the contribution consumes cash flow through the funding need rather than the spend line, so a deferral is never reported as spending; surplus routing (index047) could only DERIVE saving and only reach cash or taxable, so payroll deferral and its deduction were unmodelable until now; files with no contribute action are bit-identical to index049. New Sample F (couple 45/43, working, 401(k)) is the accumulator case A/B/C never covered. Not modeled: employer match, FICA, per-owner limits, states where a deferral is federally but not locally deductible · index050 display-only: PANEL-SIGNATURE AUDIT after the index048 estate bug — renderMilestones took a bare run and always drew the CAPACITY plan while the view toggle said otherwise (correctly labelled, but the one panel ignoring the toggle, and its net-worth cards fall to nil by construction at capacity); renderNow took a run it never read, now removed · index049 display-only: surplus control moved OUT of the draw-strategy block into its own "Money left over" section and now reports surplus years at CAPACITY as well as at entered spending — the capacity figure is the one that says whether routing can move the capacity number at all · index048 display-only: the ESTATE LINE now follows the view toggle (it was hardcoded to the capacity run, so with no legacy floor it read ~$0 forever and never responded to anything) · index047 ENGINE: surplus routing — income above spending plus taxes is credited to a bucket at cost (cash first, then taxable, else created) instead of being discarded; assumptions.surplusTo="discard" reproduces index045 exactly · index046 display (shipped in the two builds before this one): capacity of $0 now EXPLAINED (an unreachable ending target is named as such, with the largest reachable figure, instead of printing $0/yr) · every bucket row prints its REAL return · return-field help rewritten (compound rate, not an average of yearly returns) · plausibility flags on out-of-band returns and on a percentage legacy floor that the solver silently ignores · "how far can returns fall?" cushion · blank bucket returns SURFACED (engine still reads a blank as 0%/yr — it is now listed in the problems box, flagged red in the balance sheet, and fillable in one click) · the destructive "set ALL returns" slider replaced by a read-only blended-return readout (liquid vs all-in) plus a non-destructive ±pp SHIFT that preserves the spreads between buckets and restores exactly at 0 · version string now rendered from one constant · index045 display-only: fill stack reordered MECHANICALLY (unavoidable → RMD forced, with overshoot hatched → top-up draw → conversion) so a large RMD never prints as a dash · cash-bridge tooltips reconcile spending to taxable income · Social Security shown gross and taxable · legend lists only what is drawn (ceiling entry follows the line, room chips use real rates) · axis stamped as taxable income after the deduction · "total cash need" no longer mislabeled "entered" · index044: bracket ladder redrawn as a FILL GAUGE (unavoidable / to fund spending / Roth conversion / forced by RMD stacked to the actual landing; room measured ABOVE the landing, not above the floor) · single dollar basis for both widths with a today's-$ ↔ that-year's-$ toggle · per-year readout table incl. entered spending in both bases · scale windowed to the landing + 2 brackets · index043 display-only: Start here panel defaults closed · index041 display-only: PolyForm NC 1.0.0 license header · index040 display-only: ask-an-AI panel (#030) · scenario path (#031) · terms of use (#032) · wide-table horizontal scroll · rate inputs 2dp + 0.25 step · #42 windowed bracket ladder · rates NOMINAL · draw: static order or bracket-fill · tax tables 2026-federal-est · state modules FL · NJ · CO · GENERIC</div>
   </div>
 </header>
 <div id="delta" aria-live="polite"></div>
@@ -332,6 +332,7 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
         <option value="A">Sample A · Single, 40, working, NJ</option>
         <option value="B">Sample B · Couple 68/66, retired, FL</option>
         <option value="C">Sample C · Couple 58/56, NJ→FL move, home sale</option>
+        <option value="F">Sample F · Couple 45/43, working, 401(k) contributions</option>
       </select>
       <button class="secondary" id="loadBtn">Load file</button>
       <button class="secondary" id="saveBtn">Save file</button>
@@ -422,7 +423,11 @@ footer .mono{font-family:'IBM Plex Mono',monospace;}
   </p>
 </footer>
 <script>
-/* PFS-ENGINE-FREEZE-START · v013 · everything between the sentinels is fingerprinted; edit only with a deliberate re-stamp */
+/* PFS-ENGINE-FREEZE-START · v016 · everything between the sentinels is fingerprinted; edit only with a deliberate re-stamp */
+/* Sentinel history: stamped v013; index047 added surplus routing (v014) WITHOUT
+   re-stamping this line — the sentinel exists to make exactly that visible and
+   failed to. index051 adds the `contribute` action and re-stamps to v015.
+   index052 adds payroll tax (FICA) and re-stamps to v016. */
 /* =====================================================================
    PFS — Personal Financial Status · Engine v003 · pfs_index007
    Pure functions, no DOM. Real terms internally, nominal at display.
@@ -618,8 +623,71 @@ const TAX = {
      gets caught over time, exactly as under actual law. */
   niit: { rate: 0.038, threshold: { MFJ: 250000, Single: 200000 } },
   estateExemptionPerPerson: 15000000,
-  sec121: { MFJ: 500000, Single: 250000 }
+  sec121: { MFJ: 500000, Single: 250000 },
+  /* index051 — contribution limits, 2026 estimates. WARNING ONLY: nothing is
+     blocked or clamped by them, on the same reasoning that keeps automatic
+     surplus routing out of tax-advantaged buckets — an explicit action is the
+     user asserting they have the room, and the model cannot see their W-2. */
+  contribLimits: { elective: 24500, electiveCatch50: 8000, electiveCatch60: 11250,
+                   ira: 7500, iraCatch50: 1100,
+                   hsaSelf: 4400, hsaFamily: 8750, hsaCatch55: 1000 },
+  /* index052 — PAYROLL TAX (FICA), employee side, 2026 estimates.
+     `wageBase` is indexed and so is a REAL figure like every other number here.
+     `addlMedThreshold` is NOT indexed — it has been frozen in nominal dollars
+     since 2013 — so it is deflated by the year's nomF exactly as the NIIT
+     threshold is, and catches more of the plan every year, as under actual law. */
+  payroll: { ssRate: 0.062, wageBase: 184500,
+             medRate: 0.0145, addlMedRate: 0.009,
+             addlMedThreshold: { MFJ: 250000, Single: 200000 } }
 };
+
+/* index052 — employee payroll tax on wages. The engine had NO payroll tax of
+   any kind, which cost a retiree nothing (Social Security, pensions, IRA draws
+   and dividends are not wages) but overstated a WORKING household's capacity by
+   the better part of eight percent — measured at $14,257/yr on Sample F. Once
+   the contribute action put workers in scope, this became the largest error in
+   the model.
+
+   The Social Security wage base applies PER WORKER, so wages must arrive split
+   by owner rather than aggregated; Medicare is unlimited; the Additional
+   Medicare surtax is assessed on COMBINED wages against a filing-level
+   threshold, which is why it is computed here rather than per person.
+
+   Not modeled: self-employment tax (roughly double, with half deductible), the
+   employer half, and the fact that these dollars buy future Social Security
+   credits — the benefit is entered by the user, so it is already in the plan.
+   Returns real (today's) dollars. */
+function payrollTax(wagesByOwner, filing, nomF){
+  const P = TAX.payroll;
+  let total = 0, combined = 0;
+  Object.keys(wagesByOwner || {}).forEach(k => {
+    const w = wagesByOwner[k] || 0;
+    if (w <= 0) return;
+    combined += w;
+    total += Math.min(w, P.wageBase) * P.ssRate + w * P.medRate;
+  });
+  const thr = (P.addlMedThreshold[filing] || P.addlMedThreshold.Single) / (nomF || 1);
+  const addl = P.addlMedRate * Math.max(0, combined - thr);
+  return { total: total + addl, ssAndMed: total, addl, combined, threshold: thr };
+}
+
+/* index051 — the limit that applies to one contribution, in TODAY'S dollars.
+   The statutory figures are indexed and the engine works in real terms, so a
+   limit entered today is the correct comparison in every year of the plan with
+   no inflation adjustment — which is the only reason a check like this is worth
+   making at all. Returns null when no check applies. */
+function contribLimit(kind, treat, age){
+  const L = TAX.contribLimits;
+  if (kind === "none") return null;
+  if (kind === "401k") return L.elective +
+    (age >= 60 && age <= 63 ? L.electiveCatch60 : age >= 50 ? L.electiveCatch50 : 0);
+  if (kind === "ira")  return L.ira + (age >= 50 ? L.iraCatch50 : 0);
+  if (kind === "hsa")  return L.hsaFamily + (age >= 55 ? L.hsaCatch55 : 0);
+  /* kind unnamed: the model cannot tell a 401(k) from an IRA, so it flags only
+     the figure that exceeds every 2026 elective limit and is therefore wrong
+     under any reading. */
+  return L.elective + L.electiveCatch60;
+}
 
 const RMD_TABLE = {73:26.5,74:25.5,75:24.6,76:23.7,77:22.9,78:22.0,79:21.1,
   80:20.2,81:19.4,82:18.5,83:17.7,84:16.8,85:16.0,86:15.2,87:14.4,88:13.7,
@@ -1266,6 +1334,10 @@ function runTimeline(data, opts){
 
     /* 2 — INCOME */
     let wages=0, pension=0, ss=0, interest=0, rental=0, annuity=0;
+    /* index052 — wages split by owner: the Social Security wage base is a
+       per-worker cap, so an aggregate figure would overcharge a single earner
+       and undercharge a couple. An unowned stream is attributed to person1. */
+    const wagesByOwner = { person1: 0, person2: 0 };
     streams.forEach(s => {
       const owner = d.household[s.owner] || p1;
       if (!alive[s.owner || "person1"] && s.owner) return;
@@ -1301,13 +1373,15 @@ function runTimeline(data, opts){
 
       amt *= af;   // start/end gating + calendar-year proration
       switch (s.taxCharacter){
-        case "wages": wages += amt; break;
+        case "wages": wages += amt;
+          wagesByOwner[(s.owner === "person2") ? "person2" : "person1"] += amt; break;
         case "socialSecurity": ss += amt; break;
         case "pension": pension += amt; break;
         case "interest": interest += amt; break;
         case "rental": rental += amt; break;
         case "annuity": pension += amt; break;
         default: wages += amt;
+          wagesByOwner[(s.owner === "person2") ? "person2" : "person1"] += amt;
       }
     });
 
@@ -1351,6 +1425,120 @@ function runTimeline(data, opts){
     const payoffDeferred = (d.actions||[]).filter(a=>a.year===year&&a._paidDeferred)
       .reduce((s,a)=>s+a._paidDeferred,0);
 
+    /* 2b — CONTRIBUTIONS (index051, engine v015)
+       Surplus routing (index047) is DERIVED: the model works out what is left
+       over and puts it somewhere. It cannot take direction — "I intend to save
+       $10,000 a year from 2028, into the IRA" — and it can only reach cash or
+       taxable buckets, so payroll deferral into a 401(k), and the deduction that
+       comes with it, was unmodelable. This action closes that gap.
+
+       Cash flow: the contribution is added to the year's FUNDING need, not to
+       `spend`. It must consume cash rather than appear from nowhere — in a
+       surplus year the surplus falls by the contribution, in a lean year it
+       forces a draw from the draw order, which correctly models selling
+       something to fund it. It is kept out of `spend` because a 401(k) deferral
+       is not spending and the row would misreport it as such; the funding need
+       carries it instead, and `detail.contrib` records it.
+
+       Tax: `preTax` reduces the wages handed to the tax engine (federal AND
+       state, since both read the same yTax object), which is what a traditional
+       401(k) or deductible IRA does. `roth` and `taxable` do not. Without this
+       the model would tax full wages and ALSO remove the cash — overstating tax
+       for exactly the saver the feature exists to serve.
+
+       Not modeled: FICA (the engine has no payroll tax at all, so a deferral's
+       saving here is income tax only — which is right, deferrals do not escape
+       FICA); employer match; per-owner deferral limits; and the state cases
+       where a deferral is federally but not locally deductible (NJ excludes
+       401(k) but not IRA contributions). */
+    let contribTotal = 0, preTaxContrib = 0;
+    const contribCredit = [], contribTo = [];
+    (d.actions||[]).forEach(act => {
+      if (act.type !== "contribute" || act.enabled === false) return;
+      const start = act.year;
+      const end = (act.endYear == null || act.endYear === "") ? act.year : act.endYear;
+      if (year < start || year > end) return;
+      const aName = act.label || "Contribution";
+      const warn = reason => warnings.push({ year, action: aName, reason });
+      let amt = Math.max(0, act.amount || 0);
+      if (!(amt > 0)){ warn("skipped: no amount set"); return; }
+      /* Escalation on the income-stream convention (v012 #028/#029): the amount
+         is quoted in TODAY'S dollars over `t` years from now, so "inflation" —
+         the default — holds it flat in real terms, "fixed" is the same nominal
+         figure every year and erodes, and a number is real growth per year. */
+      if (typeof act.growth === "number") amt *= Math.pow(1 + act.growth/100, t);
+      else if (act.growth === "fixed") amt /= Math.pow(1 + infl, t);
+      const treat = ["preTax","roth","taxable"].includes(act.taxTreatment) ? act.taxTreatment : null;
+      if (!treat){ warn("skipped: no tax treatment set — choose pre-tax, Roth, or taxable"); return; }
+
+      let dst = act.destBucketId ? buckets.find(b => b.id === act.destBucketId) : null;
+      if (act.destBucketId && !dst){
+        warn("skipped: destination bucket '" + act.destBucketId + "' is not on the balance sheet"); return; }
+      if (!dst){
+        const want = treat === "preTax" ? ["deferred"] : treat === "roth" ? ["roth"] : ["taxable","cash"];
+        const cands = buckets.filter(b => want.includes(b.taxType) && !(treat === "roth" && b.isHSA));
+        if (!cands.length){
+          warn("skipped: no " + want.join("/") + "-type bucket to receive it — add one to the balance sheet (a $0 placeholder is the legitimate way to stage a future contribution)"); return; }
+        dst = cands[0];
+        if (cands.length > 1)
+          warn("ambiguous destination: " + cands.length + " eligible buckets — using '" +
+            (dst.label||dst.id) + "'; set a destination on the action to choose");
+      }
+      /* Treatment must match the destination's tax type, with one deliberate
+         exception: pre-tax INTO an HSA-flagged Roth bucket is exactly how an HSA
+         works — deductible going in, tax-free coming out — so it is allowed and
+         named rather than refused. */
+      const isHSAdest = dst.taxType === "roth" && !!dst.isHSA;
+      const ok = (treat === "preTax"  && (dst.taxType === "deferred" || isHSAdest))
+              || (treat === "roth"    && dst.taxType === "roth" && !dst.isHSA)
+              || (treat === "taxable" && (dst.taxType === "taxable" || dst.taxType === "cash"));
+      if (!ok){
+        warn("skipped: a " + treat + " contribution cannot land in '" + (dst.label||dst.id) +
+          "' (" + dst.taxType + "-type" + (dst.isHSA ? ", HSA-flagged" : "") + ")"); return; }
+      const ow = (dst.owner && dst.owner !== "joint") ? dst.owner : null;
+      if (ow && alive[ow] === false){
+        warn("skipped: the owner of '" + (dst.label||dst.id) + "' has died"); return; }
+
+      const oAge = ageOf(d.household[ow || "person1"] || p1, year);
+      const lim = contribLimit(act.limitKind, treat, oAge);
+      if (lim && amt > lim + 0.5)
+        warn("over the 2026 limit: $" + Math.round(amt).toLocaleString() + " against $" +
+          Math.round(lim).toLocaleString() + (act.limitKind ? "" : " (the largest elective limit that exists)") +
+          " — not blocked, and both figures are today's dollars, which is the right comparison because the limits are indexed");
+
+      contribTotal += amt;
+      if (treat === "preTax") preTaxContrib += amt;
+      contribCredit.push({ dst, amt, basisAdd: treat === "preTax" ? 0 : amt });
+      if (contribTo.indexOf(dst.label || dst.id) < 0) contribTo.push(dst.label || dst.id);
+      /* Marked on the chart in the START year only — a twenty-year contribution
+         would otherwise plant twenty identical markers. */
+      if (year === start)
+        actionMarkers.push({ year, label: act.label ||
+          ("Contribute $" + Math.round(amt).toLocaleString() + "/yr" + (end > start ? " to " + end : "")) });
+    });
+    /* The DEDUCTION cannot exceed the wages it comes out of. The money still
+       moves — a contribution can be funded by selling something — but the
+       deduction is capped, which is the actual rule and the difference the model
+       must not paper over. */
+    const preTaxDeduct = Math.min(preTaxContrib, wages);
+    if (preTaxContrib > preTaxDeduct + 0.5)
+      warnings.push({ year, action: "Contribution", reason:
+        wages < 0.5
+        ? "no wages this year, so a pre-tax contribution gets NO deduction — the $" +
+          Math.round(preTaxContrib).toLocaleString() + " still moves, turning after-tax money into deferred " +
+          "money that comes back out as ordinary income. In law it also needs earned income to be allowed at all."
+        : "deduction limited to this year's wages of $" + Math.round(wages).toLocaleString() +
+          " — the remaining $" + Math.round(preTaxContrib - preTaxDeduct).toLocaleString() +
+          " still moves to the bucket but reduces no tax" });
+    const wagesTaxed = wages - preTaxDeduct;
+    /* index052 — payroll tax is computed on GROSS wages, before the pre-tax
+       deduction: a 401(k) deferral escapes income tax but not FICA. That is not
+       a simplification, it is the rule, and it is why `wagesByOwner` is used
+       here rather than `wagesTaxed`. Constant with respect to the draw, so it
+       is computed once outside the fixed-point loop below. */
+    const fica = payrollTax(wagesByOwner, filing, Math.pow(1 + infl, t + 1));
+    const payrollTaxAmt = fica.total;
+
     /* 3 — SPENDING NEED (real) */
     const S = d.spending || {};
     let baseline = opts && opts.spendOverride != null ? opts.spendOverride
@@ -1369,6 +1557,10 @@ function runTimeline(data, opts){
       else debtService += (l.monthlyPI||0)*12 / Math.pow(1+infl, t);
     });
     const spendNeed = baseline + lump + debtService;
+    /* index051 — what the year must FUND, which is spending plus any directed
+       contribution. `spendNeed` stays clean for the row so a 401(k) deferral is
+       never reported as spending. */
+    const fundNeed = spendNeed + contribTotal;
 
     /* 4+5 — FUNDING, DRAWS & TAX (fixed-point, 3 passes) */
     let deferredDraws = 0, ltcgRealized = 0, taxTotal = 0, stateTax = 0, fed = null;
@@ -1392,7 +1584,7 @@ function runTimeline(data, opts){
       deferredDraws = 0; ltcgRealized = pendingGain;
       draws = { cash: 0, taxable: 0, deferred: 0, roth: 0 };
       const cashIncome = wages + pension + ss + interest + rental + qualDiv + rmd + conversions * 0;
-      let need = spendNeed + taxTotal - cashIncome;
+      let need = fundNeed + taxTotal - cashIncome;
       // RMD cash already counted as income; conversions are not cash income
       const takeFrom = (tt, cap) => {              // per-bucket take, v003 arithmetic
         for (const b of buckets){
@@ -1417,7 +1609,7 @@ function runTimeline(data, opts){
              so SS phase-in and prior-pass realized gains are respected */
           const ceil = bracketCeiling(targetRate, filing);
           const defAvail = buckets.filter(b=>b.taxType==="deferred").reduce((s,b)=>s+b.value,0);
-          const evalOrd = defX => federalTax({ filing, ages, wages, pension,
+          const evalOrd = defX => federalTax({ filing, ages, wages: wagesTaxed, pension,
             deferredDraws: rmd + payoffDeferred + defX, conversions,
             interest, rental, ss, qualDiv,
             ltcgRealized: pendingGain + prevSpillLtcg, nomF: nomFY,
@@ -1460,7 +1652,7 @@ function runTimeline(data, opts){
          year the RMD exceeded what spending and taxes needed, the excess was
          removed from the balance sheet and discarded. */
       surplus = need < 0 ? -need : 0;
-      const yTax = { filing, ages, wages, pension,
+      const yTax = { filing, ages, wages: wagesTaxed, pension,
         deferredDraws: deferredDraws + rmd + payoffDeferred, conversions,
         interest, rental, ss, qualDiv, ltcgRealized,
         taxDriftPP: driftPP, nomF: nomFY,
@@ -1469,9 +1661,22 @@ function runTimeline(data, opts){
       const st = (STATE_MODULES[stateId] || STATE_MODULES.GENERIC).computeTax(yTax, fed);
       stateTax = st.stateTax; stDetail = st.detail || null;
       st.notes.forEach(n => { if (!notes.includes(n)) notes.push(n); });
-      taxTotal = fed.tax + stateTax;
+      taxTotal = fed.tax + stateTax + payrollTaxAmt;
       prevSpillLtcg = ltcgRealized - pendingGain;
     }
+
+    /* 5a — CREDIT THE CONTRIBUTIONS (index051)
+       Outside the fixed-point loop, for the same reason the surplus is: each
+       pass restores the buckets from `snap`, so a credit applied inside it would
+       be undone and re-applied three times. Same timing as the surplus and as
+       the draws — start of year, before growth. The cash was already consumed
+       through `fundNeed`; this only moves it. Basis rises dollar-for-dollar into
+       a taxable or Roth destination (after-tax money going in at cost) and not
+       at all into a pre-tax one, where every dollar is ordinary on the way out. */
+    contribCredit.forEach(c => {
+      c.dst.value += c.amt;
+      c.dst.basis = (c.dst.basis || 0) + c.basisAdd;
+    });
 
     /* 5b — ROUTE THE SURPLUS (index046)
        Placed before growth on purpose: draws come out at the start of the year
@@ -1527,7 +1732,8 @@ function runTimeline(data, opts){
     rows.push({
       year, ages: ages.slice(), filing, stateId,
       income: { wages, pension, ss, interest, rental, qualDiv, rmd },
-      spend: spendNeed, taxes: { federal: fed.tax, state: stateTax, total: taxTotal },
+      spend: spendNeed,
+      taxes: { federal: fed.tax, state: stateTax, payroll: payrollTaxAmt, total: taxTotal },
       byType: Object.assign({}, byType), liquid,
       netWorth: liquid + byType.residence + byType.illiquid - debt,
       debt, nomF, notes, failed: failed,
@@ -1538,9 +1744,16 @@ function runTimeline(data, opts){
           niit: fed.niit, magi: fed.magi, niitThr: fed.niitThr,
           conversions, rmd, deferredDraws },
         state: stDetail,
+        payroll: payrollTaxAmt > 0.5 ? {
+          total: payrollTaxAmt, ssAndMed: fica.ssAndMed, addl: fica.addl,
+          combined: fica.combined, threshold: fica.threshold,
+          byOwner: Object.assign({}, wagesByOwner) } : null,
         draws: draws,
         surplus: surplus > 0.5 ? surplus : 0,
         surplusTo: surplusTo,
+        contrib: contribTotal > 0.5 ? contribTotal : 0,
+        contribDeduct: preTaxDeduct > 0.5 ? preTaxDeduct : 0,
+        contribTo: contribTo.length ? contribTo.join(", ") : null,
         bucketList: buckets.filter(b => b.value > 0.5)
           .map(b => ({ label: b.label, taxType: b.taxType, value: b.value })),
         liabList: liabs.filter(l => l.balance > 0.5)
@@ -1680,6 +1893,49 @@ const PERSONAS = { A: {
     { year: 2044, type: "death", person: "person1", label: "Death of C1" }
   ],
   assumptions: { inflationPct: 2.5 }
+  },
+  /* index051 — the ACCUMULATOR case none of A/B/C covers: twenty working years
+     ahead, both earners deferring into a 401(k), a Roth IRA alongside, and a
+     mortgage that runs past retirement. Before index047 this household's entire
+     annual saving was discarded by the engine; before index051 the saving could
+     only be derived, never directed, and never reached a tax-deferred bucket —
+     so the deferral and its deduction were both unmodelable. This persona exists
+     to exercise exactly that path. */
+  F: {
+  meta: { asOfDate: "2026-01-01" },
+  household: { person1:{name:"F1", birthYear:1981}, person2:{name:"F2", birthYear:1983},
+    filingStatus:"MFJ", stateModule:"NJ", planToAge:95 },
+  incomeStreams: [
+    { name:"Salary F1", owner:"person1", annual: 165000, startAge: null, endAge: 64,
+      growth: 1, taxCharacter:"wages", survivorPct: 0 },
+    { name:"Salary F2", owner:"person2", annual: 95000, startAge: null, endAge: 64,
+      growth: 1, taxCharacter:"wages", survivorPct: 0 },
+    { name:"SS F1", owner:"person1", annual: 46000, startAge: 67, endAge: null,
+      growth:"inflation", taxCharacter:"socialSecurity", survivorPct: 100 },
+    { name:"SS F2", owner:"person2", annual: 30000, startAge: 67, endAge: null,
+      growth:"inflation", taxCharacter:"socialSecurity", survivorPct: 100 }
+  ],
+  balanceSheet: [
+    { id:"c1", label:"Cash", taxType:"cash", value: 60000, costBasis: 60000, owner:"joint", expectedRealReturn: 0.5, yieldPct: 0.5 },
+    { id:"b1", label:"Brokerage", taxType:"taxable", value: 180000, costBasis: 140000, owner:"joint", expectedRealReturn: 4.5, yieldPct: 1.5 },
+    { id:"k1", label:"401(k) F1", taxType:"deferred", value: 420000, owner:"person1", expectedRealReturn: 4.5 },
+    { id:"k2", label:"401(k) F2", taxType:"deferred", value: 165000, owner:"person2", expectedRealReturn: 4.5 },
+    { id:"r1", label:"Roth IRA F1", taxType:"roth", value: 85000, owner:"person1", expectedRealReturn: 4.5 },
+    { id:"h1", label:"NJ Home", taxType:"residence", value: 640000, costBasis: 480000, owner:"joint", expectedRealReturn: 1 }
+  ],
+  liabilities: [ { id:"m1", label:"Mortgage", linkedAsset:"h1", balance: 310000,
+    ratePct: 5.5, monthlyPI: 2100, maturityYear: 2051 } ],
+  spending: { currentAnnual: 120000 },
+  actions: [
+    { year: 2026, endYear: 2045, type:"contribute", amount: 23000, destBucketId:"k1",
+      taxTreatment:"preTax", limitKind:"401k", growth:"inflation", label:"401(k) F1" },
+    { year: 2026, endYear: 2045, type:"contribute", amount: 12000, destBucketId:"k2",
+      taxTreatment:"preTax", limitKind:"401k", growth:"inflation", label:"401(k) F2" },
+    { year: 2026, endYear: 2045, type:"contribute", amount: 7000, destBucketId:"r1",
+      taxTreatment:"roth", limitKind:"ira", growth:"inflation", label:"Roth IRA F1" },
+    { year: 2046, type:"spendingChange", newAnnual: 110000, label:"Retirement spending" }
+  ],
+  assumptions: { inflationPct: 2.5 }
 } };
 
 let DATA = null;
@@ -1814,7 +2070,7 @@ function migrateHorizon(d){
 /* index046 — ONE source for the build stamp. Before this the <h1> badge and the
    .buildline carried independent hardcoded strings, and the badge sat two builds
    stale (B-F). Both are now painted from these two constants at boot. */
-const BUILD_ID = "index050", ENGINE_ID = "v014";
+const BUILD_ID = "index052", ENGINE_ID = "v016";
 function paintBuildStamp(){
   const a = $("buildBadge"), b = $("buildStamp");
   if (a) a.textContent = BUILD_ID + " \u00b7 " + ENGINE_ID;
@@ -1874,6 +2130,26 @@ function validateRefs(){
         probs.push(`"${esc(nm)}"${off}: an inheritance/gift needs a positive amount`);
       if (a.basisMode === "carryover" && !(a.basis >= 0))
         probs.push(`"${esc(nm)}"${off}: carryover basis selected but no donor basis given — set it, or switch to step-up`);
+    }
+    if (a.type === "contribute"){
+      if (!(a.amount > 0))
+        probs.push(`"${esc(nm)}"${off}: a contribution needs a positive annual amount (today's $)`);
+      if (!["preTax","roth","taxable"].includes(a.taxTreatment))
+        probs.push(`"${esc(nm)}"${off}: no tax treatment set \u2014 pre-tax, Roth, or taxable. Without it the contribution is skipped entirely, because guessing would either hand you a deduction you may not have or deny one you do.`);
+      if (a.endYear != null && a.endYear !== "" && a.endYear < a.year)
+        probs.push(`"${esc(nm)}"${off}: end year ${esc(a.endYear)} is before the start year ${esc(a.year)} \u2014 no year is in range, so nothing is contributed`);
+      if (a.destBucketId){
+        const t = bById(a.destBucketId);
+        if (!t) probs.push(`"${esc(nm)}"${off}: destination bucket id "${esc(a.destBucketId)}" does not exist`);
+        else {
+          const isHSAdest = t.taxType === "roth" && t.isHSA;
+          const ok = (a.taxTreatment === "preTax"  && (t.taxType === "deferred" || isHSAdest))
+                  || (a.taxTreatment === "roth"    && t.taxType === "roth" && !t.isHSA)
+                  || (a.taxTreatment === "taxable" && (t.taxType === "taxable" || t.taxType === "cash"));
+          if (a.taxTreatment && !ok)
+            probs.push(`"${esc(nm)}"${off}: a ${esc(a.taxTreatment)} contribution cannot land in "${esc(t.label||t.id)}" (${esc(t.taxType)}-type${t.isHSA?", HSA-flagged":""})`);
+        }
+      }
     }
     if (a.type === "rothConversion"){
       if (a.sourceBucketId){
@@ -2035,6 +2311,27 @@ function setActionType(i, type){
   else if (type === "death") maybeNudgeSpendingChange(yr, "Spending change (loss of spouse)");
   else if (type === "buyAsset") maybeNudgeSpendingChange(yr, "Spending change (new asset upkeep)");
   else if (type === "receiveAsset") DATA.actions[i].basisMode = "stepUp";   // #027: inheritance is the common case
+  else if (type === "contribute"){
+    /* index051 — no default tax treatment on purpose. Guessing pre-tax would
+       silently hand the user a deduction they may not be entitled to, and the
+       whole value of the field is that it was chosen. */
+    DATA.actions[i].growth = "inflation";
+  }
+  renderForms(); formEdit();
+}
+/* index051 — changing the treatment invalidates a destination chosen under the
+   old one (a Roth bucket cannot receive a pre-tax contribution), so the
+   destination is cleared rather than left to fail in the engine. */
+function setContribTreat(i, v){
+  const a = DATA.actions[i];
+  a.taxTreatment = v || undefined;
+  delete a.destBucketId;
+  renderForms(); formEdit();
+}
+function setContribGrowth(i, v){
+  const a = DATA.actions[i];
+  if (v === "pct") a.growth = (typeof a.growth === "number") ? a.growth : 3;
+  else a.growth = v;
   renderForms(); formEdit();
 }
 function setBuyKind(i, kind){
@@ -2254,7 +2551,7 @@ function renderForms(){
 
   /* Actions — scenario events */
   const acts = DATA.actions || (DATA.actions = []);
-  h += `<fieldset><legend>Actions — what could happen${helpChip("Things that happen in a specific future year: buy or sell an asset, relocate to another state, a death, a Roth conversion, pay down debt, a tax-free (HSA) draw, or a spending change. Add them and watch capacity, taxes, and the bracket ladder respond.")}</legend>`;
+  h += `<fieldset><legend>Actions — what could happen${helpChip("Things that happen in a specific future year: buy or sell an asset, relocate to another state, a death, a Roth conversion, a contribution into an account, pay down debt, a tax-free (HSA) draw, or a spending change. Add them and watch capacity, taxes, and the bracket ladder respond.")}</legend>`;
   if (!acts.length) h += `<p class="note">No actions yet. Actions are one-time events injected into the timeline: a sale, a move, a death, a conversion. Markers appear on the horizon chart.</p>`;
   h += `<table class="form wide acttable"><tbody>`;
   acts.forEach((a,i) => {
@@ -2265,8 +2562,8 @@ function renderForms(){
         onchange="DATA.actions[${i}].enabled=this.checked; renderForms(); formEdit()"></td>
       <td style="width:70px">${fin("actions."+i+".year", a.year, "num", 'style="width:70px"')}</td>
       <td style="width:150px"><select onchange="setActionType(${i}, this.value)">` +
-      ["sellAsset","buyAsset","receiveAsset","relocate","death","rothConversion","takeLoan","payDownDebt","taxFreeReimbursement","spendingChange"].map(t =>
-        `<option value="${t}" ${t===a.type?"selected":""}>${{sellAsset:"Sell asset",buyAsset:"Buy asset",receiveAsset:"Receive asset (inheritance / gift)",relocate:"Relocate",death:"Death",rothConversion:"Roth conversion",takeLoan:"Borrow (take / draw a loan)",payDownDebt:"Pay down debt",taxFreeReimbursement:"Tax-free reimbursement",spendingChange:"Spending change"}[t]}</option>`).join("") +
+      ["sellAsset","buyAsset","receiveAsset","relocate","death","rothConversion","contribute","takeLoan","payDownDebt","taxFreeReimbursement","spendingChange"].map(t =>
+        `<option value="${t}" ${t===a.type?"selected":""}>${{sellAsset:"Sell asset",buyAsset:"Buy asset",receiveAsset:"Receive asset (inheritance / gift)",relocate:"Relocate",death:"Death",rothConversion:"Roth conversion",contribute:"Contribute (save into an account)",takeLoan:"Borrow (take / draw a loan)",payDownDebt:"Pay down debt",taxFreeReimbursement:"Tax-free reimbursement",spendingChange:"Spending change"}[t]}</option>`).join("") +
       `</select></td><td>`;
     if (a.type === "sellAsset"){
       const sellable = (DATA.balanceSheet||[]).filter(b => ["residence","illiquid","taxable"].includes(b.taxType));
@@ -2369,6 +2666,48 @@ function renderForms(){
         `</select>`;
       if (!roths.some(b => !b.isHSA))
         h += ` <span class="note" style="color:#B6543F">⚠ no eligible Roth bucket exists — this conversion will be skipped. Add a Roth bucket on the balance sheet (a $0 placeholder is the legitimate way to stage a future conversion — you'd open the account at conversion time anyway) and pick it as the destination here.</span>`;
+    }
+    if (a.type === "contribute"){
+      /* index051 — a DIRECTED saving plan, as against index047 surplus routing
+         which is derived and can only reach cash or taxable. The tax-treatment
+         flag is the whole point: without it the model taxes full wages and also
+         removes the cash. */
+      const eligible = (DATA.balanceSheet||[]).filter(b =>
+        a.taxTreatment === "preTax" ? (b.taxType === "deferred" || (b.taxType === "roth" && b.isHSA))
+        : a.taxTreatment === "roth" ? (b.taxType === "roth" && !b.isHSA)
+        : a.taxTreatment === "taxable" ? (b.taxType === "taxable" || b.taxType === "cash")
+        : false);
+      const ownerTag = b => (b.owner && b.owner !== "joint")
+        ? " \u00b7 " + esc((DATA.household[b.owner]||{}).name || b.owner) : "";
+      h += `contribute ${fin("actions."+i+".amount", a.amount, "num", 'style="width:100px"')}
+        /yr${helpChip("Today's dollars, per year. How it moves over time is set by the escalation control: 'with inflation' (the default) holds the same purchasing power every year; 'flat nominal' is the same dollar figure every year, worth less as it goes; a percentage is real growth on top of inflation \u2014 a contribution that rises with a raise.")}
+        through ${fin("actions."+i+".endYear", a.endYear, "num", 'style="width:70px"')}${helpChip("The last year a contribution is made. Blank means a single year \u2014 the start year only.")}
+        \u00b7 <select title="Tax treatment. This is the field that matters: a pre-tax contribution reduces the ordinary income the tax engine sees this year; a Roth or brokerage one does not."
+          onchange="setContribTreat(${i}, this.value)">` +
+        `<option value="">\u2014 tax treatment \u2014</option>` +
+        [["preTax","pre-tax (traditional 401(k)/IRA \u2014 deducts)"],
+         ["roth","Roth (no deduction)"],
+         ["taxable","taxable / brokerage (no deduction)"]].map(([v,l]) =>
+          `<option value="${v}" ${v===a.taxTreatment?"selected":""}>${l}</option>`).join("") +
+        `</select>
+        into <select onchange="fset('actions.${i}.destBucketId', this.value || null)">` +
+        `<option value="">\u2014 auto (first eligible) \u2014</option>` +
+        eligible.map(b => `<option value="${b.id}" ${b.id===a.destBucketId?"selected":""}>${esc(b.label)}${b.isHSA?" (HSA)":""}${ownerTag(b)}</option>`).join("") +
+        `</select>
+        \u00b7 escalation <select onchange="setContribGrowth(${i}, this.value)">` +
+        [["inflation","with inflation (flat in real terms)"],["fixed","flat nominal (erodes)"],["pct","a percentage \u2014 real growth"]].map(([v,l]) => {
+          const cur = typeof a.growth === "number" ? "pct" : (a.growth || "inflation");
+          return `<option value="${v}" ${v===cur?"selected":""}>${l}</option>`;
+        }).join("") + `</select>`;
+      if (typeof a.growth === "number")
+        h += ` ${fin("actions."+i+".growth", a.growth, "num", 'style="width:64px"')} %/yr real`;
+      h += ` \u00b7 limit check <select title="Warn-only. Contribution limits are never enforced \u2014 an explicit action is you asserting you have the room, which is the same reasoning that keeps automatic surplus routing out of tax-advantaged buckets."
+          onchange="fset('actions.${i}.limitKind', this.value || null)">` +
+        [["","\u2014 any elective limit \u2014"],["401k","401(k)/403(b)/457"],["ira","IRA"],["hsa","HSA"],["none","no check"]].map(([v,l]) =>
+          `<option value="${v}" ${v===(a.limitKind||"")?"selected":""}>${l}</option>`).join("") + `</select>`;
+      if (a.taxTreatment && !eligible.length)
+        h += ` <span class="note" style="color:#B6543F">\u26a0 no ${a.taxTreatment==="preTax"?"deferred (or HSA)":a.taxTreatment==="roth"?"non-HSA Roth":"taxable/cash"} bucket exists \u2014 this contribution will be skipped. Add one on the balance sheet (a $0 placeholder is the legitimate way to stage a future contribution).</span>`;
+      h += ` <span class="note hoverhint" title="The contribution CONSUMES cash flow \u2014 it is added to what the year must fund, not to your spending line. In a surplus year the surplus falls by the contribution; in a lean year it forces a draw from the draw order, which correctly models selling something to fund it. Not modeled: employer match, FICA (there is no payroll tax anywhere in this engine), per-owner deferral limits, and the states where a deferral is federally but not locally deductible.">(consumes cash flow, does not raise your spending line \u2014 hover for what is and isn't modeled)</span>`;
     }
     if (a.type === "taxFreeReimbursement"){
       const srcs = (DATA.balanceSheet||[]).filter(b => b.taxType==="roth" || b.taxType==="cash");
@@ -2597,7 +2936,8 @@ function renderNow(){
   const r0 = traj.rows[0];
   const incTotal = r0.income.wages + r0.income.pension + r0.income.ss +
                    r0.income.interest + r0.income.rental + r0.income.qualDiv + r0.income.rmd;
-  const surplus = incTotal - r0.spend - r0.taxes.total;
+  const contrib0 = (r0.detail && r0.detail.contrib) || 0;
+  const surplus = incTotal - r0.spend - r0.taxes.total - contrib0;
   const flowRows = [
     ["Wages", r0.income.wages], ["Social Security", r0.income.ss],
     ["Pension / annuity", r0.income.pension], ["RMD", r0.income.rmd],
@@ -2609,7 +2949,9 @@ function renderNow(){
   flowRows.forEach(([k,v]) => flow += `<tr><td>${k}</td><td class="n num">${fmt$(v)}</td></tr>`);
   flow += `<tr><td><strong>Income</strong></td><td class="n num"><strong>${fmt$(incTotal)}</strong></td></tr>
     <tr><td>Spending (incl. debt service &amp; events)</td><td class="n num">−${fmt$(r0.spend)}</td></tr>
-    <tr><td>Taxes (federal + state, est.)</td><td class="n num">−${fmt$(r0.taxes.total)}</td></tr>
+    <tr><td>Taxes (federal + state${(r0.taxes.payroll||0) > 0.5 ? " + payroll" : ""}, est.)</td><td class="n num">−${fmt$(r0.taxes.total)}</td></tr>
+    ${(r0.taxes.payroll||0) > 0.5 ? `<tr><td class="note" style="padding-left:14px">— of which payroll tax on wages</td><td class="n num note">−${fmt$(r0.taxes.payroll)}</td></tr>` : ""}
+    ${contrib0 > 0.5 ? `<tr><td>Contributions (directed into accounts)</td><td class="n num">−${fmt$(contrib0)}</td></tr>` : ""}
     <tr><td><strong>Net ${surplus>=0?"surplus":"draw on assets"}</strong></td>
         <td class="n num"><strong>${surplus>=0?"+":"−"}${fmt$(Math.abs(surplus))}</strong></td></tr>
   </tbody></table>`;
@@ -3140,9 +3482,18 @@ function renderYearTable(disp, capacity){
      capacity view (where surplus is usually nil) is not cluttered by an empty
      column, and the entered-spending view cannot hide the money. */
   const anySurplus = run.rows.some(r => (r.detail.surplus||0) > 0.5);
+  /* index051 — same rule as the surplus column: it appears only when some year
+     actually has one. A contribution is not spending and must not hide inside
+     the spend figure, so it gets its own column or none. */
+  const anyContrib = run.rows.some(r => (r.detail.contrib||0) > 0.5);
+  /* index052 — same self-hiding rule: a retiree with no wages never sees this
+     column, which is the whole design principle for worker features. */
+  const anyPayroll = run.rows.some(r => (r.taxes.payroll||0) > 0.5);
   h += `<table class="data"><thead><tr>
     <th></th><th>Year</th><th>Age</th><th class="n">Income</th><th class="n">Spend</th>
-    <th class="n">Fed tax</th><th class="n">State</th>${anySurplus
+    <th class="n">Fed tax</th><th class="n">State</th>${anyPayroll
+      ? `<th class="n">Payroll${helpChip("Employee Social Security and Medicare tax on wages \u2014 6.2% up to the wage base plus 1.45% with no cap, and the 0.9% Additional Medicare surtax above a threshold frozen in nominal dollars since 2013. Charged on GROSS wages: a 401(k) deferral escapes income tax but not this. Self-employment tax is not modeled and would be roughly double.")}</th>` : ""}${anyContrib
+      ? `<th class="n">Contrib${helpChip("Money you directed into an account that year. It consumes cash flow \u2014 it is added to what the year must fund \u2014 but it is not spending, so it is not in the Spend column. A pre-tax contribution also reduces that year's ordinary income; a Roth or taxable one does not. Hover the figure for where it landed.")}</th>` : ""}${anySurplus
       ? `<th class="n">Surplus${helpChip("Income left after spending and taxes in that year, with nothing needed from the buckets. It is after-tax money, so no further tax is due on it; it is credited to a bucket at cost, which raises basis dollar-for-dollar. Before surplus routing was added this was credited to no bucket at all and simply left the model.")}</th>` : ""}
     <th class="n">Liquid</th><th class="n">Net worth</th><th>Notes</th>
     </tr></thead><tbody>`;
@@ -3154,10 +3505,12 @@ function renderYearTable(disp, capacity){
       <td class="num">${r.year}</td><td class="num">${r.ages.join("/")}</td>
       <td class="n num">${fmtK(inc)}</td><td class="n num">${fmtK(r.spend*r.nomF)}</td>
       <td class="n num">${fmtK(r.taxes.federal*r.nomF)}</td><td class="n num">${fmtK(r.taxes.state*r.nomF)}</td>
+      ${anyPayroll ? `<td class="n num" ${(r.taxes.payroll||0)>0.5 ? `style="color:#8A5A2B"` : 'class="n num note"'}>${(r.taxes.payroll||0)>0.5 ? fmtK(r.taxes.payroll*r.nomF) : "\u2014"}</td>` : ""}
+      ${anyContrib ? `<td class="n num" ${(r.detail.contrib||0)>0.5 ? `style="color:#6B4E9E" title="Into ${esc(r.detail.contribTo||"\u2014")}${(r.detail.contribDeduct||0)>0.5 ? ` \u00b7 ${fmtK(r.detail.contribDeduct*r.nomF)} of it deducted from ordinary income` : " \u00b7 no deduction"}"` : 'class="n num note"'}>${(r.detail.contrib||0)>0.5 ? fmtK(r.detail.contrib*r.nomF) : "\u2014"}</td>` : ""}
       ${anySurplus ? `<td class="n num" ${(r.detail.surplus||0)>0.5 ? `style="color:#2E6E8E" title="Credited to ${esc(r.detail.surplusTo||"—")}"` : 'class="n num note"'}>${(r.detail.surplus||0)>0.5 ? fmtK(r.detail.surplus*r.nomF) : "—"}</td>` : ""}
       <td class="n num">${fmtK(r.liquid*r.nomF)}</td><td class="n num">${fmtK(r.netWorth*r.nomF)}</td>
       <td class="note">${r.notes.map(esc).join(" · ")}</td></tr>
-      <tr class="drow" id="det${ri}" style="display:none"><td></td><td colspan="${anySurplus?10:9}">${detailHTML(r)}</td></tr>`;
+      <tr class="drow" id="det${ri}" style="display:none"><td></td><td colspan="${9+(anySurplus?1:0)+(anyContrib?1:0)+(anyPayroll?1:0)}">${detailHTML(r)}</td></tr>`;
   });
   $("yearTable").innerHTML = h + "</tbody></table>";
 }
@@ -3204,6 +3557,26 @@ function detailHTML(r){
     st += dline("= State tax", r.taxes.state, nf, "wsum");
   }
   st += `</div>`;
+  /* index052 — payroll walk, shown only in wage years. Deliberately its own
+     column rather than folded into the federal walk: it is not on the same
+     income base, takes no deduction, and answers a different question. */
+  let pr = "";
+  if (d.payroll){
+    const P = d.payroll;
+    pr = `<div class="wcol"><div class="wtitle">Payroll tax (FICA) — employee side, on gross wages</div>`;
+    ["person1","person2"].forEach(pk => {
+      const wv = (P.byOwner||{})[pk] || 0;
+      if (wv <= 0.5) return;
+      const nm = esc(((DATA.household||{})[pk]||{}).name || pk);
+      pr += dline(nm + " wages (gross, before any deferral)", wv, nf);
+    });
+    pr += dline("Social Security 6.2% (to the wage base, per worker) + Medicare 1.45% (no cap)", P.ssAndMed, nf);
+    if (P.addl > 0.5)
+      pr += dline(`+ Additional Medicare 0.9% (combined wages over ${fmt$(P.threshold*nf)})`, P.addl, nf);
+    pr += dline("= Payroll tax", P.total, nf, "wsum");
+    pr += `<div class="wline wsub">A pre-tax contribution reduces income tax but NOT this — deferrals do not escape FICA. Self-employment tax is not modeled and would be roughly double, with half deductible.</div>`;
+    pr += `</div>`;
+  }
   /* Funding + net worth build */
   let nw = `<div class="wcol"><div class="wtitle">Funding & net worth build</div>`;
   const dr = d.draws || {};
@@ -3221,7 +3594,7 @@ function detailHTML(r){
   (d.liabList||[]).forEach(l => nw += dline("− " + l.label, -l.balance, nf));
   nw += dline("= Net worth", r.netWorth, nf, "wsum");
   nw += `</div>`;
-  return `<div class="walk">${fed}${st}${nw}</div>`;
+  return `<div class="walk">${fed}${st}${pr}${nw}</div>`;
 }
 
 /* ---------------- Section 3: sliders --------------------------------- */
@@ -3764,17 +4137,32 @@ function ladderSpendingNeeds(run, year, opts){
      spendLanding to the landing and silently erasing the RMD-forced excess in
      any year where a conversion and an RMD coincided — precisely the years
      worth looking at. reconLanding was wrong in those years too. */
-  const payoffDeferred = Math.max(0, fed.otherOrd - inc.wages - inc.pension - inc.interest
+  /* index051 — a pre-tax contribution is deducted from the wages the ENGINE
+     handed the tax call, so every reconstruction here must use the same reduced
+     figure. Subtracting full `inc.wages` from `fed.otherOrd` would go negative,
+     the Math.max would hide it, and payoffDeferred would be silently wrong. */
+  const wagesTaxed = inc.wages - ((r.detail && r.detail.contribDeduct) || 0);
+  const payoffDeferred = Math.max(0, fed.otherOrd - wagesTaxed - inc.pension - inc.interest
     - inc.rental - conversionsActual - fed.deferredDraws - rmd);
   /* recover the year's realized LTCG from MAGI (magi = otherOrd + ssTaxable + qualDiv + ltcg). */
   const ltcgRealized = Math.max(0, fed.magi - fed.otherOrd - fed.ssTaxable - inc.qualDiv);
-  const nomF = r.nomF, spendNeed = r.spend;
+  /* index051 — the funding need, not the spend line: a directed contribution
+     consumes cash flow exactly as spending does and the re-solve below must see
+     it, or the reconstructed deferred draw comes out short in every contributing
+     year. `r.spend` deliberately excludes it (a deferral is not spending). */
+  const nomF = r.nomF, spendNeed = r.spend + ((r.detail && r.detail.contrib) || 0);
   const cashExRmd = inc.wages + inc.pension + inc.ss + inc.interest + inc.rental + inc.qualDiv;
-  const mkY = D => ({ filing: r.filing, ages: r.ages, wages: inc.wages, pension: inc.pension,
+  const mkY = D => ({ filing: r.filing, ages: r.ages, wages: wagesTaxed, pension: inc.pension,
     deferredDraws: D + payoffDeferred, conversions, interest: inc.interest, rental: inc.rental,
     ss: inc.ss, qualDiv: inc.qualDiv, ltcgRealized, taxDriftPP: driftPP, nomF, stateCfg: A.stateOverrides });
   const stateMod = STATE_MODULES[stateId] || STATE_MODULES.GENERIC;
-  const totalTax = D => { const y = mkY(D); const fy = federalTax(y); return fy.tax + stateMod.computeTax(y, fy).stateTax; };
+  /* index052 — payroll tax does not depend on the deferred draw (it is a tax on
+     WAGES), but it IS part of r.taxes.total, which seeds the loop below. Leaving
+     it out of totalTax would make the first pass and every later pass disagree
+     by exactly the FICA figure, and the re-solved draw would come out short in
+     every wage year. It is a constant, so it simply rides along. */
+  const payrollConst = (r.taxes && r.taxes.payroll) || 0;
+  const totalTax = D => { const y = mkY(D); const fy = federalTax(y); return fy.tax + stateMod.computeTax(y, fy).stateTax + payrollConst; };
   /* fidelity check the caller/battery can read: reconstructing the ACTUAL deferred
      ordinary (voluntary + rmd) must reproduce the recorded landing. */
   const reconLanding = federalTax(mkY(fed.deferredDraws + rmd)).ordTaxable;
@@ -4474,6 +4862,8 @@ function ladderFlags(cols){
     if (a.type === "taxFreeReimbursement") return `⚑ ${a.year} ${nm || "tax-free draw (HSA)"}${amt(a)} — tax-free, <em>not on this scale</em>`;
     if (a.type === "sellAsset") return `⚑ ${a.year} ${nm || "asset sale"} — gains are LTCG, <em>not on this scale</em>`;
     if (a.type === "receiveAsset") return `⚑ ${a.year} ${nm || "inheritance"}${amt(a)} — not income on receipt, <em>not on this scale</em>`;
+    if (a.type === "contribute" && a.taxTreatment === "preTax") return `⚑ ${a.year} ${nm || "contribution"}${amt(a)} pre-tax — <strong>reduces the landing</strong>`;
+    if (a.type === "contribute") return `⚑ ${a.year} ${nm || "contribution"}${amt(a)} ${esc(a.taxTreatment||"")} — no deduction, <em>consumes cash but not on this scale</em>`;
     if (a.type === "takeLoan") return `⚑ ${a.year} ${nm || "borrow"}${amt(a)} — loan proceeds, not income, <em>not on this scale</em>`;
     if (a.type === "death") return `⚑ ${a.year} ${nm || "death"} — filing flips; brackets and this ladder reshape from here`;
     if (a.type === "relocate") return `⚑ ${a.year} ${nm || "relocation"} — state module changes (not on this federal ladder)`;
